@@ -8,14 +8,25 @@
  * - Failed ops are kept (status 'failed') and shown to the user; never dropped silently.
  */
 export type SyncEntity =
-  'weight_entries' | 'body_measurements' | 'daily_checkins' | 'user_milestones';
+  | 'weight_entries'
+  | 'body_measurements'
+  | 'daily_checkins'
+  | 'user_milestones'
+  | 'exercises'
+  | 'scheduled_workouts'
+  | 'workout_sessions'
+  | 'exercise_sets';
 
 /** Parents sync before children (none yet in Phase 2; kept for meal_logs → items later). */
 export const ENTITY_ORDER: Record<SyncEntity, number> = {
   user_milestones: 0,
+  exercises: 0,
+  scheduled_workouts: 0,
   weight_entries: 1,
   body_measurements: 1,
   daily_checkins: 1,
+  workout_sessions: 1,
+  exercise_sets: 2,
 };
 
 export type OpKind = 'upsert' | 'delete';

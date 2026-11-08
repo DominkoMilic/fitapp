@@ -10,6 +10,10 @@ const LABELS: Record<SyncEntity, string> = {
   body_measurements: 'Measurement',
   daily_checkins: 'Check-in',
   user_milestones: 'Milestone',
+  exercises: 'Custom exercise',
+  scheduled_workouts: 'Calendar change',
+  workout_sessions: 'Workout',
+  exercise_sets: 'Workout set',
 };
 
 /** Spec 18.2: every unsynced or rejected change is visible, with Retry and an explicit Discard. */

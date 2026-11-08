@@ -1,5 +1,6 @@
+import { router } from 'expo-router';
 import { Banner, EmptyState, ErrorState, LoadingState } from '@/components/feedback';
-import { Card, Screen, SectionHeader, Text } from '@/components/ui';
+import { Card, ListItem, Screen, SectionHeader, Text } from '@/components/ui';
 import { isoWeekday } from '@/domain/calculations/dates';
 import { parsePattern } from '@/features/dashboard/today';
 import { useToday } from '@/features/dashboard/useToday';
@@ -53,6 +54,11 @@ export default function Training() {
           message="Your plan is adjusted for a recorded injury. Update its status in Profile → Health."
         />
       ) : null}
+      <ListItem
+        title="Exercise library"
+        subtitle="56 exercises with instructions"
+        onPress={() => router.push('/training/exercises')}
+      />
       <SectionHeader title={plan.data?.name ?? 'Your week'} />
       {days.length === 0 ? (
         <EmptyState title="No plan yet" message="Your weekly plan will appear here." />
