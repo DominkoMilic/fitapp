@@ -11,7 +11,7 @@ export interface MilestoneDefinition {
   key: string;
   title: string;
   description: string;
-  category: 'weight' | 'consistency';
+  category: 'weight' | 'consistency' | 'training';
   threshold: number | null;
 }
 
@@ -51,6 +51,31 @@ const CONSISTENCY: MilestoneDefinition[] = [
   },
 ];
 
+const count = (n: number, noun: string) => `${n} ${noun}${n === 1 ? '' : 's'}`;
+const TRAINING: MilestoneDefinition[] = [
+  ...[1, 5, 10, 25, 50, 100].map((n) => ({
+    key: `workouts_${n}`,
+    title: n === 1 ? 'First workout' : `${n} workouts`,
+    description: `Complete ${count(n, 'workout')}`,
+    category: 'training' as const,
+    threshold: n,
+  })),
+  ...[10, 25].map((n) => ({
+    key: `strength_${n}`,
+    title: `${n} strength sessions`,
+    description: `Complete ${n} strength sessions`,
+    category: 'training' as const,
+    threshold: n,
+  })),
+  ...[10, 25, 50, 100].map((n) => ({
+    key: `training_hours_${n}`,
+    title: `${n} hours of training`,
+    description: `Train for ${n} hours in total`,
+    category: 'training' as const,
+    threshold: n,
+  })),
+];
+
 /** Every milestone available for this goal, in display order (unlocked or not). */
 export function milestoneCatalogue(goal: GoalLike | null): MilestoneDefinition[] {
   const weight: MilestoneDefinition[] =
@@ -67,7 +92,7 @@ export function milestoneCatalogue(goal: GoalLike | null): MilestoneDefinition[]
           threshold: m.thresholdKg,
         }))
       : [];
-  return [...weight, ...CONSISTENCY];
+  return [...weight, ...CONSISTENCY, ...TRAINING];
 }
 
 /** Longest run of consecutive dates (any order, duplicates ignored), with its end date. */
@@ -109,6 +134,8 @@ export function evaluateMilestones(input: {
   /** Local dates with any log (weight, measurement or check-in). */
   logDates: readonly IsoDate[];
   unlockedKeys: ReadonlySet<string>;
+  /** Completed workout sessions and sport events (abandoned ones are excluded by the caller). */
+  sessions?: readonly { date: IsoDate; durationS: number; category: string }[];
 }): MilestoneUnlock[] {
   const out: MilestoneUnlock[] = [];
   const catalogue = milestoneCatalogue(input.goal);
@@ -144,6 +171,31 @@ export function evaluateMilestones(input: {
     const def = catalogue.find((c) => c.key === 'weigh_in_30')!;
     if (on) out.push({ ...def, value: 30, achievedOn: on });
   }
+
+  // Training: counts and hours, achieved on the session that crossed the threshold.
+  const sessions = [...(input.sessions ?? [])].sort((a, b) => a.date.localeCompare(b.date));
+  const crossing = (
+    keyPrefix: string,
+    list: typeof sessions,
+    metric: (upTo: typeof sessions) => number,
+  ) => {
+    for (const def of catalogue.filter((c) => c.key.startsWith(keyPrefix))) {
+      if (input.unlockedKeys.has(def.key) || def.threshold === null) continue;
+      for (let i = 0; i < list.length; i++) {
+        if (metric(list.slice(0, i + 1)) >= def.threshold) {
+          out.push({ ...def, value: def.threshold, achievedOn: list[i]!.date });
+          break;
+        }
+      }
+    }
+  };
+  crossing('workouts_', sessions, (l) => l.length);
+  crossing(
+    'strength_',
+    sessions.filter((s) => s.category === 'strength'),
+    (l) => l.length,
+  );
+  crossing('training_hours_', sessions, (l) => l.reduce((a, s) => a + s.durationS, 0) / 3600);
   return out;
 }
 

@@ -64,7 +64,7 @@ describe('weight milestones use the 7-day average (spec 14.1)', () => {
   });
   it('no weight milestones for maintenance goals', () => {
     const m = { ...goal, goalType: 'maintain', targetKg: null, secondaryKg: null };
-    expect(milestoneCatalogue(m).every((c) => c.category === 'consistency')).toBe(true);
+    expect(milestoneCatalogue(m).some((c) => c.category === 'weight')).toBe(false);
   });
 });
 
