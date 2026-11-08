@@ -13,3 +13,10 @@ Clarifications of, and deviations from, `docs/PACE_SPEC.md`. Newest first.
 7. **The starting weight lives on `user_goals.starting_weight_kg`.** The `weight_entries` table arrives in Phase 2. Its migration will backfill a first weight entry from the active goal.
 8. **Explicit grants.** Supabase grants all table privileges to `anon` and `authenticated` by default, so every migration revokes them and grants only what's needed. The pgTAP tests caught this: `consents` was still deletable before the fix.
 9. **Package versions** come from the `expo` package's own `bundledNativeModules.json`, because `npx expo install` (api.expo.dev) and the Expo/Supabase documentation sites are unreachable from the development container. APIs were checked against the installed type definitions.
+
+## 2026-11-09: Phase 2
+
+1. **Outbox storage.** iOS and Android use expo-sqlite (`pace-sync.db`, one row per op, rewritten in a transaction). Web and Jest use AsyncStorage, because expo-sqlite on web needs WASM and cross-origin-isolation headers. The queue rules live in `src/domain/sync/outbox.ts` and are the same on every platform.
+2. **Conflict resolution.** Records use client UUIDs and are upserted on their id. `client_updated_at` is the time the write was queued. Concurrent edits of the same record from two devices resolve by last write to reach the server. Append-only data (weights, measurements, milestones) can't conflict.
+3. **`daily_checkins` uses `(user_id, local_date)` as its primary key** instead of a separate `id`. One check-in per day is the rule, and a natural key keeps offline upserts idempotent across devices.
+4. **Failed writes are never dropped automatically.** Network, 5xx and 429 errors retry with exponential backoff (capped at 5 min). A 401 refreshes the session once and retries. Other 4xx errors mark the op as failed, and it stays visible in Sync status with Retry and Discard.

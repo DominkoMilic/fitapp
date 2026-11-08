@@ -9,6 +9,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ConfigErrorScreen } from '@/components/feedback/ConfigErrorScreen';
 import { envResult } from '@/config/env';
 import { AuthProvider, useAuth } from '@/features/auth/AuthProvider';
+import { SyncProvider } from '@/features/sync/SyncProvider';
 import { createQueryClient } from '@/services/query-client';
 import { ThemeProvider, useTheme } from '@/theme';
 
@@ -41,7 +42,9 @@ export default function RootLayout() {
           {envResult.ok ? (
             <QueryClientProvider client={queryClient}>
               <AuthProvider>
-                <RootStack />
+                <SyncProvider>
+                  <RootStack />
+                </SyncProvider>
               </AuthProvider>
             </QueryClientProvider>
           ) : (
