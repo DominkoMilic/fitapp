@@ -25,6 +25,7 @@ import {
 } from '@/features/profile/api';
 import { SyncBanner } from '@/features/sync/SyncBanner';
 import { useWeightStats } from '@/features/weight/useWeightStats';
+import { ResumeWorkoutCard } from '@/features/training/ResumeWorkoutCard';
 import { radius, spacing, TOUCH_TARGET, useTheme } from '@/theme';
 
 const WEEKDAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -122,6 +123,7 @@ export default function Home() {
         </View>
       </View>
 
+      <ResumeWorkoutCard />
       <SyncBanner />
       <GoalReachedCard />
 

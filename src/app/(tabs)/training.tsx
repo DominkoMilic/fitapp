@@ -12,6 +12,7 @@ import { dayLabel } from '@/features/training/labels';
 import { useRestrictions } from '@/features/training/library';
 import { OccurrenceRow } from '@/features/training/OccurrenceRow';
 import { useScheduledWorkouts, useScheduleGeneration } from '@/features/training/schedule-api';
+import { ResumeWorkoutCard } from '@/features/training/ResumeWorkoutCard';
 import { spacing } from '@/theme';
 
 export default function Training() {
@@ -43,6 +44,7 @@ export default function Training() {
         />
       ) : null}
 
+      <ResumeWorkoutCard />
       {offset === 0 ? (
         <>
           <SectionHeader title="Today" />
