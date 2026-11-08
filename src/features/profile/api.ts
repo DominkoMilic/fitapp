@@ -310,3 +310,46 @@ export async function regenerateWeeklyPattern(userId: string): Promise<void> {
       .eq('id', activePlan.id),
   );
 }
+
+// ------------------------------------------------------------------ goals
+
+export type GoalChange =
+  | { mode: 'update'; goalId: string; values: TablesUpdate<'user_goals'> }
+  | {
+      mode: 'replace';
+      /** Status for the current goal: achieved (target reached) or abandoned (changed mind). */
+      endCurrentAs: 'achieved' | 'abandoned';
+      next: Omit<TablesInsert<'user_goals'>, 'user_id' | 'status'>;
+    };
+
+/**
+ * Edits the active goal in place, or ends it and starts a new one (history is kept).
+ * Never changes calorie targets: the user reviews a recalculation afterwards (spec 3.1 #7).
+ */
+export const useChangeGoal = () =>
+  useInvalidatingMutation<GoalChange>(async (id, change) => {
+    if (change.mode === 'update') {
+      unwrap(
+        await db()
+          .from('user_goals')
+          .update(change.values)
+          .eq('id', change.goalId)
+          .eq('user_id', id),
+      );
+    } else {
+      const today = new Date().toISOString().slice(0, 10);
+      unwrap(
+        await db()
+          .from('user_goals')
+          .update({ status: change.endCurrentAs, ended_at: today })
+          .eq('user_id', id)
+          .eq('status', 'active'),
+      );
+      unwrap(
+        await db()
+          .from('user_goals')
+          .insert({ ...change.next, user_id: id, status: 'active' }),
+      );
+    }
+    await regenerateWeeklyPattern(id);
+  });

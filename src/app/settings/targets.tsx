@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 
 import { Banner, ErrorState, LoadingState } from '@/components/feedback';
@@ -19,6 +20,7 @@ import {
   useTargetHistory,
 } from '@/features/profile/api';
 import { SaveState } from '@/features/profile/SaveState';
+import { useWeightStats } from '@/features/weight/useWeightStats';
 
 export default function TargetsSettings() {
   const { today } = useToday();
@@ -26,6 +28,7 @@ export default function TargetsSettings() {
   const goal = useActiveGoal();
   const history = useTargetHistory();
   const save = useSaveTargets();
+  const { current: currentW } = useWeightStats('30D');
   const [editKcal, setEditKcal] = useState<number | null>(null);
   const [showRecalc, setShowRecalc] = useState(false);
 
@@ -38,15 +41,15 @@ export default function TargetsSettings() {
       sex: p.calc_sex as CalcSex,
       dateOfBirth: p.date_of_birth,
       heightCm: Number(p.height_cm),
-      // Weight logging arrives in Phase 2; until then the goal's starting weight is used.
-      weightKg: Number(g.starting_weight_kg),
+      // Current weight (7-day average when available) drives recalculation.
+      weightKg: currentW ? Math.round(currentW.kg * 100) / 100 : Number(g.starting_weight_kg),
       activityLevel: p.activity_level as ActivityLevel,
       goalType: g.goal_type as GoalType,
       targetWeightKg: g.target_weight_kg === null ? null : Number(g.target_weight_kg),
       weeklyRatePct: g.weekly_rate_pct === null ? null : Number(g.weekly_rate_pct),
       asOf: today,
     });
-  }, [profile.data, goal.data, today]);
+  }, [profile.data, goal.data, today, currentW]);
 
   if (profile.isPending || goal.isPending || history.isPending)
     return (
@@ -113,9 +116,9 @@ export default function TargetsSettings() {
     <Screen edges={['bottom']}>
       <SaveState status={save.status} error={save.error} />
       {goal.data ? (
-        <Card>
+        <Card onPress={() => router.push('/settings/goal')} accessibilityLabel="Change goal">
           <Text variant="small" color="textSecondary">
-            Goal
+            Goal · tap to change
           </Text>
           <Text variant="title">
             {{
@@ -217,8 +220,8 @@ export default function TargetsSettings() {
               {recalculated.macros.carbsG} g · F {recalculated.macros.fatG} g
             </Text>
             <Text variant="caption" color="textSecondary">
-              Uses your starting weight ({formatWeight(recalculated.inputs.weightKg, unit)}) until
-              weight logging is available.
+              Uses your current weight ({formatWeight(recalculated.inputs.weightKg, unit)}
+              {currentW?.basis === 'average' ? ', 7-day average' : ''}).
             </Text>
             <Button
               title="Use these targets"

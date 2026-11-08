@@ -6,6 +6,7 @@ import { WeightChart } from '@/components/charts/WeightChart';
 import { ErrorState, LoadingState } from '@/components/feedback';
 import { Button, Card, ListItem, Screen, SectionHeader, StatTile, Text } from '@/components/ui';
 import { kgToLb, type UnitSystem } from '@/domain/calculations/units';
+import { GoalReachedCard } from '@/features/milestones/GoalReachedCard';
 import { useProfile } from '@/features/profile/api';
 import { useWeightStats } from '@/features/weight/useWeightStats';
 import { spacing } from '@/theme';
@@ -41,6 +42,7 @@ export default function Progress() {
       <Text variant="heading" accessibilityRole="header">
         Progress
       </Text>
+      <GoalReachedCard />
       <Card
         onPress={() => router.push('/progress/weight')}
         accessibilityLabel="Open weight details"
