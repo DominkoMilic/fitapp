@@ -64,15 +64,22 @@ export function WeightChart({
       [PAD.left, width - PAD.right],
     );
     const y = linearScale([y0, y1], [HEIGHT - PAD.bottom, PAD.top]);
-    const avgPaths = segments(avgPoints, (p) => p.avg === null).map((seg) =>
-      seg
-        .map(
-          (p, i) =>
-            `${i === 0 ? 'M' : 'L'}${x(dayNum(p.date)).toFixed(1)},${y(toDisplay(p.avg as number)).toFixed(1)}`,
-        )
-        .join(' '),
-    );
-    return { x, y, ticks: niceTicks(y0, y1, 4), avgPaths, avgByDate, first, last };
+    const avgSegments = segments(avgPoints, (p) => p.avg === null);
+    // Single-point segments can't be drawn as a line; show them as dots.
+    const avgDots = avgSegments
+      .filter((seg) => seg.length === 1)
+      .map((seg) => ({ x: x(dayNum(seg[0]!.date)), y: y(toDisplay(seg[0]!.avg as number)) }));
+    const avgPaths = avgSegments
+      .filter((seg) => seg.length > 1)
+      .map((seg) =>
+        seg
+          .map(
+            (p, i) =>
+              `${i === 0 ? 'M' : 'L'}${x(dayNum(p.date)).toFixed(1)},${y(toDisplay(p.avg as number)).toFixed(1)}`,
+          )
+          .join(' '),
+      );
+    return { x, y, ticks: niceTicks(y0, y1, 4), avgPaths, avgDots, avgByDate, first, last };
   }, [daily, allDaily, references, toDisplay, width]);
 
   const onLayout = (e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width);
@@ -165,6 +172,9 @@ export function WeightChart({
                   fill={d.date === selected ? colors.textPrimary : colors.textSecondary}
                   opacity={0.9}
                 />
+              ))}
+              {model.avgDots.map((d, i) => (
+                <Circle key={`avg-${i}`} cx={d.x} cy={d.y} r={4.5} fill={colors.accent} />
               ))}
               {model.avgPaths.map((p, i) => (
                 <Path

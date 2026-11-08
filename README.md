@@ -2,22 +2,23 @@
 
 A mobile fitness coach, workout planner, nutrition tracker and activity tracker for iOS and Android, built with Expo (React Native) and Supabase.
 
-**Status:** Phase 1 (Foundation) is implemented. Phase 2 (Dashboard and progress) is next, after review. See [`docs/phase-1-report.md`](docs/phase-1-report.md).
+**Status:** Phases 1 (Foundation) and 2 (Dashboard and progress) are implemented. Phase 3 (Training) is next, after review. See [`docs/phase-1-report.md`](docs/phase-1-report.md) and [`docs/phase-2-report.md`](docs/phase-2-report.md).
 
 ## Documents
 
-| File                                               | What it is                                                 |
-| -------------------------------------------------- | ---------------------------------------------------------- |
-| [`PACE_Specification.pdf`](PACE_Specification.pdf) | The full specification as a PDF, for reading               |
-| [`docs/PACE_SPEC.md`](docs/PACE_SPEC.md)           | The same specification in Markdown: the source of truth    |
-| [`CLAUDE.md`](CLAUDE.md)                           | Working rules for coding agents in this repository         |
-| [`docs/decisions.md`](docs/decisions.md)           | Decisions that clarify or deviate from the spec            |
-| [`docs/migrations.md`](docs/migrations.md)         | Database migrations, the security model and DB tests       |
-| [`docs/phase-1-report.md`](docs/phase-1-report.md) | What Phase 1 delivered, test results and known limitations |
+| File                                               | What it is                                                        |
+| -------------------------------------------------- | ----------------------------------------------------------------- |
+| [`PACE_Specification.pdf`](PACE_Specification.pdf) | The full specification as a PDF, for reading                      |
+| [`docs/PACE_SPEC.md`](docs/PACE_SPEC.md)           | The same specification in Markdown: the source of truth           |
+| [`CLAUDE.md`](CLAUDE.md)                           | Working rules for coding agents in this repository                |
+| [`docs/decisions.md`](docs/decisions.md)           | Decisions that clarify or deviate from the spec                   |
+| [`docs/migrations.md`](docs/migrations.md)         | Database migrations, the security model and DB tests              |
+| [`docs/phase-1-report.md`](docs/phase-1-report.md) | What Phase 1 delivered, test results and known limitations        |
+| [`docs/phase-2-report.md`](docs/phase-2-report.md) | Phase 2: weight, measurements, check-in, milestones, offline sync |
 
 ## Tech stack
 
-Expo SDK 58 · React Native 0.88 · TypeScript (strict) · Expo Router · Supabase (Postgres, Auth, RLS) · TanStack Query · Zustand · React Hook Form + Zod · Jest + React Native Testing Library · pgTAP · Playwright (web smoke test) · Maestro (device E2E).
+Expo SDK 58 · React Native 0.88 · TypeScript (strict) · Expo Router · Supabase (Postgres, Auth, RLS) · TanStack Query · Zustand · React Hook Form + Zod · expo-sqlite (offline outbox) · react-native-svg (charts) · Jest + React Native Testing Library · pgTAP · Playwright (web smoke test) · Maestro (device E2E).
 
 ## Prerequisites
 
@@ -158,5 +159,14 @@ Phase 1 was built feature by feature. Each branch builds on the one before it:
 5. `feature/p1-auth`: Supabase auth and routing gate
 6. `feature/p1-onboarding`: 9-step onboarding and plan preview
 7. `feature/p1-app-shell`: tabs, dashboard, profile editing, E2E
+
+Phase 2 branches, built the same way:
+
+1. `feature/p2-schema`: weight, measurements, check-in and milestone tables
+2. `feature/p2-offline-sync`: outbox and sync engine
+3. `feature/p2-weight`: weight logging, chart and statistics
+4. `feature/p2-measurements-checkin`: measurements and daily check-in
+5. `feature/p2-milestones-goal`: milestone engine, goal editing and goal-reached flow
+6. `feature/p2-dashboard`: Home dashboard, sync status, E2E
 
 `claude/pace-spec-review-usad8z` contains all of them.

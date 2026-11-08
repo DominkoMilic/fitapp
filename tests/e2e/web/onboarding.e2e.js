@@ -23,6 +23,10 @@ const user = {
   created_at: new Date().toISOString(),
 };
 let payload = null;
+// Rows the app writes through the sync engine (Phase 2 tables).
+const store = { weight_entries: [], body_measurements: [], daily_checkins: [], user_milestones: [] };
+const writes = [];
+const keyOf = { weight_entries: 'id', body_measurements: 'id', daily_checkins: 'local_date', user_milestones: 'milestone_key' };
 const now = new Date().toISOString();
 
 (async () => {
@@ -59,10 +63,28 @@ const now = new Date().toISOString();
     if (url.pathname === '/auth/v1/logout') return route.fulfill({ status: 204 });
     if (url.pathname === '/rest/v1/rpc/complete_onboarding') {
       payload = JSON.parse(req.postData() || '{}').payload;
+      // Mirrors the seed_first_weight_entry trigger.
+      store.weight_entries.push({ id: 'w-onboarding', user_id: UID, weight_kg: payload.goal.starting_weight_kg, measured_at: now, local_date: payload.plan.start_date, note: null, source: 'onboarding', created_at: now, updated_at: now });
       return route.fulfill({ status: 204 });
     }
     const p = payload;
     const table = url.pathname.replace('/rest/v1/', '');
+    if (store[table] && req.method() === 'POST') {
+      const body = JSON.parse(req.postData() || '[]');
+      for (const row of Array.isArray(body) ? body : [body]) {
+        writes.push({ table, row });
+        const k = keyOf[table];
+        const i = store[table].findIndex((r) => r[k] === row[k]);
+        const full = { created_at: now, updated_at: now, unlocked_at: now, ...row };
+        if (i >= 0) { if (table !== 'user_milestones') store[table][i] = { ...store[table][i], ...full }; } else store[table].push(full);
+      }
+      return route.fulfill({ status: 201, contentType: 'application/json', body: '[]' });
+    }
+    if (store[table] && req.method() === 'DELETE') return route.fulfill({ status: 204 });
+    if (store[table]) {
+      const single = (req.headers()['accept'] || '').includes('vnd.pgrst.object');
+      return json(single ? store[table][0] ?? null : store[table]);
+    }
     const single = (req.headers()['accept'] || '').includes('vnd.pgrst.object');
     const rows =
       {
@@ -248,6 +270,51 @@ const now = new Date().toISOString();
     .catch(() => page.getByText('Training', { exact: true }).last().click());
   await page.waitForTimeout(1000);
   await shot('17-training');
+  // ---------------------------------------------------------------- Phase 2
+  const zagrebDate = (offsetDays) => {
+    const d = new Date(Date.now() + offsetDays * 86400000);
+    const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Zagreb', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(d);
+    const get = (t) => Number(parts.find((x) => x.type === t).value);
+    return { d: get('day'), m: get('month'), y: get('year') };
+  };
+  const logWeight = async (kg, offsetDays) => {
+    await page.getByRole('tab', { name: /Home/ }).click();
+    await page.waitForTimeout(500);
+    await page.getByRole('button', { name: 'Log weight' }).first().click();
+    await page.waitForTimeout(700);
+    await page.getByLabel('Weight', { exact: true }).fill(String(kg));
+    const dt = zagrebDate(offsetDays);
+    await page.getByLabel('Day', { exact: true }).fill(String(dt.d));
+    await page.getByLabel('Month', { exact: true }).fill(String(dt.m));
+    await page.getByLabel('Year', { exact: true }).fill(String(dt.y));
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    await page.waitForTimeout(2500); // debounce + sync
+  };
+  await logWeight(106.0, -2);
+  await logWeight(105.8, -1);
+  await logWeight(105.6, 0); // today's daily value = mean(108 onboarding, 105.6) = 106.8 → 7-day avg 106.2
+  await page.waitForTimeout(2500);
+  await shot('20-home-after-weights');
+  const homeText = await page.locator('body').innerText();
+  await page.getByRole('tab', { name: /Progress/ }).click();
+  await page.waitForTimeout(1000);
+  await shot('21-progress');
+  await page.getByText('Weight details and history').click();
+  await page.waitForTimeout(1000);
+  await shot('22-weight-detail');
+  await page.goBack();
+  await page.waitForTimeout(600);
+  await page.getByRole('tab', { name: /Home/ }).click();
+  await page.waitForTimeout(500);
+  await page.getByRole('button', { name: 'Check-in' }).first().click();
+  await page.waitForTimeout(700);
+  await page.getByLabel('Sleep last night').fill('6.5');
+  await page.getByRole('group', { name: 'Pain level' }).getByRole('checkbox', { name: '5', exact: true }).click();
+  await page.getByRole('group', { name: 'Where is the pain' }).getByRole('checkbox', { name: 'Ankle / foot' }).click();
+  await page.getByRole('button', { name: 'Save check-in' }).click();
+  await page.waitForTimeout(2500);
+  await shot('23-checkin-pain');
+  const checkinText = await page.locator('body').innerText();
   fs.writeFileSync(`${out}/payload.json`, JSON.stringify(payload, null, 2));
   const checks = {
     'plan shows 2720 kcal': planText.includes('2720'),
@@ -257,7 +324,12 @@ const now = new Date().toISOString();
     'seed week matches spec 25.1':
       payload?.plan?.weekly_pattern?.map((d) => d.kind).join(',') ===
       'strength_upper,commitment,recovery,strength_lower_safe,rest,commitment,recovery',
-    'ended on Training tab': page.url().endsWith('/training'),
+    'weights synced to server (3 upserts)': writes.filter((w) => w.table === 'weight_entries').length === 3,
+    'first milestone unlocked on the 7-day average': store.user_milestones.some((m) => m.milestone_key === 'weight_lost_1'),
+    'milestone written exactly once': writes.filter((w) => w.table === 'user_milestones' && w.row.milestone_key === 'weight_lost_1').length === 1,
+    'home shows the 7-day average (106.2)': homeText.includes('106.2'),
+    'check-in synced': store.daily_checkins.length === 1 && store.daily_checkins[0].pain === 5,
+    'pain >= 4 shows rest guidance': checkinText.includes('Rest that area'),
     'no page errors': errors.length === 0,
   };
   for (const [name, ok] of Object.entries(checks)) console.log(ok ? '✓' : '✗', name);

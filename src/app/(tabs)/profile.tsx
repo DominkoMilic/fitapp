@@ -5,12 +5,16 @@ import { ConfirmDialog } from '@/components/feedback';
 import { Card, ListItem, Screen, SectionHeader, Text } from '@/components/ui';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useProfile } from '@/features/profile/api';
+import { useSyncActions, useSyncStatus } from '@/features/sync/SyncProvider';
 
 export default function ProfileTab() {
   const { session, signOut } = useAuth();
   const profile = useProfile();
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const sync = useSyncStatus();
+  const { flush } = useSyncActions();
+  const unsynced = sync.pending + sync.failed;
 
   return (
     <Screen edges={['top']}>
@@ -47,6 +51,12 @@ export default function ProfileTab() {
       <ListItem title="Equipment" onPress={() => router.push('/settings/equipment')} />
       <ListItem title="Appearance" onPress={() => router.push('/settings/appearance')} />
 
+      <ListItem
+        title="Sync status"
+        value={unsynced ? `${unsynced} waiting` : 'All synced'}
+        onPress={() => router.push('/settings/sync')}
+      />
+
       <SectionHeader title="Privacy" />
       <ListItem title="Privacy policy" onPress={() => router.push('/legal/privacy')} />
       <ListItem title="Terms of use" onPress={() => router.push('/legal/terms')} />
@@ -54,12 +64,24 @@ export default function ProfileTab() {
       <ListItem title="Export my data" subtitle="Available before public release" />
       <ListItem title="Delete my account" subtitle="Available before public release" />
 
-      <ListItem title="Sign out" destructive onPress={() => setConfirmSignOut(true)} />
+      <ListItem
+        title="Sign out"
+        destructive
+        onPress={() => {
+          void flush();
+          setConfirmSignOut(true);
+        }}
+      />
       <ConfirmDialog
         visible={confirmSignOut}
         title="Sign out?"
-        message="Your data stays in your account. You can sign in again at any time."
-        confirmLabel="Sign out"
+        message={
+          unsynced
+            ? `${unsynced} change${unsynced > 1 ? 's are' : ' is'} not synced yet. They stay safely on this phone and sync when you sign in again with this account.`
+            : 'Your data stays in your account. You can sign in again at any time.'
+        }
+        confirmLabel={unsynced ? 'Sign out anyway' : 'Sign out'}
+        cancelLabel={unsynced ? 'Cancel' : undefined}
         loading={signingOut}
         onCancel={() => setConfirmSignOut(false)}
         onConfirm={async () => {
