@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { parseDecimal } from '@/domain/calculations/units';
 
@@ -28,13 +28,14 @@ export function NumberField({
   ...rest
 }: NumberFieldProps) {
   const [text, setText] = useState(format(value, precision));
+  const [lastValue, setLastValue] = useState(value);
 
-  useEffect(() => {
-    const parsed = parseDecimal(text);
-    if (parsed !== value) setText(format(value, precision));
-    // Only resync when the external value changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
+  // Resync the text when the value is changed from outside (adjusting state during render,
+  // the React-recommended alternative to an effect).
+  if (value !== lastValue) {
+    setLastValue(value);
+    if (parseDecimal(text) !== value) setText(format(value, precision));
+  }
 
   return (
     <TextField
@@ -45,7 +46,9 @@ export function NumberField({
       onChangeText={(t) => {
         setText(t);
         const parsed = parseDecimal(t);
-        onChangeValue(parsed !== null && (decimal || Number.isInteger(parsed)) ? parsed : null);
+        const next = parsed !== null && (decimal || Number.isInteger(parsed)) ? parsed : null;
+        setLastValue(next);
+        onChangeValue(next);
       }}
     />
   );
