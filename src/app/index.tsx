@@ -1,28 +1,33 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Redirect } from 'expo-router';
 
-import { envResult } from '@/config/env';
+import { ConfigErrorScreen } from '@/components/feedback/ConfigErrorScreen';
+import { ErrorState, LoadingState } from '@/components/feedback';
+import { Button, Screen } from '@/components/ui';
+import { useAuth } from '@/features/auth/AuthProvider';
+import { useGate } from '@/features/auth/useGate';
 
-/** Temporary root screen: replaced by the auth/onboarding gate in feature/p1-auth. */
-export default function Index() {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>PACE</Text>
-      <Text style={styles.body}>
-        {envResult.ok
-          ? `Environment: ${envResult.env.appEnv}`
-          : `Configuration error:\n${envResult.errors.join('\n')}`}
-      </Text>
-    </View>
-  );
+/** Entry point: sends the user to auth, onboarding or the app (spec 6.1). */
+export default function Gate() {
+  const gate = useGate();
+  const { signOut } = useAuth();
+
+  switch (gate.kind) {
+    case 'config_error':
+      return <ConfigErrorScreen />;
+    case 'loading':
+      return (
+        <Screen>
+          <LoadingState />
+        </Screen>
+      );
+    case 'profile_error':
+      return (
+        <Screen>
+          <ErrorState message="We couldn't load your profile." onRetry={gate.retry} />
+          <Button title="Sign out" variant="ghost" onPress={() => void signOut()} />
+        </Screen>
+      );
+    case 'route':
+      return <Redirect href={gate.href} />;
+  }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#121417',
-  },
-  title: { color: '#34D399', fontSize: 34, fontWeight: '700' },
-  body: { color: '#A3AAB5', marginTop: 12, textAlign: 'center', paddingHorizontal: 24 },
-});
