@@ -2,11 +2,12 @@ import { Redirect, router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { View } from 'react-native';
 
-import { Banner } from '@/components/feedback';
+import { Banner, LoadingState } from '@/components/feedback';
 import {
   Button,
   Card,
   NumberField,
+  Screen,
   SectionHeader,
   SegmentedControl,
   StatTile,
@@ -43,6 +44,9 @@ export default function PlanStep() {
   const complete = useCompleteOnboarding();
   const [editMode, setEditMode] = useState<'none' | 'calories' | 'macros'>('none');
   const [error, setError] = useState<string | null>(null);
+  // Set once the server has saved the plan, so clearing the draft can't trigger the
+  // "missing answers" redirect below before navigation to Home completes.
+  const [saved, setSaved] = useState(false);
 
   const { personal, goals, activity, equipment, schedule, nutrition, health, consent } = draft;
   const ready =
@@ -71,6 +75,14 @@ export default function PlanStep() {
     });
     return { plan, pattern };
   }, [ready, personal, goals, activity, schedule, health, asOf]);
+
+  if (saved) {
+    return (
+      <Screen>
+        <LoadingState label="Opening your plan" />
+      </Screen>
+    );
+  }
 
   if (!ready || !computed) {
     const missing = (
@@ -130,6 +142,7 @@ export default function PlanStep() {
       });
       complete.mutate(payload, {
         onSuccess: () => {
+          setSaved(true);
           useOnboardingDraft.setState({ ...emptyDraft, userId: draft.userId });
           router.replace('/');
         },
@@ -205,7 +218,7 @@ export default function PlanStep() {
       <SegmentedControl
         accessibilityLabel="Edit targets"
         options={[
-          { value: 'none', label: 'Use suggested' },
+          { value: 'none', label: 'Suggested' },
           { value: 'calories', label: 'Edit calories' },
           { value: 'macros', label: 'Edit macros' },
         ]}

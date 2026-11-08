@@ -1,0 +1,47 @@
+# Maestro flow for a real device / simulator with a development build connected to a
+# Supabase project. Uses a fresh account each run (email confirmation must be completed
+# manually or disabled in a test project).
+#   maestro test tests/e2e/maestro/onboarding.yaml -e EMAIL=you+1@example.com -e PASSWORD=abcd1234
+appId: app.pace.fitness.development
+---
+- launchApp:
+    clearState: true
+- tapOn: 'I already have an account'
+- tapOn: 'Email'
+- inputText: ${EMAIL}
+- tapOn: 'Password'
+- inputText: ${PASSWORD}
+- tapOn: 'Sign in'
+- assertVisible: 'About you'
+- tapOn: 'Name'
+- inputText: 'Dev'
+- tapOn: 'Day'
+- inputText: '1'
+- tapOn: 'Month'
+- inputText: '5'
+- tapOn: 'Year'
+- inputText: '2003'
+- tapOn: 'Male'
+- tapOn: 'Height'
+- inputText: '187'
+- tapOn: 'Current weight'
+- inputText: '108'
+- tapOn: 'Continue'
+- tapOn: 'Lose weight.*'
+- tapOn: 'Target weight'
+- inputText: '90'
+- tapOn: 'Continue'
+- tapOn: 'Moderately active.*'
+- tapOn: 'Continue'
+- tapOn: 'Dumbbells'
+- tapOn: 'Continue'
+- tapOn: 'Continue'
+- tapOn: 'Continue'
+- tapOn: 'Skip for now'
+- tapOn: 'I accept the terms of use'
+- tapOn: 'I accept the privacy policy'
+- tapOn: 'Continue'
+- assertVisible: 'Your starting plan'
+- assertVisible: '2720'
+- tapOn: 'Save and start'
+- assertVisible: 'Today'

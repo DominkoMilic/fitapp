@@ -14,12 +14,21 @@ module.exports = defineConfig([
       'docs/*',
       'coverage/*',
       '.expo/*',
+      '.e2e/**',
     ],
   },
   {
     rules: {
       'no-console': ['warn', { allow: ['warn', 'error'] }],
     },
+  },
+  {
+    // Node scripts (E2E runners): Node globals and console output are expected.
+    files: ['tests/e2e/**/*.js', 'scripts/**/*.js'],
+    languageOptions: {
+      globals: { Buffer: 'readonly', process: 'readonly', require: 'readonly', __dirname: 'readonly' },
+    },
+    rules: { 'no-console': 'off' },
   },
   {
     files: ['**/*.ts', '**/*.tsx'],

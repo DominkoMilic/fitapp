@@ -5,3 +5,4 @@ docs
 supabase/.temp
 *.pdf
 package-lock.json
+.e2e

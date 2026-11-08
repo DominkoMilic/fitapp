@@ -46,13 +46,16 @@ export function ChipGroup<T extends string>({
   options,
   selected,
   onToggle,
+  accessibilityLabel,
 }: {
   options: readonly { value: T; label: string }[];
   selected: readonly T[];
   onToggle: (value: T) => void;
+  /** Names the group for screen readers (needed when two groups share option labels). */
+  accessibilityLabel?: string;
 }) {
   return (
-    <View style={styles.group}>
+    <View style={styles.group} role="group" aria-label={accessibilityLabel}>
       {options.map((o) => (
         <Chip
           key={o.value}

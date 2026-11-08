@@ -31,7 +31,11 @@ export function OnboardingStep({
   const index = stepIndex(step);
   const prev = previousStep(step);
 
-  useEffect(() => setLastStep(step), [setLastStep, step]);
+  useEffect(() => {
+    // Braces matter: the persisted store's setter returns a Promise, which must not
+    // be returned from the effect (React would call it as a cleanup function).
+    setLastStep(step);
+  }, [setLastStep, step]);
 
   return (
     <Screen

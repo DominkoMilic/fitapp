@@ -15,7 +15,10 @@ export function useCompleteOnboarding() {
       });
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: profileKeys.all }),
+    // refetchType 'all': the profile query is inactive during onboarding, and the gate must
+    // see the onboarded profile before it renders, or it routes back into onboarding.
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: profileKeys.all, refetchType: 'all' }),
   });
 }
 

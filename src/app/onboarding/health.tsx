@@ -120,6 +120,7 @@ export default function HealthStep() {
                 Where?
               </Text>
               <ChipGroup
+                accessibilityLabel="Body area"
                 options={BODY_AREAS.map((a) => ({
                   value: a,
                   label: BODY_AREA_LABELS[a as BodyArea],
@@ -156,6 +157,7 @@ export default function HealthStep() {
                 Pain right now (0 = none, 10 = worst)
               </Text>
               <ChipGroup
+                accessibilityLabel="Pain level"
                 options={Array.from({ length: 11 }, (_, n) => ({
                   value: String(n),
                   label: String(n),

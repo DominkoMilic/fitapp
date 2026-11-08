@@ -58,7 +58,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "jest",
@@ -69,7 +69,8 @@
     "db:test": "supabase test db",
     "db:types": "supabase gen types --schema public > src/integrations/supabase/database.types.ts && prettier --write src/integrations/supabase/database.types.ts",
     "db:verify": "bash scripts/verify-migrations.sh",
-    "check": "npm run typecheck && npm run lint && npm run test -- --ci"
+    "check": "npm run typecheck && npm run lint && npm run test -- --ci",
+    "e2e:web": "bash scripts/e2e-web.sh"
   },
   "private": true,
   "jest": {

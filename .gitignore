@@ -28,3 +28,4 @@ coverage/
 npm-debug.*
 supabase/.branches
 supabase/.temp
+.e2e/

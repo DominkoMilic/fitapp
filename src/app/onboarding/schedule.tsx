@@ -107,6 +107,7 @@ export default function ScheduleStep() {
         name="preferredDays"
         render={({ field }) => (
           <ChipGroup
+            accessibilityLabel="Preferred training days"
             options={WEEKDAYS}
             selected={field.value.map(String) as (typeof WEEKDAYS)[number]['value'][]}
             onToggle={(v) => {
@@ -190,6 +191,7 @@ export default function ScheduleStep() {
             onChangeText={(title) => setEditing({ ...editing, title })}
           />
           <ChipGroup
+            accessibilityLabel="Type"
             options={CATEGORY_OPTIONS}
             selected={[editing.category]}
             onToggle={(category) =>
@@ -201,6 +203,7 @@ export default function ScheduleStep() {
             }
           />
           <ChipGroup
+            accessibilityLabel="Day of the week"
             options={WEEKDAYS}
             selected={[String(editing.weekday) as (typeof WEEKDAYS)[number]['value']]}
             onToggle={(v) => setEditing({ ...editing, weekday: Number(v) })}

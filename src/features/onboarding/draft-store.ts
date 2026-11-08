@@ -68,9 +68,15 @@ export const useOnboardingDraft = create<OnboardingDraft & DraftActions>()(
       bindUser: (userId) => {
         if (get().userId !== userId) set({ ...emptyDraft, userId });
       },
-      save: (key, value) => set({ [key]: value } as Partial<OnboardingDraft>),
-      setLastStep: (lastStep) => set({ lastStep }),
-      reset: () => set({ ...emptyDraft }),
+      save: (key, value) => {
+        set({ [key]: value } as Partial<OnboardingDraft>);
+      },
+      setLastStep: (lastStep) => {
+        set({ lastStep });
+      },
+      reset: () => {
+        set({ ...emptyDraft });
+      },
     }),
     {
       name: 'pace.onboarding-draft',
