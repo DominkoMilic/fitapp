@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Render docs/PACE_SPEC.md to docs/PACE_Specification.pdf.
+"""Render docs/PACE_SPEC.md to PACE_Specification.pdf (repo root).
 
 Supports the Markdown subset used by the spec: headings (#..####), paragraphs,
 bullet and numbered lists, pipe tables, fenced code blocks, horizontal rules,
 **bold** and `inline code`.
 
+Output: PACE_Specification.pdf at the repository root.
 Usage: python3 docs/tools/build_pdf.py
 """
 import re
@@ -27,7 +28,7 @@ from reportlab.platypus.tableofcontents import TableOfContents
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "PACE_SPEC.md"
-OUT = ROOT / "PACE_Specification.pdf"
+OUT = ROOT.parent / "PACE_Specification.pdf"
 
 FONT_DIR = Path("/usr/share/fonts/truetype/dejavu")
 pdfmetrics.registerFont(TTFont("Sans", str(FONT_DIR / "DejaVuSans.ttf")))
