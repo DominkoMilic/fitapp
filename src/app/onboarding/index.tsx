@@ -1,15 +1,9 @@
-import { Banner } from '@/components/feedback';
-import { Button, Screen, Text } from '@/components/ui';
-import { useAuth } from '@/features/auth/AuthProvider';
+import { Redirect } from 'expo-router';
 
-/** Replaced by the onboarding flow in feature/p1-onboarding. */
-export default function OnboardingStart() {
-  const { signOut } = useAuth();
-  return (
-    <Screen>
-      <Text variant="heading">Welcome to PACE</Text>
-      <Banner tone="info" message="Onboarding is not available in this build yet." />
-      <Button title="Sign out" variant="secondary" onPress={() => void signOut()} />
-    </Screen>
-  );
+import { useOnboardingDraft } from '@/features/onboarding/draft-store';
+
+/** Resumes onboarding at the last step the user reached (spec 28.2 #1). */
+export default function OnboardingIndex() {
+  const lastStep = useOnboardingDraft((s) => s.lastStep);
+  return <Redirect href={`/onboarding/${lastStep}`} />;
 }

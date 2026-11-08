@@ -52,5 +52,32 @@ for t in "$ROOT"/supabase/tests/database/*.test.sql; do
   if echo "$out" | grep -qE "^not ok|ERROR|Looks like"; then echo "$out" | grep -E "^not ok|#|ERROR" | head -40; fi
 done
 
+echo "→ Contract test: app-built onboarding payload → complete_onboarding()"
+if [ -f "$ROOT/node_modules/.bin/jest" ]; then
+  PACE_PAYLOAD_OUT="$WORK/payload.json" "$ROOT/node_modules/.bin/jest" --rootDir "$ROOT" \
+    "$ROOT/tests/integration/onboarding-contract.test.ts" >/dev/null 2>&1 || { echo "   could not build payload"; status=1; }
+  if [ -f "$WORK/payload.json" ]; then
+    result="$(psql -X -q -t -A -v ON_ERROR_STOP=1 -v payload="$(cat "$WORK/payload.json")" <<'SQL' 2>&1
+begin;
+insert into auth.users (id, email) values ('eeeeeeee-0000-0000-0000-000000000005', 'contract@example.com');
+select set_config('request.jwt.claims', '{"sub":"eeeeeeee-0000-0000-0000-000000000005","role":"authenticated"}', true);
+set local role authenticated;
+select public.complete_onboarding(:'payload'::jsonb);
+select concat_ws(',',
+  (select count(*) from public.profiles where onboarding_completed_at is not null),
+  (select kcal from public.nutrition_targets),
+  (select count(*) from public.recurring_events),
+  (select count(*) from public.health_conditions),
+  (select jsonb_array_length(weekly_pattern) from public.training_plans where status = 'active'));
+rollback;
+SQL
+)" || status=1
+    echo "   result: $(echo "$result" | tail -1) (expected 1,2720,2,1,7)"
+    if [ "$(echo "$result" | tail -1)" != "1,2720,2,1,7" ]; then echo "$result" | head -20; status=1; fi
+  fi
+else
+  echo "   skipped (run npm install first)"
+fi
+
 if [ "$status" -ne 0 ]; then echo "✗ verification failed"; exit 1; fi
 echo "✓ all migrations applied and all pgTAP tests passed"
