@@ -23,6 +23,11 @@ trap cleanup EXIT
 run_as_pg() { if [ "$(id -u)" = "0" ]; then su postgres -s /bin/bash -c "$*"; else bash -c "$*"; fi; }
 if [ "$(id -u)" = "0" ]; then chown postgres "$WORK"; fi
 
+if "$PG_BIN/pg_isready" -h localhost -p "$PORT" >/dev/null 2>&1; then
+  echo "✗ Port $PORT is already in use (a previous KEEP_DB=1 run?). Stop that server or set PORT=…" >&2
+  exit 1
+fi
+
 run_as_pg "'$PG_BIN/initdb' -D '$WORK/data' -U postgres -A trust >/dev/null"
 run_as_pg "'$PG_BIN/pg_ctl' -D '$WORK/data' -o '-p $PORT -k $WORK -c listen_addresses=localhost' -l '$WORK/log' -w start >/dev/null"
 
@@ -68,12 +73,13 @@ select concat_ws(',',
   (select kcal from public.nutrition_targets),
   (select count(*) from public.recurring_events),
   (select count(*) from public.health_conditions),
-  (select jsonb_array_length(weekly_pattern) from public.training_plans where status = 'active'));
+  (select jsonb_array_length(weekly_pattern) from public.training_plans where status = 'active'),
+  (select count(*) from public.weight_entries where source = 'onboarding'));
 rollback;
 SQL
 )" || status=1
-    echo "   result: $(echo "$result" | tail -1) (expected 1,2720,2,1,7)"
-    if [ "$(echo "$result" | tail -1)" != "1,2720,2,1,7" ]; then echo "$result" | head -20; status=1; fi
+    echo "   result: $(echo "$result" | tail -1) (expected 1,2720,2,1,7,1)"
+    if [ "$(echo "$result" | tail -1)" != "1,2720,2,1,7,1" ]; then echo "$result" | head -20; status=1; fi
   fi
 else
   echo "   skipped (run npm install first)"

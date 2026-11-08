@@ -3,6 +3,43 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      body_measurements: {
+        Row: {
+          client_updated_at: string | null;
+          created_at: string;
+          id: string;
+          local_date: string;
+          measured_at: string;
+          measurement_type: string;
+          updated_at: string;
+          user_id: string;
+          value_cm: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          client_updated_at?: string | null;
+          created_at?: string;
+          id?: string;
+          local_date: string;
+          measured_at: string;
+          measurement_type: string;
+          updated_at?: string;
+          user_id: string;
+          value_cm: number;
+        };
+        Update: {
+          client_updated_at?: string | null;
+          created_at?: string;
+          id?: string;
+          local_date?: string;
+          measured_at?: string;
+          measurement_type?: string;
+          updated_at?: string;
+          user_id?: string;
+          value_cm?: number;
+        };
+        Relationships: [];
+      };
       consents: {
         Row: {
           consent_type: string;
@@ -27,6 +64,49 @@ export type Database = {
           granted?: boolean;
           id?: string;
           recorded_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      daily_checkins: {
+        Row: {
+          client_updated_at: string | null;
+          created_at: string;
+          fatigue: number | null;
+          local_date: string;
+          note: string | null;
+          pain: number | null;
+          pain_area: string | null;
+          sleep_hours: number | null;
+          soreness: number | null;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          client_updated_at?: string | null;
+          created_at?: string;
+          fatigue?: number | null;
+          local_date: string;
+          note?: string | null;
+          pain?: number | null;
+          pain_area?: string | null;
+          sleep_hours?: number | null;
+          soreness?: number | null;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          client_updated_at?: string | null;
+          created_at?: string;
+          fatigue?: number | null;
+          local_date?: string;
+          note?: string | null;
+          pain?: number | null;
+          pain_area?: string | null;
+          sleep_hours?: number | null;
+          soreness?: number | null;
+          updated_at?: string;
           user_id?: string;
         };
         Relationships: [];
@@ -394,6 +474,46 @@ export type Database = {
         };
         Relationships: [];
       };
+      user_milestones: {
+        Row: {
+          created_at: string;
+          description: string | null;
+          id: string;
+          metadata: NonNullable<Json>;
+          milestone_key: string;
+          threshold: number | null;
+          title: string;
+          unlocked_at: string;
+          user_id: string;
+          value: number | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          metadata?: NonNullable<Json>;
+          milestone_key: string;
+          threshold?: number | null;
+          title: string;
+          unlocked_at?: string;
+          user_id: string;
+          value?: number | null;
+        };
+        Update: {
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          metadata?: NonNullable<Json>;
+          milestone_key?: string;
+          threshold?: number | null;
+          title?: string;
+          unlocked_at?: string;
+          user_id?: string;
+          value?: number | null;
+        };
+        Relationships: [];
+      };
       user_preferences: {
         Row: {
           allergies: string[];
@@ -455,6 +575,46 @@ export type Database = {
           training_environment?: string | null;
           updated_at?: string;
           user_id?: string;
+        };
+        Relationships: [];
+      };
+      weight_entries: {
+        Row: {
+          client_updated_at: string | null;
+          created_at: string;
+          id: string;
+          local_date: string;
+          measured_at: string;
+          note: string | null;
+          source: string;
+          updated_at: string;
+          user_id: string;
+          weight_kg: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          client_updated_at?: string | null;
+          created_at?: string;
+          id?: string;
+          local_date: string;
+          measured_at: string;
+          note?: string | null;
+          source?: string;
+          updated_at?: string;
+          user_id: string;
+          weight_kg: number;
+        };
+        Update: {
+          client_updated_at?: string | null;
+          created_at?: string;
+          id?: string;
+          local_date?: string;
+          measured_at?: string;
+          note?: string | null;
+          source?: string;
+          updated_at?: string;
+          user_id?: string;
+          weight_kg?: number;
         };
         Relationships: [];
       };
