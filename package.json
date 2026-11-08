@@ -79,11 +79,15 @@
       "<rootDir>/src/**/*.test.ts?(x)"
     ],
     "moduleNameMapper": {
-      "^@/(.*)$": "<rootDir>/src/$1"
+      "^@/(.*)$": "<rootDir>/src/$1",
+      "^lucide-react-native$": "<rootDir>/node_modules/lucide-react-native/dist/cjs/lucide-react-native.js"
     },
     "collectCoverageFrom": [
       "src/domain/**/*.ts",
       "!src/**/*.d.ts"
+    ],
+    "setupFiles": [
+      "<rootDir>/tests/setup/jest.setup.ts"
     ]
   },
   "engines": {
