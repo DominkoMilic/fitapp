@@ -49,6 +49,7 @@
     "jest": "^30.5.2",
     "jest-expo": "~58.0.14",
     "prettier": "^3.9.10",
+    "supabase": "^3.0.0",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -66,7 +67,7 @@
     "db:start": "supabase start",
     "db:reset": "supabase db reset",
     "db:test": "supabase test db",
-    "db:types": "supabase gen types typescript --local > src/integrations/supabase/database.types.ts",
+    "db:types": "supabase gen types --schema public > src/integrations/supabase/database.types.ts && prettier --write src/integrations/supabase/database.types.ts",
     "db:verify": "bash scripts/verify-migrations.sh",
     "check": "npm run typecheck && npm run lint && npm run test -- --ci"
   },
