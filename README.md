@@ -6,12 +6,12 @@ A mobile fitness coach, workout planner, nutrition tracker and activity tracker 
 
 ## Documents
 
-| File | What it is |
-|---|---|
-| [`PACE_Specification.pdf`](PACE_Specification.pdf) | Full specification as a PDF, for reading (60 pages, with clickable contents) |
-| [`docs/PACE_SPEC.md`](docs/PACE_SPEC.md) | The same specification in Markdown — the source of truth for the coding agent |
-| [`CLAUDE.md`](CLAUDE.md) | Working rules for the coding agent in this repository |
-| [`docs/tools/build_pdf.py`](docs/tools/build_pdf.py) | Regenerates the PDF from the Markdown |
+| File                                                 | What it is                                                                    |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------- |
+| [`PACE_Specification.pdf`](PACE_Specification.pdf)   | Full specification as a PDF, for reading (60 pages, with clickable contents)  |
+| [`docs/PACE_SPEC.md`](docs/PACE_SPEC.md)             | The same specification in Markdown — the source of truth for the coding agent |
+| [`CLAUDE.md`](CLAUDE.md)                             | Working rules for the coding agent in this repository                         |
+| [`docs/tools/build_pdf.py`](docs/tools/build_pdf.py) | Regenerates the PDF from the Markdown                                         |
 
 ## Specification at a glance
 

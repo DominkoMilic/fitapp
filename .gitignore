@@ -1,0 +1,30 @@
+# dependencies
+node_modules/
+
+# Expo / native
+.expo/
+dist/
+web-build/
+ios/
+android/
+expo-env.d.ts
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# env
+.env
+.env.*
+!.env.example
+
+# testing
+coverage/
+
+# misc
+.DS_Store
+*.log
+npm-debug.*
+supabase/.branches
+supabase/.temp
