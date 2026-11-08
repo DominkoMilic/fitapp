@@ -7,6 +7,7 @@ import {
   generateWeeklyPattern,
 } from '@/domain/training/weekly-pattern';
 import { useAuth } from '@/features/auth/AuthProvider';
+import { clearFutureGenerated, ensureSchedule } from '@/features/training/schedule-sync';
 import { requireSupabase } from '@/integrations/supabase/client';
 import type { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/database.types';
 
@@ -309,6 +310,10 @@ export async function regenerateWeeklyPattern(userId: string): Promise<void> {
       })
       .eq('id', activePlan.id),
   );
+  // Rebuild future, untouched calendar entries from the new pattern (spec 10.2).
+  const today = new Date().toISOString().slice(0, 10);
+  await clearFutureGenerated(userId, today, { planId: activePlan.id });
+  await ensureSchedule(userId, today);
 }
 
 // ------------------------------------------------------------------ goals
