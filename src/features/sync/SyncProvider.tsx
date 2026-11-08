@@ -1,6 +1,14 @@
 import NetInfo from '@react-native-community/netinfo';
 import { useQueryClient } from '@tanstack/react-query';
-import { createContext, type PropsWithChildren, useContext, useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
+import {
+  createContext,
+  type PropsWithChildren,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
+} from 'react';
 import { AppState } from 'react-native';
 
 import { type NewOp, type OutboxOp, queueSummary, type SyncEntity } from '@/domain/sync/outbox';
@@ -35,7 +43,8 @@ export function SyncProvider({ children }: PropsWithChildren) {
         return !error;
       },
       onSynced: (entities) => {
-        for (const e of entities) void queryClient.invalidateQueries({ queryKey: syncKeys.entity(userId, e) });
+        for (const e of entities)
+          void queryClient.invalidateQueries({ queryKey: syncKeys.entity(userId, e) });
       },
     });
   }, [userId, queryClient]);
@@ -68,7 +77,11 @@ const noop = () => () => undefined;
 /** The current user's outbox queue (re-renders on change). */
 export function useOutbox(): readonly OutboxOp[] {
   const engine = useContext(SyncContext);
-  return useSyncExternalStore(engine?.subscribe ?? noop, engine?.getSnapshot ?? (() => EMPTY), () => EMPTY);
+  return useSyncExternalStore(
+    engine?.subscribe ?? noop,
+    engine?.getSnapshot ?? (() => EMPTY),
+    () => EMPTY,
+  );
 }
 
 export function useSyncStatus() {

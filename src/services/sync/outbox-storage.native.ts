@@ -26,7 +26,9 @@ function db(): Promise<SQLiteDatabase> {
 /** SQLite outbox (iOS/Android): survives app kills and restarts. */
 export const outboxStorage: OutboxStorage = {
   async load(userId) {
-    const rows = await (await db()).getAllAsync<{ op: string }>(
+    const rows = await (
+      await db()
+    ).getAllAsync<{ op: string }>(
       'SELECT op FROM outbox WHERE user_id = ? ORDER BY position',
       userId,
     );
@@ -38,7 +40,13 @@ export const outboxStorage: OutboxStorage = {
       await d.runAsync('DELETE FROM outbox WHERE user_id = ?', userId);
       let position = 0;
       for (const op of ops) {
-        await d.runAsync('INSERT INTO outbox (id, user_id, position, op) VALUES (?, ?, ?, ?)', op.id, userId, position++, JSON.stringify(op));
+        await d.runAsync(
+          'INSERT INTO outbox (id, user_id, position, op) VALUES (?, ?, ?, ?)',
+          op.id,
+          userId,
+          position++,
+          JSON.stringify(op),
+        );
       }
     });
   },

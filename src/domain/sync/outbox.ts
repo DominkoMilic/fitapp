@@ -7,7 +7,8 @@
  *   (only if the record was created offline); delete+upsert → upsert.
  * - Failed ops are kept (status 'failed') and shown to the user; never dropped silently.
  */
-export type SyncEntity = 'weight_entries' | 'body_measurements' | 'daily_checkins' | 'user_milestones';
+export type SyncEntity =
+  'weight_entries' | 'body_measurements' | 'daily_checkins' | 'user_milestones';
 
 /** Parents sync before children (none yet in Phase 2; kept for meal_logs → items later). */
 export const ENTITY_ORDER: Record<SyncEntity, number> = {
@@ -39,10 +40,15 @@ export interface OutboxOp {
   lastError: string | null;
 }
 
-export type NewOp = Pick<OutboxOp, 'id' | 'userId' | 'entity' | 'recordKey' | 'kind' | 'payload' | 'createdOffline'>;
+export type NewOp = Pick<
+  OutboxOp,
+  'id' | 'userId' | 'entity' | 'recordKey' | 'kind' | 'payload' | 'createdOffline'
+>;
 
-const same = (a: { entity: SyncEntity; recordKey: string }, b: { entity: SyncEntity; recordKey: string }) =>
-  a.entity === b.entity && a.recordKey === b.recordKey;
+const same = (
+  a: { entity: SyncEntity; recordKey: string },
+  b: { entity: SyncEntity; recordKey: string },
+) => a.entity === b.entity && a.recordKey === b.recordKey;
 
 /** Adds an op, collapsing it with any queued op for the same record. */
 export function enqueue(queue: readonly OutboxOp[], op: NewOp, now: string): OutboxOp[] {
@@ -76,7 +82,10 @@ export function enqueue(queue: readonly OutboxOp[], op: NewOp, now: string): Out
 export function readyOps(queue: readonly OutboxOp[], now: string): OutboxOp[] {
   return queue
     .filter((q) => q.status === 'pending' && q.nextAttemptAt <= now)
-    .sort((a, b) => ENTITY_ORDER[a.entity] - ENTITY_ORDER[b.entity] || a.createdAt.localeCompare(b.createdAt));
+    .sort(
+      (a, b) =>
+        ENTITY_ORDER[a.entity] - ENTITY_ORDER[b.entity] || a.createdAt.localeCompare(b.createdAt),
+    );
 }
 
 /** Exponential backoff: 2 s, 4 s, 8 s … capped at 5 minutes. */
@@ -97,7 +106,12 @@ export interface TransportErrorLike {
 export function classifyError(error: TransportErrorLike): ErrorClass {
   const message = (error.message ?? '').toLowerCase();
   const status = error.status ?? null;
-  if (status === 401 || error.code === 'PGRST301' || error.code === 'PGRST303' || message.includes('jwt expired')) {
+  if (
+    status === 401 ||
+    error.code === 'PGRST301' ||
+    error.code === 'PGRST303' ||
+    message.includes('jwt expired')
+  ) {
     return 'auth';
   }
   if (status === null || status === 0) return 'network';
@@ -132,7 +146,9 @@ export function markFailed(
 
 /** User chose "Retry" on a failed op. */
 export function retryOp(queue: readonly OutboxOp[], opId: string, now: string): OutboxOp[] {
-  return queue.map((q) => (q.id === opId ? { ...q, status: 'pending', nextAttemptAt: now, lastError: null } : q));
+  return queue.map((q) =>
+    q.id === opId ? { ...q, status: 'pending', nextAttemptAt: now, lastError: null } : q,
+  );
 }
 
 /** User chose "Discard" on a failed op (explicit, never automatic). */

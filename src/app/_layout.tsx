@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ConfigErrorScreen } from '@/components/feedback/ConfigErrorScreen';
+import { ToastHost } from '@/components/feedback/Toast';
 import { envResult } from '@/config/env';
 import { AuthProvider, useAuth } from '@/features/auth/AuthProvider';
 import { SyncProvider } from '@/features/sync/SyncProvider';
@@ -29,6 +30,7 @@ function RootStack() {
       <Stack
         screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}
       />
+      <ToastHost />
     </>
   );
 }

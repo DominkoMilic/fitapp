@@ -1,65 +1,88 @@
-import { ChartLine } from 'lucide-react-native';
+import { router } from 'expo-router';
+import { useCallback } from 'react';
+import { StyleSheet, View } from 'react-native';
 
-import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
-import { Card, Screen, SectionHeader, Text } from '@/components/ui';
-import { formatWeight, type UnitSystem } from '@/domain/calculations/units';
-import { weightMilestones } from '@/domain/milestones/weight-milestones';
-import { useActiveGoal, useProfile } from '@/features/profile/api';
-import { useTheme } from '@/theme';
+import { WeightChart } from '@/components/charts/WeightChart';
+import { ErrorState, LoadingState } from '@/components/feedback';
+import { Button, Card, ListItem, Screen, SectionHeader, StatTile, Text } from '@/components/ui';
+import { kgToLb, type UnitSystem } from '@/domain/calculations/units';
+import { useProfile } from '@/features/profile/api';
+import { useWeightStats } from '@/features/weight/useWeightStats';
+import { spacing } from '@/theme';
 
 export default function Progress() {
-  const { colors } = useTheme();
-  const goal = useActiveGoal();
-  const profile = useProfile();
-  if (goal.isPending) {
+  const s = useWeightStats('30D');
+  const { data: profile } = useProfile();
+  const unit = (profile?.unit_system ?? 'metric') as UnitSystem;
+  const toDisplay = useCallback((kg: number) => (unit === 'metric' ? kg : kgToLb(kg)), [unit]);
+  const u = unit === 'metric' ? 'kg' : 'lb';
+  const fmt = (kg: number | null, signed = false) =>
+    kg === null ? '—' : `${signed && kg > 0 ? '+' : ''}${toDisplay(kg).toFixed(1)}`;
+
+  if (s.weights.isPending || s.goal.isPending)
     return (
       <Screen edges={['top']}>
         <LoadingState />
       </Screen>
     );
-  }
-  if (goal.isError) {
+  if (s.weights.isError && s.weights.entries.length === 0) {
     return (
       <Screen edges={['top']}>
-        <ErrorState message="We couldn't load your goal." onRetry={() => void goal.refetch()} />
+        <ErrorState
+          message="We couldn't load your progress."
+          onRetry={() => void s.weights.refetch()}
+        />
       </Screen>
     );
   }
-  const unit = (profile.data?.unit_system ?? 'metric') as UnitSystem;
-  const g = goal.data;
-  const milestones =
-    g && g.goal_type === 'lose_weight' && g.target_weight_kg !== null
-      ? weightMilestones({
-          startKg: Number(g.starting_weight_kg),
-          targetKg: Number(g.target_weight_kg),
-          secondaryTargetKg:
-            g.secondary_target_weight_kg === null ? null : Number(g.secondary_target_weight_kg),
-        })
-      : [];
+
   return (
     <Screen edges={['top']}>
       <Text variant="heading" accessibilityRole="header">
         Progress
       </Text>
-      <EmptyState
-        icon={<ChartLine size={36} color={colors.textSecondary} />}
-        title="Weight tracking is next"
-        message={`Daily weigh-ins, the 7-day trend chart and measurements arrive in the next update. You started at ${
-          g ? formatWeight(Number(g.starting_weight_kg), unit) : '—'
-        }.`}
+      <Card
+        onPress={() => router.push('/progress/weight')}
+        accessibilityLabel="Open weight details"
+      >
+        <View style={styles.row}>
+          <StatTile
+            label={s.current?.basis === 'average' ? '7-day average' : 'Latest weight'}
+            value={fmt(s.current?.kg ?? null)}
+            unit={u}
+          />
+          <StatTile
+            label="Last 30 days"
+            value={fmt(s.change30, true)}
+            unit={u}
+            caption={s.change30 === null ? 'Not enough data' : undefined}
+          />
+        </View>
+        {s.inRange.length > 1 ? (
+          <WeightChart
+            daily={s.inRange}
+            allDaily={s.daily}
+            references={
+              s.targetKg !== null ? [{ kind: 'target', kg: s.targetKg, label: 'Target' }] : []
+            }
+            toDisplay={toDisplay}
+            unitLabel={u}
+            summary={`Weight over the last 30 days. Current ${fmt(s.current?.kg ?? null)} ${u}.`}
+          />
+        ) : (
+          <Text variant="small" color="textSecondary">
+            Log a few morning weigh-ins to see your trend.
+          </Text>
+        )}
+      </Card>
+      <Button title="Log weight" onPress={() => router.push('/weight/log')} />
+      <SectionHeader title="More" />
+      <ListItem
+        title="Weight details and history"
+        onPress={() => router.push('/progress/weight')}
       />
-      {milestones.length ? (
-        <>
-          <SectionHeader title="Milestones ahead" />
-          <Card>
-            {milestones.map((m) => (
-              <Text key={m.key} variant="small">
-                ○ {m.title}
-              </Text>
-            ))}
-          </Card>
-        </>
-      ) : null}
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({ row: { flexDirection: 'row', gap: spacing.xs } });

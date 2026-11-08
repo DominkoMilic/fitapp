@@ -15,8 +15,15 @@ const byId = (op: OutboxOp) => ({ id: op.recordKey, user_id: op.userId });
 export const ENTITY_CONFIG: Record<SyncEntity, EntityConfig> = {
   weight_entries: { onConflict: 'id', deleteMatch: byId },
   body_measurements: { onConflict: 'id', deleteMatch: byId },
-  daily_checkins: { onConflict: 'user_id,local_date', deleteMatch: (op) => ({ user_id: op.userId, local_date: op.recordKey }) },
-  user_milestones: { onConflict: 'user_id,milestone_key', ignoreDuplicates: true, deleteMatch: byId },
+  daily_checkins: {
+    onConflict: 'user_id,local_date',
+    deleteMatch: (op) => ({ user_id: op.userId, local_date: op.recordKey }),
+  },
+  user_milestones: {
+    onConflict: 'user_id,milestone_key',
+    ignoreDuplicates: true,
+    deleteMatch: byId,
+  },
 };
 
 /** Sends one outbox op to Supabase. Payloads are built by typed repositories. */

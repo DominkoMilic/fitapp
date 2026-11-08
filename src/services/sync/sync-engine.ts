@@ -83,7 +83,11 @@ export class SyncEngine {
   }
 
   enqueue(op: Omit<NewOp, 'userId'>): Promise<void> {
-    return this.serial(() => this.commit(enqueue(this.queue, { ...op, userId: this.opts.userId }, this.now().toISOString())));
+    return this.serial(() =>
+      this.commit(
+        enqueue(this.queue, { ...op, userId: this.opts.userId }, this.now().toISOString()),
+      ),
+    );
   }
 
   retry(opId: string): Promise<void> {
@@ -111,7 +115,9 @@ export class SyncEngine {
           try {
             result = await this.opts.transport(op);
           } catch (e) {
-            result = { error: { message: e instanceof Error ? e.message : String(e), status: null } };
+            result = {
+              error: { message: e instanceof Error ? e.message : String(e), status: null },
+            };
           }
           if (!result.error) {
             await this.serial(() => this.commit(markSucceeded(this.queue, op.id)));
@@ -124,7 +130,11 @@ export class SyncEngine {
             if (await this.opts.refreshAuth()) continue; // retry the same op once
           }
           const message = result.error.message ?? 'Unknown error';
-          await this.serial(() => this.commit(markFailed(this.queue, op.id, cls === 'auth' ? 'network' : cls, message, this.now())));
+          await this.serial(() =>
+            this.commit(
+              markFailed(this.queue, op.id, cls === 'auth' ? 'network' : cls, message, this.now()),
+            ),
+          );
           if (cls !== 'permanent') break;
         }
       } finally {
