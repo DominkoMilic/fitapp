@@ -111,6 +111,158 @@ export type Database = {
         };
         Relationships: [];
       };
+      exercise_sets: {
+        Row: {
+          client_updated_at: string | null;
+          completed: boolean;
+          created_at: string;
+          duration_seconds: number | null;
+          exercise_id: string | null;
+          exercise_name: string;
+          exercise_slug: string | null;
+          id: string;
+          pain_flag: boolean;
+          repetitions: number | null;
+          set_number: number;
+          skipped: boolean;
+          user_id: string;
+          weight_kg: number | null;
+          workout_session_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          client_updated_at?: string | null;
+          completed?: boolean;
+          created_at?: string;
+          duration_seconds?: number | null;
+          exercise_id?: string | null;
+          exercise_name: string;
+          exercise_slug?: string | null;
+          id?: string;
+          pain_flag?: boolean;
+          repetitions?: number | null;
+          set_number: number;
+          skipped?: boolean;
+          user_id: string;
+          weight_kg?: number | null;
+          workout_session_id: string;
+        };
+        Update: {
+          client_updated_at?: string | null;
+          completed?: boolean;
+          created_at?: string;
+          duration_seconds?: number | null;
+          exercise_id?: string | null;
+          exercise_name?: string;
+          exercise_slug?: string | null;
+          id?: string;
+          pain_flag?: boolean;
+          repetitions?: number | null;
+          set_number?: number;
+          skipped?: boolean;
+          user_id?: string;
+          weight_kg?: number | null;
+          workout_session_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'exercise_sets_exercise_id_fkey';
+            columns: ['exercise_id'];
+            isOneToOne: false;
+            referencedRelation: 'exercises';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'exercise_sets_workout_session_id_fkey';
+            columns: ['workout_session_id'];
+            isOneToOne: false;
+            referencedRelation: 'workout_sessions';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      exercises: {
+        Row: {
+          archived_at: string | null;
+          category: string;
+          caution_notes: string | null;
+          client_updated_at: string | null;
+          contraindication_tags: string[];
+          created_at: string;
+          default_duration_s: number | null;
+          default_reps_max: number | null;
+          default_reps_min: number | null;
+          default_sets: number | null;
+          description: string | null;
+          difficulty: string;
+          equipment: string[];
+          id: string;
+          instructions: string[];
+          is_unilateral: boolean;
+          media_url: string | null;
+          met: number | null;
+          muscle_groups: string[];
+          name: string;
+          owner_id: string | null;
+          slug: string | null;
+          tracking_type: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          archived_at?: string | null;
+          category: string;
+          caution_notes?: string | null;
+          client_updated_at?: string | null;
+          contraindication_tags?: string[];
+          created_at?: string;
+          default_duration_s?: number | null;
+          default_reps_max?: number | null;
+          default_reps_min?: number | null;
+          default_sets?: number | null;
+          description?: string | null;
+          difficulty?: string;
+          equipment?: string[];
+          id?: string;
+          instructions?: string[];
+          is_unilateral?: boolean;
+          media_url?: string | null;
+          met?: number | null;
+          muscle_groups?: string[];
+          name: string;
+          owner_id?: string | null;
+          slug?: string | null;
+          tracking_type: string;
+          updated_at?: string;
+        };
+        Update: {
+          archived_at?: string | null;
+          category?: string;
+          caution_notes?: string | null;
+          client_updated_at?: string | null;
+          contraindication_tags?: string[];
+          created_at?: string;
+          default_duration_s?: number | null;
+          default_reps_max?: number | null;
+          default_reps_min?: number | null;
+          default_sets?: number | null;
+          description?: string | null;
+          difficulty?: string;
+          equipment?: string[];
+          id?: string;
+          instructions?: string[];
+          is_unilateral?: boolean;
+          media_url?: string | null;
+          met?: number | null;
+          muscle_groups?: string[];
+          name?: string;
+          owner_id?: string | null;
+          slug?: string | null;
+          tracking_type?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       health_conditions: {
         Row: {
           body_area: string | null;
@@ -341,6 +493,88 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: 'recurring_events_training_plan_id_fkey';
+            columns: ['training_plan_id'];
+            isOneToOne: false;
+            referencedRelation: 'training_plans';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      scheduled_workouts: {
+        Row: {
+          category: string;
+          client_updated_at: string | null;
+          created_at: string;
+          estimated_duration_minutes: number | null;
+          id: string;
+          intensity: string;
+          is_user_modified: boolean;
+          kind: string;
+          notes: string[];
+          occurrence_key: string | null;
+          recurring_event_id: string | null;
+          scheduled_date: string;
+          scheduled_time: string | null;
+          status: string;
+          template_slug: string | null;
+          title: string;
+          training_plan_id: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          category: string;
+          client_updated_at?: string | null;
+          created_at?: string;
+          estimated_duration_minutes?: number | null;
+          id?: string;
+          intensity: string;
+          is_user_modified?: boolean;
+          kind: string;
+          notes?: string[];
+          occurrence_key?: string | null;
+          recurring_event_id?: string | null;
+          scheduled_date: string;
+          scheduled_time?: string | null;
+          status?: string;
+          template_slug?: string | null;
+          title: string;
+          training_plan_id?: string | null;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          category?: string;
+          client_updated_at?: string | null;
+          created_at?: string;
+          estimated_duration_minutes?: number | null;
+          id?: string;
+          intensity?: string;
+          is_user_modified?: boolean;
+          kind?: string;
+          notes?: string[];
+          occurrence_key?: string | null;
+          recurring_event_id?: string | null;
+          scheduled_date?: string;
+          scheduled_time?: string | null;
+          status?: string;
+          template_slug?: string | null;
+          title?: string;
+          training_plan_id?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'scheduled_workouts_recurring_event_id_fkey';
+            columns: ['recurring_event_id'];
+            isOneToOne: false;
+            referencedRelation: 'recurring_events';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'scheduled_workouts_training_plan_id_fkey';
             columns: ['training_plan_id'];
             isOneToOne: false;
             referencedRelation: 'training_plans';
@@ -615,6 +849,192 @@ export type Database = {
           updated_at?: string;
           user_id?: string;
           weight_kg?: number;
+        };
+        Relationships: [];
+      };
+      workout_sessions: {
+        Row: {
+          calories_estimated: number | null;
+          category: string;
+          client_updated_at: string | null;
+          completion_status: string;
+          created_at: string;
+          duration_seconds: number;
+          ended_at: string;
+          feeling: number | null;
+          id: string;
+          local_date: string;
+          notes: string | null;
+          paused_seconds: number;
+          perceived_exertion: number | null;
+          scheduled_workout_id: string | null;
+          source: string;
+          started_at: string;
+          template_slug: string | null;
+          title: string;
+          total_volume_kg: number | null;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          calories_estimated?: number | null;
+          category: string;
+          client_updated_at?: string | null;
+          completion_status: string;
+          created_at?: string;
+          duration_seconds: number;
+          ended_at: string;
+          feeling?: number | null;
+          id?: string;
+          local_date: string;
+          notes?: string | null;
+          paused_seconds?: number;
+          perceived_exertion?: number | null;
+          scheduled_workout_id?: string | null;
+          source?: string;
+          started_at: string;
+          template_slug?: string | null;
+          title: string;
+          total_volume_kg?: number | null;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          calories_estimated?: number | null;
+          category?: string;
+          client_updated_at?: string | null;
+          completion_status?: string;
+          created_at?: string;
+          duration_seconds?: number;
+          ended_at?: string;
+          feeling?: number | null;
+          id?: string;
+          local_date?: string;
+          notes?: string | null;
+          paused_seconds?: number;
+          perceived_exertion?: number | null;
+          scheduled_workout_id?: string | null;
+          source?: string;
+          started_at?: string;
+          template_slug?: string | null;
+          title?: string;
+          total_volume_kg?: number | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'workout_sessions_scheduled_workout_id_fkey';
+            columns: ['scheduled_workout_id'];
+            isOneToOne: false;
+            referencedRelation: 'scheduled_workouts';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      workout_template_exercises: {
+        Row: {
+          alternative_exercise_id: string | null;
+          duration_s: number | null;
+          exercise_id: string;
+          id: string;
+          order_index: number;
+          phase: string;
+          reps_max: number | null;
+          reps_min: number | null;
+          rest_s: number;
+          sets: number;
+          template_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          alternative_exercise_id?: string | null;
+          duration_s?: number | null;
+          exercise_id: string;
+          id: string;
+          order_index: number;
+          phase: string;
+          reps_max?: number | null;
+          reps_min?: number | null;
+          rest_s?: number;
+          sets: number;
+          template_id: string;
+        };
+        Update: {
+          alternative_exercise_id?: string | null;
+          duration_s?: number | null;
+          exercise_id?: string;
+          id?: string;
+          order_index?: number;
+          phase?: string;
+          reps_max?: number | null;
+          reps_min?: number | null;
+          rest_s?: number;
+          sets?: number;
+          template_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'workout_template_exercises_alternative_exercise_id_fkey';
+            columns: ['alternative_exercise_id'];
+            isOneToOne: false;
+            referencedRelation: 'exercises';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'workout_template_exercises_exercise_id_fkey';
+            columns: ['exercise_id'];
+            isOneToOne: false;
+            referencedRelation: 'exercises';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'workout_template_exercises_template_id_fkey';
+            columns: ['template_id'];
+            isOneToOne: false;
+            referencedRelation: 'workout_templates';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      workout_templates: {
+        Row: {
+          category: string;
+          created_at: string;
+          description: string | null;
+          estimated_minutes: number;
+          id: string;
+          intensity: string;
+          name: string;
+          short_version_slug: string | null;
+          slug: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          category: string;
+          created_at?: string;
+          description?: string | null;
+          estimated_minutes: number;
+          id: string;
+          intensity: string;
+          name: string;
+          short_version_slug?: string | null;
+          slug: string;
+          updated_at?: string;
+        };
+        Update: {
+          category?: string;
+          created_at?: string;
+          description?: string | null;
+          estimated_minutes?: number;
+          id?: string;
+          intensity?: string;
+          name?: string;
+          short_version_slug?: string | null;
+          slug?: string;
+          updated_at?: string;
         };
         Relationships: [];
       };

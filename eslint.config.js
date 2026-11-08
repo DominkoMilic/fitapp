@@ -24,7 +24,7 @@ module.exports = defineConfig([
   },
   {
     // Node scripts (E2E runners): Node globals and console output are expected.
-    files: ['tests/e2e/**/*.js', 'scripts/**/*.js'],
+    files: ['tests/e2e/**/*.js', 'scripts/**/*.js', 'scripts/**/*.mjs'],
     languageOptions: {
       globals: { Buffer: 'readonly', process: 'readonly', require: 'readonly', __dirname: 'readonly' },
     },

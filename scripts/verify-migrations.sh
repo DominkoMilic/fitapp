@@ -15,13 +15,12 @@ export PGHOST="$WORK" PGPORT="$PORT" PGUSER=postgres PGDATABASE=postgres
 
 cleanup() {
   if [ "${KEEP_DB:-0}" = "1" ]; then echo "DB kept running: postgresql://postgres@localhost:$PORT/postgres?host=$WORK"; return; fi
-  "$PG_BIN/pg_ctl" -D "$WORK/data" -m immediate stop >/dev/null 2>&1 || true
+  run_as_pg "'$PG_BIN/pg_ctl' -D '$WORK/data' -m immediate stop" >/dev/null 2>&1 || true
   rm -rf "$WORK"
 }
-trap cleanup EXIT
-
 run_as_pg() { if [ "$(id -u)" = "0" ]; then su postgres -s /bin/bash -c "$*"; else bash -c "$*"; fi; }
 if [ "$(id -u)" = "0" ]; then chown postgres "$WORK"; fi
+trap cleanup EXIT
 
 if "$PG_BIN/pg_isready" -h localhost -p "$PORT" >/dev/null 2>&1; then
   echo "✗ Port $PORT is already in use (a previous KEEP_DB=1 run?). Stop that server or set PORT=…" >&2
