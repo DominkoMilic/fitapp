@@ -85,6 +85,8 @@ export default function Progress() {
       />
       <ListItem title="Body measurements" onPress={() => router.push('/progress/measurements')} />
       <ListItem title="Milestones" onPress={() => router.push('/progress/milestones')} />
+      <ListItem title="Weekly report" onPress={() => router.push('/reports')} />
+      <ListItem title="2-week target review" onPress={() => router.push('/coach/review')} />
       <ListItem
         title="Daily check-in"
         subtitle="Sleep, tiredness, soreness, pain"
