@@ -13,6 +13,7 @@ const TITLES: Record<string, string> = {
   nutrition: 'Nutrition',
   equipment: 'Equipment',
   appearance: 'Appearance',
+  notifications: 'Reminders',
 };
 
 export default function SettingsLayout() {

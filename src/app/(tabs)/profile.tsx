@@ -50,6 +50,7 @@ export default function ProfileTab() {
       />
       <ListItem title="Equipment" onPress={() => router.push('/settings/equipment')} />
       <ListItem title="Appearance" onPress={() => router.push('/settings/appearance')} />
+      <ListItem title="Reminders" onPress={() => router.push('/settings/notifications')} />
 
       <ListItem
         title="Sync status"

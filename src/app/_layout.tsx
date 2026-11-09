@@ -10,12 +10,18 @@ import { ConfigErrorScreen } from '@/components/feedback/ConfigErrorScreen';
 import { ToastHost } from '@/components/feedback/Toast';
 import { envResult } from '@/config/env';
 import { AuthProvider, useAuth } from '@/features/auth/AuthProvider';
+import { useRestTimerNotification } from '@/features/notifications/useRestTimerNotification';
 import { SyncProvider } from '@/features/sync/SyncProvider';
 import '@/services/location/location-task';
 import { createQueryClient } from '@/services/query-client';
 import { ThemeProvider, useTheme } from '@/theme';
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
+
+function RestTimerNotification() {
+  useRestTimerNotification();
+  return null;
+}
 
 function RootStack() {
   const { colors, scheme } = useTheme();
@@ -32,6 +38,7 @@ function RootStack() {
         screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}
       />
       <ToastHost />
+      <RestTimerNotification />
     </>
   );
 }

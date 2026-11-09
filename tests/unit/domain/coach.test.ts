@@ -1,3 +1,4 @@
+import { isAllowedTime, readPrefs } from '@/features/notifications/prefs';
 import { addDays } from '@/domain/calculations/dates';
 import { loadSpike, sessionLoadOf } from '@/domain/coach/load';
 import {
@@ -606,5 +607,24 @@ describe('consistency weeks (spec 25.5)', () => {
         (m) => m.key === 'consistency_weeks_4',
       ),
     ).toBe(false);
+  });
+});
+
+describe('stored reminder preferences', () => {
+  it('fills missing or invalid parts with defaults', () => {
+    expect(readPrefs(null)).toEqual(DEFAULT_PREFS);
+    const p = readPrefs({
+      weighIn: { on: true, time: '07:15' },
+      meals: { on: true, times: ['25:00'] },
+    });
+    expect(p.weighIn).toEqual({ on: true, time: '07:15' });
+    expect(p.meals).toEqual(DEFAULT_PREFS.meals);
+    expect(p.workout).toEqual(DEFAULT_PREFS.workout);
+  });
+  it('quiet hours are not selectable', () => {
+    expect(isAllowedTime('07:00')).toBe(true);
+    expect(isAllowedTime('21:59')).toBe(true);
+    expect(isAllowedTime('22:00')).toBe(false);
+    expect(isAllowedTime('06:59')).toBe(false);
   });
 });

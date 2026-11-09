@@ -5,10 +5,17 @@ import { ChartLine, Dumbbell, House, User, Utensils } from 'lucide-react-native'
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useRecalibrationEngine } from '@/features/coach/useRecalibrationEngine';
 import { useMilestoneEngine } from '@/features/milestones/api';
+import { useNotificationEngine } from '@/features/notifications/useNotificationEngine';
 import { useTheme } from '@/theme';
 
 function MilestoneEngine() {
   useMilestoneEngine();
+  return null;
+}
+
+/** Local reminders kept in line with the plan (spec 17). */
+function NotificationEngine() {
+  useNotificationEngine();
   return null;
 }
 
@@ -27,6 +34,7 @@ export default function TabsLayout() {
     <>
       <MilestoneEngine />
       <RecalibrationEngine />
+      <NotificationEngine />
       <Tabs
         screenOptions={{
           headerShown: false,

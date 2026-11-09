@@ -1,3 +1,4 @@
+import { instantFromLocal } from '@/domain/calculations/dates';
 import {
   addDays,
   cmToFeetInches,
@@ -54,5 +55,27 @@ describe('dates', () => {
     expect(localDateInTimezone(instant, 'UTC')).toBe('2026-11-08');
     expect(localDateInTimezone(instant, 'Europe/Zagreb')).toBe('2026-11-09');
     expect(localDateInTimezone(instant, 'America/New_York')).toBe('2026-11-08');
+  });
+});
+
+describe('instantFromLocal (notification times in the profile timezone)', () => {
+  it('converts a local wall time to UTC, across DST', () => {
+    expect(new Date(instantFromLocal('2026-11-18', 9 * 60, 'Europe/Zagreb')).toISOString()).toBe(
+      '2026-11-18T08:00:00.000Z',
+    );
+    expect(new Date(instantFromLocal('2026-07-01', 9 * 60, 'Europe/Zagreb')).toISOString()).toBe(
+      '2026-07-01T07:00:00.000Z',
+    );
+    expect(
+      new Date(instantFromLocal('2026-11-18', 19 * 60, 'America/New_York')).toISOString(),
+    ).toBe('2026-11-19T00:00:00.000Z');
+    expect(new Date(instantFromLocal('2026-11-18', 7 * 60, 'UTC')).toISOString()).toBe(
+      '2026-11-18T07:00:00.000Z',
+    );
+  });
+  it('a time skipped by spring-forward lands after the gap', () => {
+    // Zagreb skips 02:00–03:00 on 2026-03-29.
+    const t = new Date(instantFromLocal('2026-03-29', 2 * 60 + 30, 'Europe/Zagreb'));
+    expect(t.toISOString()).toBe('2026-03-29T01:30:00.000Z'); // 03:30 local (CEST)
   });
 });

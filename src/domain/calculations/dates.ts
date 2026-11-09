@@ -76,3 +76,37 @@ export function localDateInTimezone(instant: Date, timeZone: string): IsoDate {
   const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
   return `${get('year')}-${get('month')}-${get('day')}`;
 }
+
+/** Offset of a timezone from UTC at an instant, in minutes (e.g. +60 for Zagreb in winter). */
+function offsetMinutes(instantMs: number, timeZone: string): number {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(new Date(instantMs));
+  const get = (t: string) => Number(parts.find((p) => p.type === t)?.value ?? 0);
+  const asUtc = Date.UTC(
+    get('year'),
+    get('month') - 1,
+    get('day'),
+    get('hour') % 24,
+    get('minute'),
+  );
+  return Math.round((asUtc - Math.floor(instantMs / 60_000) * 60_000) / 60_000);
+}
+
+/**
+ * The instant of a local wall-clock time (date + minutes after midnight) in a timezone. Handles DST:
+ * a time skipped by a spring-forward resolves to the hour after; an ambiguous one to the first.
+ */
+export function instantFromLocal(date: IsoDate, minuteOfDay: number, timeZone: string): number {
+  const { y, m, d } = parseIsoDate(date);
+  const wall = Date.UTC(y, m - 1, d, 0, minuteOfDay);
+  let t = wall - offsetMinutes(wall, timeZone) * 60_000;
+  t = wall - offsetMinutes(t, timeZone) * 60_000;
+  return t;
+}
