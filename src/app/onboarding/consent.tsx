@@ -85,7 +85,7 @@ export default function ConsentStep() {
       ) : null}
       <Toggle
         label="Reminders (optional)"
-        description="Workout and match reminders. You choose which ones later."
+        description="Workout and game reminders. You choose which ones later."
         value={values.notifications}
         onChange={(notifications) => setValues({ ...values, notifications })}
       />

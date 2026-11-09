@@ -10,7 +10,14 @@
  */
 
 export type ExerciseCategory =
-  'strength' | 'core' | 'mobility' | 'conditioning' | 'cardio' | 'football' | 'recovery';
+  | 'strength'
+  | 'core'
+  | 'mobility'
+  | 'conditioning'
+  | 'cardio'
+  | 'football' // legacy custom rows; shown as sport drills
+  | 'sport_skills'
+  | 'recovery';
 export type TrackingType = 'reps' | 'reps_weight' | 'time';
 export type Difficulty = 'beginner' | 'intermediate' | 'advanced';
 
@@ -1298,7 +1305,7 @@ export interface TemplateExercise {
 export interface CatalogueTemplate {
   slug: string;
   name: string;
-  category: 'strength' | 'conditioning' | 'recovery' | 'mobility' | 'football';
+  category: 'strength' | 'conditioning' | 'recovery' | 'mobility' | 'football' | 'sport_skills';
   intensity: 'easy' | 'moderate' | 'hard';
   minutes: number;
   shortVersion: string | null;

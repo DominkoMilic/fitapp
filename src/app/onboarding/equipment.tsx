@@ -26,7 +26,9 @@ const OPTIONS: { value: Exclude<EquipmentType, 'custom'>; label: string }[] = [
   { value: 'jump_rope', label: 'Jump rope' },
   { value: 'treadmill', label: 'Treadmill' },
   { value: 'exercise_bike', label: 'Exercise bike' },
-  { value: 'football', label: 'Ball' },
+  { value: 'football', label: 'Ball (any sport)' },
+  { value: 'racket', label: 'Racket' },
+  { value: 'stick', label: 'Stick (hockey)' },
   { value: 'cones', label: 'Cones' },
 ];
 const WEIGHTED: EquipmentType[] = ['dumbbells', 'kettlebell', 'barbell'];

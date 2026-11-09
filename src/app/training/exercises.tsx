@@ -14,7 +14,7 @@ const CATEGORIES: { value: ExerciseCategory; label: string }[] = [
   { value: 'mobility', label: 'Mobility' },
   { value: 'conditioning', label: 'Conditioning' },
   { value: 'cardio', label: 'Cardio' },
-  { value: 'football', label: 'Football' },
+  { value: 'sport_skills', label: 'Sport drills' },
   { value: 'recovery', label: 'Recovery' },
 ];
 
@@ -33,7 +33,12 @@ export default function ExerciseLibrary() {
       .filter(
         (e) => !q || e.name.toLowerCase().includes(q) || e.muscleGroups.some((m) => m.includes(q)),
       )
-      .filter((e) => !categories.length || categories.includes(e.category))
+      .filter(
+        (e) =>
+          !categories.length ||
+          categories.includes(e.category) ||
+          (e.category === 'football' && categories.includes('sport_skills')),
+      )
       .filter(
         (e) =>
           !safeOnly ||

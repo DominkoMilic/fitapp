@@ -318,7 +318,7 @@ export default function PlanStep() {
       {pattern.warnings.includes('sport_while_injured') ? (
         <Banner
           tone="warning"
-          message="Your injury isn't marked as cleared for sport. We recommend clearance from a healthcare professional before matches."
+          message="Your injury isn't marked as cleared for your sport. We recommend clearance from a healthcare professional before games or practices."
         />
       ) : null}
       {pattern.warnings.includes('too_many_hard_days') ? (

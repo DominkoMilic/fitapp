@@ -83,7 +83,8 @@ function TrainingForm({ prefs }: { prefs: Preferences | null }) {
         onChange={(v) => setMinutes(Number(v))}
       />
       <Text variant="caption" color="textSecondary">
-        Your weekly plan is regenerated around your matches, practices and injuries when you save.
+        Your weekly plan is regenerated around your games, practices, fixed activities and injuries
+        when you save.
       </Text>
     </Screen>
   );

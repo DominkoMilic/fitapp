@@ -12,6 +12,7 @@ import { OptionCard } from '@/features/onboarding/components/OptionCard';
 import { WeightField } from '@/features/onboarding/components/MeasurementFields';
 import { useOnboardingDraft } from '@/features/onboarding/draft-store';
 import { spacing } from '@/theme';
+import { SportsPicker } from '@/features/sports/SportsPicker';
 
 const GOALS: { value: GoalsValues['goalType']; title: string; description: string }[] = [
   {
@@ -66,7 +67,9 @@ export default function GoalsStep() {
   const weeklyKg = rate !== null ? (rate / 100) * personal.weightKg : null;
 
   const onContinue = handleSubmit((values) => {
-    save('goals', values);
+    // The 'sport' focus follows whether the user plays a sport.
+    const focus = values.focusTags.filter((t) => t !== 'sport');
+    save('goals', { ...values, focusTags: values.sports.length ? [...focus, 'sport'] : focus });
     router.replace('/onboarding/activity');
   });
 
@@ -187,6 +190,14 @@ export default function GoalsStep() {
         </>
       ) : null}
 
+      <Text variant="title" accessibilityRole="header">
+        Your sports
+      </Text>
+      <Controller
+        control={control}
+        name="sports"
+        render={({ field }) => <SportsPicker value={field.value} onChange={field.onChange} />}
+      />
       <Text variant="small" color="textSecondary">
         Also focus on (optional)
       </Text>
@@ -197,7 +208,6 @@ export default function GoalsStep() {
           <ChipGroup
             options={[
               { value: 'strength', label: 'Strength' },
-              { value: 'sport', label: 'My sport' },
               { value: 'running', label: 'Running' },
               { value: 'cardio', label: 'Cardio fitness' },
               { value: 'mobility', label: 'Mobility' },

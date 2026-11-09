@@ -26,6 +26,7 @@ const EQUIPMENT_LABELS: Record<string, string> = {
   exercise_bike: 'exercise bike',
   jump_rope: 'jump rope',
   football: 'ball',
+  sport_skills: 'ball',
   cones: 'cones',
 };
 const equipmentText = (req: string[]) =>

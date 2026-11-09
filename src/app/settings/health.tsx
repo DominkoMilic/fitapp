@@ -175,7 +175,7 @@ export default function HealthSettings() {
           {editing.status === 'cleared_sport' ? (
             <Banner
               tone="info"
-              message="We recommend clearance from a healthcare professional before returning to matches."
+              message="We recommend clearance from a healthcare professional before returning to your sport."
             />
           ) : null}
           <Text variant="small" color="textSecondary">

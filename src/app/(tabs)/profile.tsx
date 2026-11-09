@@ -48,6 +48,11 @@ export default function ProfileTab() {
 
       <SectionHeader title="Preferences" />
       <ListItem
+        title="Sports"
+        subtitle="The sports you play, or none"
+        onPress={() => router.push('/settings/sports')}
+      />
+      <ListItem
         title="Training"
         subtitle="Days, session length"
         onPress={() => router.push('/settings/training')}

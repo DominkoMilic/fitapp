@@ -12,6 +12,7 @@ import { useRestrictions } from '@/features/training/library';
 import { useScheduleActions } from '@/features/training/schedule-api';
 import { spacing } from '@/theme';
 import { useSubmit } from '@/hooks/useSubmit';
+import { SPORT_BY_KEY } from '@/domain/sports/catalogue';
 
 export default function AddWorkout() {
   const { today } = useToday();
@@ -21,9 +22,12 @@ export default function AddWorkout() {
   const [slug, setSlug] = useState<string | null>(null);
   const [date, setDate] = useState<string | null>(today);
   const [error, setError] = useState<string | null>(null);
-  const available = TEMPLATES.filter(
-    (t) => !(t.slug === 'futsal-skills' && restrictions.sportRestricted),
-  );
+  // Sport drill packs only for sports the user plays and isn't injured for.
+  const available = TEMPLATES.filter((t) => {
+    if (t.category !== 'football' && t.category !== 'sport_skills') return true;
+    const sports = restrictions.sports.filter((k) => SPORT_BY_KEY[k]?.drillPack === t.slug);
+    return sports.length > 0 && sports.some((k) => !restrictions.restrictedFor(k));
+  });
 
   const save = async () => {
     if (!slug) return setError('Choose a workout');

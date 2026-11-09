@@ -16,22 +16,29 @@ import {
   type InjuryStatus,
   type RestrictionTag,
   sportRestricted,
+  sportRestrictedFor,
 } from '@/domain/training/injury';
 import { useAuth } from '@/features/auth/AuthProvider';
-import { useEquipment, useHealthConditions } from '@/features/profile/api';
+import { useEquipment, useHealthConditions, usePreferences } from '@/features/profile/api';
 import { syncKeys, useOutbox, useSyncActions } from '@/features/sync/SyncProvider';
 import { requireSupabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/database.types';
 
 export type LibraryExercise = CatalogueExercise & { custom: boolean; id: string | null };
 
-/** Injury restriction tags currently in force (spec 9.2). */
+/** Injury restriction tags currently in force (spec 9.2), and which of the user's sports to hold off. */
 export function useRestrictions(): {
   tags: RestrictionTag[];
+  /** Any of the user's sports isn't recommended right now (see sportRestrictedFor). */
   sportRestricted: boolean;
+  /** For one sport (sports catalogue key). */
+  restrictedFor: (sportKey: string) => boolean;
+  sports: string[];
   loading: boolean;
 } {
   const health = useHealthConditions();
+  const prefs = usePreferences();
+  const sports = useMemo(() => prefs.data?.sports ?? [], [prefs.data?.sports]);
   return useMemo(() => {
     const injuries = (health.data ?? []).map((h) => ({
       bodyArea: h.body_area as BodyArea | null,
@@ -39,10 +46,12 @@ export function useRestrictions(): {
     }));
     return {
       tags: activeRestrictions(injuries),
-      sportRestricted: sportRestricted(injuries),
+      sportRestricted: sports.length ? sportRestricted(injuries, sports) : false,
+      restrictedFor: (key: string) => sportRestrictedFor(injuries, key),
+      sports,
       loading: health.isPending,
     };
-  }, [health.data, health.isPending]);
+  }, [health.data, health.isPending, sports]);
 }
 
 /** Equipment the user owns, as catalogue tokens. "No equipment" → empty set. */

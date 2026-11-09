@@ -284,7 +284,7 @@ export default function Home() {
           </Card>
         ))
       ) : (
-        <Text color="textSecondary">No matches or practices this week.</Text>
+        <Text color="textSecondary">Nothing fixed in your week.</Text>
       )}
       {stats.startKg !== null && stats.current ? (
         <Text variant="caption" color="textSecondary">

@@ -21,7 +21,7 @@ const CATEGORIES: { value: ExerciseCategory; label: string }[] = [
   { value: 'mobility', label: 'Mobility' },
   { value: 'conditioning', label: 'Conditioning' },
   { value: 'cardio', label: 'Cardio' },
-  { value: 'football', label: 'Football' },
+  { value: 'sport_skills', label: 'Sport drill' },
 ];
 const EQUIPMENT = [
   { value: 'dumbbells', label: 'Dumbbells' },

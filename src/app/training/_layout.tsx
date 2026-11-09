@@ -14,7 +14,7 @@ export default function TrainingLayout() {
         'history/index': 'History',
         'history/[id]': 'Workout',
         records: 'Personal records',
-        'log-event': 'Log match or practice',
+        'log-event': 'Log a game or activity',
         'add-workout': 'Add workout',
         'series/[id]': 'Recurring session',
       }}

@@ -18,9 +18,11 @@ import {
 } from '@/features/training/schedule-api';
 import { useBuiltWorkout } from '@/features/training/useBuiltWorkout';
 import { useGuardedAction } from '@/hooks/useSubmit';
+import { parseSportCategory } from '@/domain/sports/catalogue';
 
 const WARNING_TEXT = {
-  match_tomorrow: 'There is a match the next day. Keep that day light: rest or mobility is better.',
+  match_tomorrow:
+    'There is a game or match the next day. Keep that day light: rest or mobility is better.',
   three_hard_days: 'This would make three hard days in a row. Consider an easier day in between.',
 } as const;
 
@@ -54,6 +56,7 @@ export default function WorkoutDetail() {
   const template = w.template_slug ? TEMPLATE_BY_SLUG[w.template_slug] : undefined;
   const shortSlug = template?.shortVersion ?? null;
   const sport = w.kind === 'commitment' || isSport(w.category);
+  const eventSport = parseSportCategory(w.category)?.sport ?? null;
 
   const doMove = async (date: string) => {
     await actions.move(w, date);
@@ -89,10 +92,10 @@ export default function WorkoutDetail() {
           {n}
         </Text>
       ))}
-      {sport && restrictions.sportRestricted ? (
+      {eventSport && restrictions.restrictedFor(eventSport.key) ? (
         <Banner
           tone="warning"
-          message="Your injury isn't marked as cleared for sport. Check with a healthcare professional before playing."
+          message={`Your injury isn't marked as cleared for ${eventSport.label.toLowerCase()}. Check with a healthcare professional before playing.`}
         />
       ) : null}
 

@@ -8,7 +8,7 @@ import { applyPending } from '@/domain/sync/outbox';
 import { TEMPLATE_BY_SLUG } from '@/domain/training/catalogue';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useToday } from '@/features/dashboard/useToday';
-import { profileKeys } from '@/features/profile/api';
+import { profileKeys, regenerateWeeklyPattern } from '@/features/profile/api';
 import { syncKeys, useOutbox, useSyncActions } from '@/features/sync/SyncProvider';
 import { requireSupabase } from '@/integrations/supabase/client';
 import { fetchAllPages } from '@/integrations/supabase/paging';
@@ -195,8 +195,11 @@ export function useSeriesActions() {
   const userId = useAuth().session?.user.id;
   const { today } = useToday();
   const queryClient = useQueryClient();
+  // Games and fixed activities shape the whole week (rest before a game, recovery after), so the
+  // weekly pattern is regenerated, which also rebuilds future calendar entries.
   const done = async () => {
     if (!userId) return;
+    await regenerateWeeklyPattern(userId);
     await ensureSchedule(userId, today);
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: syncKeys.entity(userId, 'scheduled_workouts') }),
@@ -238,5 +241,33 @@ export function useSeriesActions() {
       await done();
     },
   });
-  return { update, end };
+  const create = useMutation({
+    mutationFn: async (input: {
+      title: string;
+      category: string;
+      weekday: number;
+      localTime: string;
+      durationMinutes: number;
+      intensity: 'easy' | 'moderate' | 'hard';
+      timezone: string;
+    }) => {
+      if (!userId) throw new Error('Not signed in');
+      const { error } = await db()
+        .from('recurring_events')
+        .insert({
+          user_id: userId,
+          title: input.title.trim().slice(0, 80),
+          category: input.category,
+          weekday: input.weekday,
+          local_time: input.localTime,
+          duration_minutes: input.durationMinutes,
+          intensity: input.intensity,
+          timezone: input.timezone,
+          starts_on: today,
+        });
+      if (error) throw error;
+      await done();
+    },
+  });
+  return { update, end, create };
 }

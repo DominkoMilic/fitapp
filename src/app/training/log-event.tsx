@@ -11,11 +11,11 @@ import { useRestrictions } from '@/features/training/library';
 import { useScheduledWorkout } from '@/features/training/schedule-api';
 import { useSaveSession } from '@/features/training/session-api';
 import { useWeightStats } from '@/features/weight/useWeightStats';
+import { categoryLabel } from '@/domain/format';
+import { parseSportCategory, sportCategory } from '@/domain/sports/catalogue';
+import { CommitmentTypePicker } from '@/features/sports/CommitmentTypePicker';
 
-type Category =
-  'futsal_match' | 'futsal_practice' | 'football_match' | 'football_practice' | 'other';
-
-/** Logs a match, practice or other activity with duration and RPE (spec 10.4, sport events). */
+/** Logs a game, practice or other activity with duration and RPE (spec 10.4, sport events). */
 export default function LogEvent() {
   const { scheduledId } = useLocalSearchParams<{ scheduledId?: string }>();
   const { today } = useToday();
@@ -24,9 +24,21 @@ export default function LogEvent() {
   const { current } = useWeightStats('30D');
   const save = useSaveSession();
   const showToast = useToast((s) => s.show);
-  const [category, setCategory] = useState<Category>(
-    (scheduled?.category as Category) ?? 'futsal_match',
+  const firstSport = restrictions.sports[0];
+  const [category, setCategory] = useState<string>(
+    scheduled?.category ?? (firstSport ? sportCategory(firstSport, 'match') : 'other'),
   );
+  // The scheduled item and the user's sports load after the first render: apply the default once
+  // when they arrive, unless the user already picked something (adjusting state during render).
+  const [defaulted, setDefaulted] = useState(false);
+  const [touched, setTouched] = useState(false);
+  const defaultCategory =
+    scheduled?.category ?? (firstSport ? sportCategory(firstSport, 'match') : null);
+  if (!defaulted && !touched && defaultCategory && (!scheduledId || scheduled)) {
+    setDefaulted(true);
+    if (defaultCategory !== category) setCategory(defaultCategory);
+  }
+  const sport = parseSportCategory(category)?.sport ?? null;
   const [title, setTitle] = useState(scheduled?.title ?? '');
   const [date, setDate] = useState<string | null>(scheduled?.scheduled_date ?? today);
   const [minutes, setMinutes] = useState<number | null>(
@@ -50,15 +62,7 @@ export default function LogEvent() {
       await save({
         scheduled: scheduled ?? null,
         templateSlug: null,
-        title:
-          title.trim() ||
-          {
-            futsal_match: 'Futsal match',
-            futsal_practice: 'Futsal practice',
-            football_match: 'Football match',
-            football_practice: 'Football practice',
-            other: 'Activity',
-          }[category],
+        title: title.trim() || categoryLabel(category) || 'Activity',
         category,
         startedAt: start.toISOString(),
         endedAt: end.toISOString(),
@@ -89,23 +93,19 @@ export default function LogEvent() {
       footer={<Button title="Save" loading={saving} onPress={() => void onSave()} />}
     >
       {error ? <Banner tone="danger" message={error} /> : null}
-      {restrictions.sportRestricted && category !== 'other' ? (
+      {sport && restrictions.restrictedFor(sport.key) ? (
         <Banner
           tone="warning"
-          message="Your injury isn't marked as cleared for sport. Logging is fine; consider professional advice before your next match."
+          message={`Your injury isn't marked as cleared for ${sport.label.toLowerCase()}. Logging is fine; consider professional advice before your next ${sport.eventLabels.match.toLowerCase()}.`}
         />
       ) : null}
-      <ChipGroup
-        accessibilityLabel="Type"
-        options={[
-          { value: 'futsal_match', label: 'Futsal match' },
-          { value: 'futsal_practice', label: 'Futsal practice' },
-          { value: 'football_match', label: 'Football match' },
-          { value: 'football_practice', label: 'Football practice' },
-          { value: 'other', label: 'Other' },
-        ]}
-        selected={[category]}
-        onToggle={setCategory}
+      <CommitmentTypePicker
+        sports={restrictions.sports}
+        value={category}
+        onChange={(c) => {
+          setTouched(true);
+          setCategory(c);
+        }}
       />
       <TextField label="Name (optional)" value={title} onChangeText={setTitle} maxLength={80} />
       <DateField label="Date" value={date} onChange={setDate} />

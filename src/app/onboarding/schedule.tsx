@@ -23,21 +23,15 @@ import { OnboardingStep } from '@/features/onboarding/components/OnboardingStep'
 import { WEEKDAYS } from '@/features/onboarding/constants';
 import { useOnboardingDraft } from '@/features/onboarding/draft-store';
 import { spacing } from '@/theme';
-import { intensityLabel } from '@/domain/format';
+import { categoryLabel, intensityLabel } from '@/domain/format';
+import { sportCategory } from '@/domain/sports/catalogue';
+import { CommitmentTypePicker } from '@/features/sports/CommitmentTypePicker';
 
 type Commitment = ScheduleValues['commitments'][number];
 
-const CATEGORY_OPTIONS = [
-  { value: 'futsal_match', label: 'Futsal match' },
-  { value: 'futsal_practice', label: 'Futsal practice' },
-  { value: 'football_match', label: 'Football match' },
-  { value: 'football_practice', label: 'Football practice' },
-  { value: 'other', label: 'Other' },
-] as const;
-
-const emptyCommitment = (): Commitment => ({
+const emptyCommitment = (sports: readonly string[]): Commitment => ({
   title: '',
-  category: 'futsal_match',
+  category: sports[0] ? sportCategory(sports[0], 'match') : 'run',
   weekday: 6,
   localTime: '18:00',
   durationMinutes: 60,
@@ -46,6 +40,8 @@ const emptyCommitment = (): Commitment => ({
 
 export default function ScheduleStep() {
   const saved = useOnboardingDraft((s) => s.schedule);
+  const sports = useOnboardingDraft((s) => s.goals?.sports ?? []);
+  const hasSport = sports.length > 0;
   const save = useOnboardingDraft((s) => s.save);
   const [editing, setEditing] = useState<Commitment | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
@@ -82,11 +78,15 @@ export default function ScheduleStep() {
     <OnboardingStep
       step="schedule"
       title="Your week"
-      subtitle="Matches and practices are fixed; PACE plans training around them."
+      subtitle={
+        hasSport
+          ? 'Games and practices are fixed; PACE plans training around them.'
+          : 'How often you want to train, and anything already fixed in your week.'
+      }
       onContinue={() => void onContinue()}
     >
       <Text variant="small" color="textSecondary">
-        Training sessions per week (besides sport)
+        Training sessions per week{hasSport ? ' (besides your sport)' : ''}
       </Text>
       <Controller
         control={control}
@@ -156,19 +156,21 @@ export default function ScheduleStep() {
       />
 
       <Text variant="title" accessibilityRole="header">
-        Recurring matches and practices
+        {hasSport ? 'Your weekly games and practices' : 'Fixed weekly activities (optional)'}
       </Text>
       {commitments.length === 0 && !editing ? (
         <Text color="textSecondary">
-          None added. Add your weekly league match or practice so training avoids those days.
+          {hasSport
+            ? 'Add your weekly games and practices so training works around them.'
+            : 'Already have a fixed weekly run, ride or class? Add it so training works around it. You can skip this.'}
         </Text>
       ) : null}
       {commitments.map((c, i) => (
         <Card key={`${c.title}-${i}`}>
           <Text variant="bodyStrong">{c.title}</Text>
           <Text variant="small" color="textSecondary">
-            {WEEKDAYS[c.weekday - 1]?.label} {c.localTime} · {c.durationMinutes} min ·{' '}
-            {intensityLabel(c.intensity)}
+            {categoryLabel(c.category)} · {WEEKDAYS[c.weekday - 1]?.label} {c.localTime} ·{' '}
+            {c.durationMinutes} min · {intensityLabel(c.intensity)}
           </Text>
           <Button
             title="Remove"
@@ -188,21 +190,14 @@ export default function ScheduleStep() {
           {editError ? <Banner tone="danger" message={editError} /> : null}
           <TextField
             label="Name"
-            placeholder="e.g. League match"
+            placeholder={hasSport ? 'e.g. League game' : 'e.g. Saturday long run'}
             value={editing.title}
             onChangeText={(title) => setEditing({ ...editing, title })}
           />
-          <ChipGroup
-            accessibilityLabel="Type"
-            options={CATEGORY_OPTIONS}
-            selected={[editing.category]}
-            onToggle={(category) =>
-              setEditing({
-                ...editing,
-                category,
-                intensity: category === 'other' ? 'moderate' : 'hard',
-              })
-            }
+          <CommitmentTypePicker
+            sports={sports}
+            value={editing.category}
+            onChange={(category, intensity) => setEditing({ ...editing, category, intensity })}
           />
           <ChipGroup
             accessibilityLabel="Day of the week"
@@ -237,9 +232,9 @@ export default function ScheduleStep() {
         </Card>
       ) : commitments.length < 7 ? (
         <Button
-          title="Add match or practice"
+          title={hasSport ? 'Add a game or practice' : 'Add a fixed activity'}
           variant="secondary"
-          onPress={() => setEditing(emptyCommitment())}
+          onPress={() => setEditing(emptyCommitment(sports))}
         />
       ) : null}
     </OnboardingStep>

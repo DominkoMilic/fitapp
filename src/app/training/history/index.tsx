@@ -39,7 +39,7 @@ export default function History() {
       <Screen edges={['bottom']}>
         <EmptyState
           title="No workouts yet"
-          message="Completed workouts and logged matches appear here."
+          message="Completed workouts, games and activities appear here."
           actionLabel="Go to Training"
           onAction={() => router.replace('/training')}
         />

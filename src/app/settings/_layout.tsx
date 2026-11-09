@@ -15,6 +15,7 @@ const TITLES: Record<string, string> = {
   appearance: 'Appearance',
   notifications: 'Reminders',
   data: 'Your data',
+  sports: 'Your sports',
   'delete-account': 'Delete account',
 };
 

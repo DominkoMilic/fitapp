@@ -136,8 +136,8 @@ function Form({ initial }: { initial: NotificationPrefs }) {
         />
       ) : null}
       <Toggle
-        label="Match reminder"
-        description="The evening before a match, at 19:00."
+        label="Game reminder"
+        description="The evening before a game, match or race, at 19:00."
         value={prefs.match.on}
         onChange={toggle('match')}
       />

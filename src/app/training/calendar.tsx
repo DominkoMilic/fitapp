@@ -104,7 +104,7 @@ export default function MonthCalendar() {
         })}
       </View>
       <Text variant="caption" color="textSecondary">
-        Green: done · Blue: planned · Orange: match or practice
+        Green: done · Blue: planned · Orange: your sport or a fixed activity
       </Text>
       <SectionHeader title={dayLabel(selected, today)} />
       {isPending ? (
