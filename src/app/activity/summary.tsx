@@ -123,7 +123,7 @@ export default function ActivitySummaryScreen() {
         disabled={saving}
         onPress={() =>
           void recorder.resume().then(
-            () => router.back(),
+            () => router.replace('/activity/track'),
             () => showToast('Could not restart location updates.'),
           )
         }

@@ -1,5 +1,4 @@
 import { randomUUID } from 'expo-crypto';
-import { router } from 'expo-router';
 import { useState } from 'react';
 
 import { Banner, useToast } from '@/components/feedback';
@@ -10,6 +9,7 @@ import { useActivityActions } from '@/features/activity/api';
 import { ACTIVITY_LABEL } from '@/features/activity/labels';
 import { useToday } from '@/features/dashboard/useToday';
 import { DateField } from '@/features/onboarding/components/DateField';
+import { backToActivities } from '@/features/activity/navigation';
 import { useProfile } from '@/features/profile/api';
 import { useWeightStats } from '@/features/weight/useWeightStats';
 
@@ -61,7 +61,7 @@ export default function ManualActivity() {
         notes: notes.trim() ? notes.trim().slice(0, 1000) : null,
       });
       showToast(`${ACTIVITY_LABEL[type]} added`);
-      router.back();
+      backToActivities();
     } catch {
       setError('Could not save. Try again.');
     } finally {

@@ -13,6 +13,7 @@ import { recorder } from '@/features/activity/recorder';
 import { useActiveRecording } from '@/features/activity/recording-store';
 import { RouteMap } from '@/features/activity/RouteMap';
 import { useLiveRecording } from '@/features/activity/useLiveRecording';
+import { backToActivities } from '@/features/activity/navigation';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useProfile } from '@/features/profile/api';
 import { useWeightStats } from '@/features/weight/useWeightStats';
@@ -299,7 +300,7 @@ function Live() {
           void act(async () => {
             setConfirmDiscard(false);
             await recorder.clear();
-            router.back();
+            backToActivities();
           })
         }
       />

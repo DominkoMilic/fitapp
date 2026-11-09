@@ -34,16 +34,17 @@ export function ConfirmDialog({
       onRequestClose={onCancel}
       statusBarTranslucent
     >
-      <Pressable
-        style={[styles.backdrop, { backgroundColor: colors.overlay }]}
-        onPress={onCancel}
-        accessibilityLabel="Dismiss"
-        accessibilityRole="button"
-      >
+      {/* The backdrop is a sibling, not a wrapper: buttons must not be nested inside a button. */}
+      <View style={styles.backdrop}>
         <Pressable
+          style={[StyleSheet.absoluteFill, { backgroundColor: colors.overlay }]}
+          onPress={onCancel}
+          accessibilityLabel="Dismiss"
+          accessibilityRole="button"
+        />
+        <View
           style={[styles.dialog, { backgroundColor: colors.surface, borderColor: colors.border }]}
           accessibilityViewIsModal
-          onPress={() => undefined}
         >
           <Text variant="title" accessibilityRole="header">
             {title}
@@ -60,8 +61,8 @@ export function ConfirmDialog({
             />
             <Button title={cancelLabel} variant="ghost" onPress={onCancel} disabled={loading} />
           </View>
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   );
 }

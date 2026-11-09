@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -9,6 +9,7 @@ import type { ActivityType } from '@/domain/activity/met';
 import { useActivities, useActivityActions, useRoute } from '@/features/activity/api';
 import { ACTIVITY_LABEL, QUALITY_LABEL } from '@/features/activity/labels';
 import { RouteMap } from '@/features/activity/RouteMap';
+import { backToActivities } from '@/features/activity/navigation';
 import { useProfile } from '@/features/profile/api';
 import { formatClock } from '@/hooks/useNow';
 import { spacing } from '@/theme';
@@ -37,7 +38,7 @@ export default function ActivityDetail() {
           title="Activity not found"
           message="It may have been deleted."
           actionLabel="Back"
-          onAction={() => router.back()}
+          onAction={() => backToActivities()}
         />
       </Screen>
     );
@@ -119,7 +120,7 @@ export default function ActivityDetail() {
               .then(() => remove(a.id))
               .then(() => {
                 showToast('Activity deleted');
-                router.back();
+                backToActivities();
               });
           }
         }}
