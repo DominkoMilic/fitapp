@@ -1,0 +1,23 @@
+# Maestro smoke flows on EAS (spec 27 #20). Run with: npx eas-cli@latest workflow:run e2e.yml
+# Needs EAS secrets E2E_EMAIL and E2E_PASSWORD for an onboarded test account in a TEST project
+# (preview environment), never production.
+name: E2E smoke
+
+jobs:
+  build_android:
+    type: build
+    params:
+      platform: android
+      profile: e2e
+  maestro_android:
+    needs: [build_android]
+    type: maestro
+    params:
+      build_id: ${{ needs.build_android.outputs.build_id }}
+      flow_path: ['tests/e2e/maestro/smoke']
+    # The flows read APP_ID, EMAIL and PASSWORD. Check the current EAS Workflows docs for how to pass
+    # them to a maestro job when you first run this (environment variables / EAS secrets).
+    env:
+      APP_ID: app.pace.fitness.preview
+      EMAIL: ${{ env.E2E_EMAIL }}
+      PASSWORD: ${{ env.E2E_PASSWORD }}

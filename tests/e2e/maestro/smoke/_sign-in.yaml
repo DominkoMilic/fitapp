@@ -1,0 +1,15 @@
+# Subflow: signs in with an account that has finished onboarding.
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+- tapOn: 'I already have an account'
+- tapOn: 'Email'
+- inputText: ${EMAIL}
+- tapOn: 'Password'
+- inputText: ${PASSWORD}
+- hideKeyboard
+- tapOn: 'Sign in'
+- extendedWaitUntil:
+    visible: 'Home'
+    timeout: 20000

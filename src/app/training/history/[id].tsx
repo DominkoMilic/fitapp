@@ -1,8 +1,9 @@
 import { randomUUID } from 'expo-crypto';
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { goBack } from '@/navigation/back';
 import { ConfirmDialog, ErrorState, LoadingState } from '@/components/feedback';
 import { Button, Card, Screen, StatTile, Text } from '@/components/ui';
 import { formatClock } from '@/hooks/useNow';
@@ -118,7 +119,7 @@ export default function SessionDetail() {
             createdOffline: false,
           });
           setConfirmDelete(false);
-          router.back();
+          goBack('/training/history');
         }}
       />
     </Screen>

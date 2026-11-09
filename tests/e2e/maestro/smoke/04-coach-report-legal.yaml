@@ -1,0 +1,15 @@
+# Coach, weekly report, data export entry and legal pages render (spec 27 #14, #15, #18).
+appId: ${APP_ID}
+---
+- runFlow: _sign-in.yaml
+- openLink: pace://reports
+- assertVisible: '.*In progress'
+- openLink: pace://coach/review
+- assertVisible: 'Every two weeks.*'
+- openLink: pace://settings/data
+- assertVisible: 'Export my data'
+- assertVisible: 'Delete my account'
+- openLink: pace://legal/privacy
+- assertVisible: 'Who we are'
+- openLink: pace://legal/licences
+- assertVisible: 'Food data'

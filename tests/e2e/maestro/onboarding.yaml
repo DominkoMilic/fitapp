@@ -2,7 +2,7 @@
 # Supabase project. Uses a fresh account each run (email confirmation must be completed
 # manually or disabled in a test project).
 #   maestro test tests/e2e/maestro/onboarding.yaml -e EMAIL=you+1@example.com -e PASSWORD=abcd1234
-appId: app.pace.fitness.development
+appId: ${APP_ID}
 ---
 - launchApp:
     clearState: true

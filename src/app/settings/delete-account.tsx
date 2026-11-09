@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 
+import { goBack } from '@/navigation/back';
 import { Banner, useToast } from '@/components/feedback';
 import { Button, Card, Screen, Text, TextField } from '@/components/ui';
 import { clearLocalData, requestAccountDeletion } from '@/features/account/delete-account';
@@ -102,7 +103,7 @@ export default function DeleteAccount() {
         loading={busy}
         onPress={() => void onDelete()}
       />
-      <Button title="Cancel" variant="ghost" onPress={() => router.back()} />
+      <Button title="Cancel" variant="ghost" onPress={() => goBack('/settings/data')} />
     </Screen>
   );
 }

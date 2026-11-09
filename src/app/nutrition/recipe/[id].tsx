@@ -2,6 +2,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Image, Linking, StyleSheet, View } from 'react-native';
 
+import { goBack } from '@/navigation/back';
 import { Banner, ErrorState, LoadingState, useToast } from '@/components/feedback';
 import {
   Button,
@@ -278,7 +279,9 @@ function RecipeView({ recipe }: { recipe: RecipeRow }) {
           title="Remove recipe"
           variant="ghost"
           fullWidth={false}
-          onPress={() => void actions.archiveRecipe(recipe).then(() => router.back())}
+          onPress={() =>
+            void actions.archiveRecipe(recipe).then(() => goBack('/nutrition/recipes'))
+          }
         />
       )}
     </Screen>

@@ -1,6 +1,7 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 
+import { goBack } from '@/navigation/back';
 import { Banner, ConfirmDialog, LoadingState, useToast } from '@/components/feedback';
 import { Button, Screen, Text, TextField } from '@/components/ui';
 import { LIMITS } from '@/constants/safety';
@@ -72,7 +73,7 @@ function WeightForm({
         note,
         measuredAt: existing && existing.local_date === date ? existing.measured_at : undefined,
       });
-      router.back();
+      goBack('/progress/weight');
       if (!existing) {
         showToast('Weight saved', { label: 'Undo', onPress: () => void actions.remove(savedId) });
       }
@@ -134,7 +135,7 @@ function WeightForm({
         onConfirm={async () => {
           if (existing) await actions.remove(existing.id);
           setConfirmDelete(false);
-          router.back();
+          goBack('/progress/weight');
         }}
       />
     </Screen>

@@ -1,0 +1,60 @@
+# Checks every push and pull request (spec 27 #20): typecheck, lint, unit tests, seed/shared-code
+# checks, database tests with RLS on a real local Supabase, and app bundles for iOS and Android.
+name: CI
+
+on:
+  push:
+    branches: [main, 'claude/**', 'feature/**']
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    name: Typecheck, lint, unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+
+  database:
+    name: Database and RLS tests (pgTAP)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 3.0.0
+      - name: Start local Supabase (database only)
+        # Auth and Storage stay on: the tests use the auth and storage schemas.
+        run: supabase start -x studio,imgproxy,mailpit,logflare,vector,supavisor,edge-runtime,realtime
+      - run: supabase test db
+      - name: Migrations apply cleanly from scratch
+        run: supabase db reset
+
+  bundle:
+    name: Bundle iOS and Android
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      EXPO_PUBLIC_APP_ENV: preview
+      EXPO_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_ci_placeholder_value
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx expo export --platform ios --output-dir dist-ios
+      - run: npx expo export --platform android --output-dir dist-android

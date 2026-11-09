@@ -1,6 +1,7 @@
-import { router, Stack } from 'expo-router';
+import { Stack } from 'expo-router';
 import { useState } from 'react';
 
+import { goBack } from '@/navigation/back';
 import { Banner, LoadingState, useToast } from '@/components/feedback';
 import {
   Button,
@@ -86,7 +87,7 @@ function CheckinForm({ today, existing }: { today: string; existing: Checkin | u
     if (guidance?.tone === 'warning') {
       setSaved(true); // keep the safety message on screen
     } else {
-      router.back();
+      goBack('/home');
       showToast('Check-in saved');
     }
   };
@@ -96,7 +97,7 @@ function CheckinForm({ today, existing }: { today: string; existing: Checkin | u
       edges={['bottom']}
       footer={
         saved ? (
-          <Button title="Done" onPress={() => router.back()} />
+          <Button title="Done" onPress={() => goBack('/home')} />
         ) : (
           <Button title="Save check-in" onPress={() => void onSave()} />
         )

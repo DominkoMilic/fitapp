@@ -34,6 +34,15 @@ module.exports = defineConfig([
     files: ['**/*.ts', '**/*.tsx'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'error',
+      // Screens can be opened without history (links, notifications, reloads): use goBack().
+      'no-restricted-properties': [
+        'error',
+        { object: 'router', property: 'back', message: "Use goBack(fallback) from '@/navigation/back'." },
+      ],
     },
+  },
+  {
+    files: ['src/navigation/back.ts'],
+    rules: { 'no-restricted-properties': 'off' },
   },
 ]);

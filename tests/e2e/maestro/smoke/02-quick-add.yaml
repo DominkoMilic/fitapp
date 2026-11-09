@@ -1,0 +1,14 @@
+# Log food with quick add and see it in today's diary (spec 27 #10).
+appId: ${APP_ID}
+---
+- runFlow: _sign-in.yaml
+- openLink: pace://nutrition/quick-add?meal=snack
+- tapOn: 'Name (optional)'
+- inputText: 'Maestro snack'
+- tapOn: 'Calories'
+- inputText: '321'
+- hideKeyboard
+- tapOn: 'Add'
+- assertVisible: 'Added'
+- tapOn: 'Nutrition'
+- assertVisible: 'Maestro snack'

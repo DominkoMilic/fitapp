@@ -1,6 +1,7 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 
+import { goBack } from '@/navigation/back';
 import { Banner, useToast } from '@/components/feedback';
 import { Button, NumberField, Screen, Text, TextField } from '@/components/ui';
 import { useToday } from '@/features/dashboard/useToday';
@@ -39,7 +40,7 @@ export default function QuickAdd() {
       source: 'quick_add',
       confidence: 'user',
     });
-    router.back();
+    goBack('/nutrition');
     showToast('Added');
   };
 

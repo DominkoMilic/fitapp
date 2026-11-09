@@ -1,6 +1,6 @@
-import { router } from 'expo-router';
 import { useState } from 'react';
 
+import { goBack } from '@/navigation/back';
 import { Banner, useToast } from '@/components/feedback';
 import { Button, NumberField, Screen, Text } from '@/components/ui';
 import { CM_PER_IN, type UnitSystem } from '@/domain/calculations/units';
@@ -39,7 +39,7 @@ export default function LogMeasurements() {
     setSaving(true);
     try {
       await actions.saveMany(date, Object.fromEntries(entered.map(([k, v]) => [k, toCm(v)])));
-      router.back();
+      goBack('/progress/measurements');
       showToast(`${entered.length} measurement${entered.length > 1 ? 's' : ''} saved`);
     } catch {
       setError("Couldn't save. Please try again.");

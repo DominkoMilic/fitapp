@@ -1,0 +1,17 @@
+# Log a weight and see it in history (spec 27 #5).
+appId: ${APP_ID}
+---
+- runFlow: _sign-in.yaml
+- openLink: pace://weight/log
+- tapOn: 'Weight'
+- eraseText
+- inputText: '99.5'
+- hideKeyboard
+- tapOn: 'Save'
+- runFlow:
+    when:
+      visible: 'Is this correct?'
+    commands:
+      - tapOn: 'Save anyway'
+- openLink: pace://progress/weight
+- assertVisible: '99.5.*'

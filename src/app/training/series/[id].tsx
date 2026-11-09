@@ -1,6 +1,7 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 
+import { goBack } from '@/navigation/back';
 import { Banner, ConfirmDialog, ErrorState, LoadingState } from '@/components/feedback';
 import { Button, ChipGroup, NumberField, Screen, Text, TextField } from '@/components/ui';
 import { WEEKDAYS } from '@/features/onboarding/constants';
@@ -43,7 +44,7 @@ function SeriesForm({ e }: { e: RecurringEvent }) {
     setError(null);
     update.mutate(
       { eventId: e.id, weekday, localTime: time, durationMinutes: duration, title: title.trim() },
-      { onSuccess: () => router.back() },
+      { onSuccess: () => goBack('/training') },
     );
   };
 
@@ -101,7 +102,7 @@ function SeriesForm({ e }: { e: RecurringEvent }) {
         onCancel={() => setConfirmEnd(false)}
         onConfirm={() =>
           end.mutate(e.id, {
-            onSuccess: () => router.back(),
+            onSuccess: () => goBack('/training'),
             onSettled: () => setConfirmEnd(false),
           })
         }

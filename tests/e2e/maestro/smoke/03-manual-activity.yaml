@@ -1,0 +1,13 @@
+# Add a manual walk and open it (spec 27 #13; GPS recording itself is tested by hand on devices).
+appId: ${APP_ID}
+---
+- runFlow: _sign-in.yaml
+- openLink: pace://activity/manual
+- tapOn: 'Distance (optional)'
+- inputText: '3'
+- hideKeyboard
+- tapOn: 'Save activity'
+- assertVisible: 'Walk added'
+- openLink: pace://activity
+- tapOn: 'Walk ·.*'
+- assertVisible: '3.00 km'

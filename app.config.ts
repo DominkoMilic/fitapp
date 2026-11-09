@@ -21,13 +21,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: IS_PROD ? 'PACE' : `PACE (${APP_ENV})`,
   slug: 'pace',
   scheme: 'pace',
-  version: '0.1.0',
+  version: '1.0.0',
   orientation: 'portrait',
   icon: './assets/icon.png',
   userInterfaceStyle: 'automatic',
   ios: {
     supportsTablet: false,
     bundleIdentifier: BUNDLE_ID,
+    // Only standard HTTPS: no export-compliance documentation needed.
+    config: { usesNonExemptEncryption: false },
   },
   android: {
     package: BUNDLE_ID,
@@ -38,13 +40,22 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       monochromeImage: './assets/android-icon-monochrome.png',
     },
     predictiveBackGestureEnabled: false,
+    // Added by libraries but not used by PACE (no overlays; files are shared from the app cache).
+    blockedPermissions: [
+      'android.permission.SYSTEM_ALERT_WINDOW',
+      'android.permission.READ_EXTERNAL_STORAGE',
+      'android.permission.WRITE_EXTERNAL_STORAGE',
+    ],
   },
   web: {
     favicon: './assets/favicon.png',
   },
   plugins: [
+    // Listed first so its Info.plist change runs after expo-task-manager's (mods run in reverse).
+    './plugins/withLocationOnlyBackground',
     'expo-router',
-    'expo-secure-store',
+    // No biometric unlock in V1, so no Face ID usage string.
+    ['expo-secure-store', { faceIDPermission: false }],
     'expo-localization',
     ['expo-notifications', { color: '#34D399' }],
     'expo-sqlite',
@@ -59,6 +70,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         isIosBackgroundLocationEnabled: true,
         isAndroidBackgroundLocationEnabled: true,
         isAndroidForegroundServiceEnabled: true,
+        // Activity type is chosen by the user; motion sensors aren't used.
+        motionUsagePermission: false,
       },
     ],
     'expo-task-manager',

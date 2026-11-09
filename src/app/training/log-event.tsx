@@ -1,6 +1,7 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 
+import { goBack } from '@/navigation/back';
 import { Banner, useToast } from '@/components/feedback';
 import { Button, ChipGroup, NumberField, Screen, Text, TextField } from '@/components/ui';
 import { estimateCalories, sessionMet } from '@/domain/training/session';
@@ -75,7 +76,7 @@ export default function LogEvent() {
         notes: notes.trim() || null,
         sets: [],
       });
-      router.back();
+      goBack('/training');
       showToast('Session logged');
     } finally {
       setSaving(false);

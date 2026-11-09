@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { goBack } from '@/navigation/back';
 import { Banner, ConfirmDialog, EmptyState, useToast } from '@/components/feedback';
 import {
   Button,
@@ -114,7 +115,7 @@ export default function WorkoutSummary() {
       footer={
         <>
           <Button title="Save workout" loading={saving} onPress={() => void onSave()} />
-          <Button title="Back to workout" variant="ghost" onPress={() => router.back()} />
+          <Button title="Back to workout" variant="ghost" onPress={() => goBack('/training')} />
         </>
       }
     >

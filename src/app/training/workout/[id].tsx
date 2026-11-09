@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 
+import { goBack } from '@/navigation/back';
 import { Banner, ConfirmDialog, ErrorState, LoadingState, useToast } from '@/components/feedback';
 import { Button, Card, Screen, SectionHeader, Text } from '@/components/ui';
 import { addDays } from '@/domain/calculations/dates';
@@ -202,7 +203,7 @@ export default function WorkoutDetail() {
             <Button
               title="Remove this workout"
               variant="ghost"
-              onPress={() => void actions.removeOneOff(w).then(() => router.back())}
+              onPress={() => void actions.removeOneOff(w).then(() => goBack('/training'))}
             />
           ) : null}
         </>

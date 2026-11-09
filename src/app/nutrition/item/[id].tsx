@@ -1,6 +1,7 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 
+import { goBack } from '@/navigation/back';
 import { Banner, ConfirmDialog, ErrorState, LoadingState } from '@/components/feedback';
 import { Button, Card, NumberField, Screen, Text } from '@/components/ui';
 import { checkGrams } from '@/domain/nutrition/totals';
@@ -64,7 +65,7 @@ function EditForm({ item, onServer }: { item: MealLogItem; onServer: boolean }) 
       };
     }
     await actions.updateItem(item, changes);
-    router.back();
+    goBack('/nutrition');
   };
 
   return (
@@ -104,7 +105,7 @@ function EditForm({ item, onServer }: { item: MealLogItem; onServer: boolean }) 
         onConfirm={async () => {
           await actions.deleteItem(item, onServer);
           setConfirmDelete(false);
-          router.back();
+          goBack('/nutrition');
         }}
       />
     </Screen>

@@ -1,6 +1,7 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 
+import { goBack } from '@/navigation/back';
 import { Banner, ConfirmDialog, ErrorState } from '@/components/feedback';
 import { Button, Card, Screen, SectionHeader, Text } from '@/components/ui';
 import { isContraindicated, type RestrictionTag } from '@/domain/training/injury';
@@ -114,7 +115,7 @@ export default function ExerciseDetail() {
             onConfirm={async () => {
               await actions.archive(row);
               setConfirmArchive(false);
-              router.back();
+              goBack('/training/exercises');
             }}
           />
         </>
