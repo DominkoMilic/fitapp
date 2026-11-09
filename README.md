@@ -2,23 +2,25 @@
 
 A mobile fitness coach, workout planner, nutrition tracker and activity tracker for iOS and Android, built with Expo (React Native) and Supabase.
 
-**Status:** Phases 1–6 (Foundation, Progress, Training, Nutrition, GPS activities, Personal coach) are implemented. Phase 7 (Production readiness) is next, after review. See the phase reports in [`docs/`](docs/).
+**Status:** All seven V1 phases are implemented (Foundation, Progress, Training, Nutrition, GPS activities, Personal coach, Production readiness). What's left before the stores is in [`docs/release/checklist.md`](docs/release/checklist.md): legal review, real-device testing and the store submissions. See the phase reports in [`docs/`](docs/).
 
 ## Documents
 
-| File                                               | What it is                                                             |
-| -------------------------------------------------- | ---------------------------------------------------------------------- |
-| [`PACE_Specification.pdf`](PACE_Specification.pdf) | The full specification as a PDF, for reading                           |
-| [`docs/PACE_SPEC.md`](docs/PACE_SPEC.md)           | The same specification in Markdown: the source of truth                |
-| [`CLAUDE.md`](CLAUDE.md)                           | Working rules for coding agents in this repository                     |
-| [`docs/decisions.md`](docs/decisions.md)           | Decisions that clarify or deviate from the spec                        |
-| [`docs/migrations.md`](docs/migrations.md)         | Database migrations, the security model and DB tests                   |
-| [`docs/phase-1-report.md`](docs/phase-1-report.md) | What Phase 1 delivered, test results and known limitations             |
-| [`docs/phase-2-report.md`](docs/phase-2-report.md) | Phase 2: weight, measurements, check-in, milestones, offline sync      |
-| [`docs/phase-3-report.md`](docs/phase-3-report.md) | Phase 3: exercise library, calendar, workouts, history, records        |
-| [`docs/phase-4-report.md`](docs/phase-4-report.md) | Phase 4: food logging, USDA catalogue, recipes, planner, shopping list |
-| [`docs/phase-5-report.md`](docs/phase-5-report.md) | Phase 5: GPS walk/run/ride recording, routes, manual activities        |
-| [`docs/phase-6-report.md`](docs/phase-6-report.md) | Phase 6: daily coach, 2-week target review, weekly report, reminders   |
+| File                                               | What it is                                                               |
+| -------------------------------------------------- | ------------------------------------------------------------------------ |
+| [`PACE_Specification.pdf`](PACE_Specification.pdf) | The full specification as a PDF, for reading                             |
+| [`docs/PACE_SPEC.md`](docs/PACE_SPEC.md)           | The same specification in Markdown: the source of truth                  |
+| [`CLAUDE.md`](CLAUDE.md)                           | Working rules for coding agents in this repository                       |
+| [`docs/decisions.md`](docs/decisions.md)           | Decisions that clarify or deviate from the spec                          |
+| [`docs/migrations.md`](docs/migrations.md)         | Database migrations, the security model and DB tests                     |
+| [`docs/phase-1-report.md`](docs/phase-1-report.md) | What Phase 1 delivered, test results and known limitations               |
+| [`docs/phase-2-report.md`](docs/phase-2-report.md) | Phase 2: weight, measurements, check-in, milestones, offline sync        |
+| [`docs/phase-3-report.md`](docs/phase-3-report.md) | Phase 3: exercise library, calendar, workouts, history, records          |
+| [`docs/phase-4-report.md`](docs/phase-4-report.md) | Phase 4: food logging, USDA catalogue, recipes, planner, shopping list   |
+| [`docs/phase-5-report.md`](docs/phase-5-report.md) | Phase 5: GPS walk/run/ride recording, routes, manual activities          |
+| [`docs/phase-6-report.md`](docs/phase-6-report.md) | Phase 6: daily coach, 2-week target review, weekly report, reminders     |
+| [`docs/phase-7-report.md`](docs/phase-7-report.md) | Phase 7: account deletion, export, legal, accessibility, release setup   |
+| [`docs/release/`](docs/release/)                   | Release checklist, store listing and privacy answers, device test matrix |
 
 ## Tech stack
 
@@ -129,21 +131,21 @@ Store the Supabase values per environment in EAS (`eas env:create`), or in `.env
 
 ## Scripts
 
-| Command                                                 | What it does                                                                                                                         |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `npm run check`                                         | Typecheck + lint (zero warnings) + unit/component tests                                                                              |
-| `npm test`                                              | Jest unit and component tests                                                                                                        |
-| `npm run typecheck` / `npm run lint` / `npm run format` | Individual checks                                                                                                                    |
-| `npm run db:verify`                                     | Applies all migrations to a throwaway PostgreSQL, runs the pgTAP tests and the app↔DB contract test (no Docker needed)               |
-| `npm run db:test`                                       | pgTAP tests against the local Supabase stack (`supabase test db`)                                                                    |
-| `npm run db:reset`                                      | Rebuilds the local database (Docker)                                                                                                 |
-| `npm run db:types`                                      | Regenerates `src/integrations/supabase/database.types.ts`                                                                            |
-| `npm run db:seed-training`                              | Regenerates the exercise/template seed migration from `src/domain/training/catalogue.ts` (`npm run check` verifies it is up to date) |
-| `npm run db:seed-usda -- <csv dir>`                     | Regenerates the USDA food seed migration from the downloaded SR Legacy CSVs                                                          |
-| `npm run functions:sync`                                | Copies the shared parser/normaliser into `supabase/functions/_shared` (`npm run check` verifies it)                                  |
-| `npm run e2e:web`                                       | Builds the web bundle and runs the Playwright onboarding smoke test (mocked backend)                                                 |
+| Command                                                 | What it does                                                                                                                              |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run check`                                         | Typecheck + lint (zero warnings) + unit/component tests                                                                                   |
+| `npm test`                                              | Jest unit and component tests                                                                                                             |
+| `npm run typecheck` / `npm run lint` / `npm run format` | Individual checks                                                                                                                         |
+| `npm run db:verify`                                     | Applies all migrations to a throwaway PostgreSQL, runs the pgTAP tests and the app↔DB contract test (no Docker needed)                    |
+| `npm run db:test`                                       | pgTAP tests against the local Supabase stack (`supabase test db`)                                                                         |
+| `npm run db:reset`                                      | Rebuilds the local database (Docker)                                                                                                      |
+| `npm run db:types`                                      | Regenerates `src/integrations/supabase/database.types.ts`                                                                                 |
+| `npm run db:seed-training`                              | Regenerates the exercise/template seed migration from `src/domain/training/catalogue.ts` (`npm run check` verifies it is up to date)      |
+| `npm run db:seed-usda -- <csv dir>`                     | Regenerates the USDA food seed migration from the downloaded SR Legacy CSVs                                                               |
+| `npm run functions:sync`                                | Copies shared tested modules (recipe parser/normaliser, account deletion) into `supabase/functions/_shared` (`npm run check` verifies it) |
+| `npm run e2e:web`                                       | Builds the web bundle and runs the Playwright onboarding smoke test (mocked backend)                                                      |
 
-Device E2E: `maestro test tests/e2e/maestro/onboarding.yaml -e EMAIL=… -e PASSWORD=…` against a development build.
+Device E2E: `maestro test tests/e2e/maestro/smoke -e APP_ID=app.pace.fitness.development -e EMAIL=… -e PASSWORD=…` against a development or preview build (see [`tests/e2e/maestro/README.md`](tests/e2e/maestro/README.md)). CI: [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 
 ## Project structure
 
@@ -201,5 +203,7 @@ Phase 4 branches: `feature/p4-schema`, `feature/p4-domain`, `feature/p4-logging`
 Phase 5 branches: `feature/p5-schema`, `feature/p5-domain`, `feature/p5-tracking`, `feature/p5-activities`.
 
 Phase 6 branches: `feature/p6-schema`, `feature/p6-domain`, `feature/p6-coach`, `feature/p6-reports`, `feature/p6-notifications`.
+
+Phase 7 branches: `feature/p7-account`, `feature/p7-legal`, `feature/p7-quality`, `feature/p7-release`.
 
 `claude/pace-spec-review-usad8z` contains all of them.
