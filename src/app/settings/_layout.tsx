@@ -14,6 +14,8 @@ const TITLES: Record<string, string> = {
   equipment: 'Equipment',
   appearance: 'Appearance',
   notifications: 'Reminders',
+  data: 'Your data',
+  'delete-account': 'Delete account',
 };
 
 export default function SettingsLayout() {

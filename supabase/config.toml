@@ -427,3 +427,7 @@ enabled = true
 # accepts tokens signed with the legacy JWT secret, which rejects sessions signed with the new keys.
 [functions.recipes-proxy]
 verify_jwt = false
+
+# Authenticates the caller itself and requires a recent password re-entry.
+[functions.delete-account]
+verify_jwt = false

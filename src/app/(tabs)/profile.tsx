@@ -63,7 +63,11 @@ export default function ProfileTab() {
       <ListItem title="Terms of use" onPress={() => router.push('/legal/terms')} />
       <ListItem title="Health disclaimer" onPress={() => router.push('/legal/disclaimer')} />
       <ListItem title="Export my data" subtitle="Available before public release" />
-      <ListItem title="Delete my account" subtitle="Available before public release" />
+      <ListItem
+        title="Your data"
+        subtitle="Export, or delete your account"
+        onPress={() => router.push('/settings/data')}
+      />
 
       <ListItem
         title="Sign out"

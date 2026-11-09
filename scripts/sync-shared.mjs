@@ -15,6 +15,7 @@ const FILES = {
   'src/domain/nutrition/measure-parser.ts': 'measure-parser.ts',
   'src/integrations/recipes/recipe-provider.interface.ts': 'recipe-provider.interface.ts',
   'src/integrations/recipes/recipe-normalizer.ts': 'recipe-normalizer.ts',
+  'src/domain/account/delete-account.ts': 'delete-account.ts',
 };
 const RENAMES = {
   '@/domain/nutrition/measure-parser': './measure-parser.ts',
