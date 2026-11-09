@@ -7,6 +7,7 @@ import { buildExport, type ExportProgress } from '@/features/account/export';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useSyncActions, useSyncStatus } from '@/features/sync/SyncProvider';
 import { shareJsonFile } from '@/services/share/share-file';
+import { plural } from '@/domain/format';
 
 export default function YourData() {
   const session = useAuth().session;
@@ -45,7 +46,7 @@ export default function YourData() {
       </Text>
       {unsynced ? (
         <Banner
-          message={`${unsynced} change${unsynced > 1 ? 's' : ''} on this phone ${unsynced > 1 ? "haven't" : "hasn't"} synced yet and won't be in the export until they do.`}
+          message={`${plural(unsynced, 'change')} on this phone ${unsynced === 1 ? "hasn't" : "haven't"} synced yet and won't be in the export until they do.`}
         />
       ) : null}
       {progress ? (

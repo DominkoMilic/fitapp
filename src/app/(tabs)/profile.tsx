@@ -1,11 +1,12 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 
-import { ConfirmDialog } from '@/components/feedback';
+import { Banner, ConfirmDialog } from '@/components/feedback';
 import { Card, ListItem, Screen, SectionHeader, Text } from '@/components/ui';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useProfile } from '@/features/profile/api';
 import { useSyncActions, useSyncStatus } from '@/features/sync/SyncProvider';
+import { plural } from '@/domain/format';
 
 export default function ProfileTab() {
   const { session, signOut } = useAuth();
@@ -22,11 +23,19 @@ export default function ProfileTab() {
         Profile
       </Text>
       <Card>
-        <Text variant="title">{profile.data?.display_name ?? ''}</Text>
+        <Text variant="title">
+          {profile.data?.display_name ?? (profile.isPending ? 'Loading…' : 'Your profile')}
+        </Text>
         <Text variant="small" color="textSecondary">
           {session?.user.email}
         </Text>
       </Card>
+      {profile.isError ? (
+        <Banner
+          tone="warning"
+          message="Your profile couldn't be loaded. Settings may show older values until you're back online."
+        />
+      ) : null}
 
       <SectionHeader title="You" />
       <ListItem title="Personal information" onPress={() => router.push('/settings/personal')} />
@@ -49,27 +58,26 @@ export default function ProfileTab() {
         onPress={() => router.push('/settings/nutrition')}
       />
       <ListItem title="Equipment" onPress={() => router.push('/settings/equipment')} />
-      <ListItem title="Appearance" onPress={() => router.push('/settings/appearance')} />
       <ListItem title="Reminders" onPress={() => router.push('/settings/notifications')} />
+      <ListItem title="Appearance" onPress={() => router.push('/settings/appearance')} />
 
-      <ListItem
-        title="Sync status"
-        value={unsynced ? `${unsynced} waiting` : 'All synced'}
-        onPress={() => router.push('/settings/sync')}
-      />
-
-      <SectionHeader title="Privacy" />
-      <ListItem title="Privacy policy" onPress={() => router.push('/legal/privacy')} />
-      <ListItem title="Terms of use" onPress={() => router.push('/legal/terms')} />
-      <ListItem title="Health disclaimer" onPress={() => router.push('/legal/disclaimer')} />
-      <ListItem title="Data sources and licences" onPress={() => router.push('/legal/licences')} />
-      <ListItem title="Export my data" subtitle="Available before public release" />
+      <SectionHeader title="Your data and privacy" />
       <ListItem
         title="Your data"
         subtitle="Export, or delete your account"
         onPress={() => router.push('/settings/data')}
       />
+      <ListItem title="Privacy policy" onPress={() => router.push('/legal/privacy')} />
+      <ListItem title="Terms of use" onPress={() => router.push('/legal/terms')} />
+      <ListItem title="Health disclaimer" onPress={() => router.push('/legal/disclaimer')} />
+      <ListItem title="Data sources and licences" onPress={() => router.push('/legal/licences')} />
 
+      <SectionHeader title="Account" />
+      <ListItem
+        title="Sync status"
+        value={unsynced ? `${unsynced} waiting` : 'All synced'}
+        onPress={() => router.push('/settings/sync')}
+      />
       <ListItem
         title="Sign out"
         destructive
@@ -83,7 +91,7 @@ export default function ProfileTab() {
         title="Sign out?"
         message={
           unsynced
-            ? `${unsynced} change${unsynced > 1 ? 's are' : ' is'} not synced yet. They stay safely on this phone and sync when you sign in again with this account.`
+            ? `${plural(unsynced, 'change')} ${unsynced === 1 ? 'is' : 'are'} not synced yet. They stay safely on this phone and sync when you sign in again with this account.`
             : 'Your data stays in your account. You can sign in again at any time.'
         }
         confirmLabel={unsynced ? 'Sign out anyway' : 'Sign out'}
@@ -92,10 +100,13 @@ export default function ProfileTab() {
         onCancel={() => setConfirmSignOut(false)}
         onConfirm={async () => {
           setSigningOut(true);
-          await signOut();
-          setSigningOut(false);
-          setConfirmSignOut(false);
-          router.replace('/welcome');
+          try {
+            await signOut();
+            router.replace('/welcome');
+          } finally {
+            setSigningOut(false);
+            setConfirmSignOut(false);
+          }
         }}
       />
     </Screen>

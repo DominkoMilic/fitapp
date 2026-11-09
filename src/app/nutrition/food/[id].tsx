@@ -4,7 +4,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { Banner, ConfirmDialog, ErrorState, LoadingState, useToast } from '@/components/feedback';
 import { Button, Card, ChipGroup, NumberField, Screen, StatTile, Text } from '@/components/ui';
-import { checkGrams, nutritionForGrams } from '@/domain/nutrition/totals';
+import { checkGrams, nutritionForGrams , MEAL_LABELS } from '@/domain/nutrition/totals';
 import { useToday } from '@/features/dashboard/useToday';
 import { portionsOf, useFood, useNutritionActions } from '@/features/nutrition/api';
 import { MealPicker } from '@/features/nutrition/MealPicker';
@@ -54,7 +54,7 @@ export default function FoodAmount() {
     );
     // Back to the diary (not the search screen), where the new entry shows up.
     router.dismissTo('/nutrition');
-    showToast(`Added to ${meal}`);
+    showToast(`Added to ${MEAL_LABELS[meal].toLowerCase()}`);
   };
   const onAdd = () => {
     const c = checkGrams(grams);

@@ -4,6 +4,7 @@ import { Card, SectionHeader, StatTile, Text } from '@/components/ui';
 import { formatWeight, type UnitSystem } from '@/domain/calculations/units';
 import type { WeeklyReport } from '@/domain/reports/weekly';
 import { spacing } from '@/theme';
+import { formatDateRange, plural } from '@/domain/format';
 
 const NO_DATA = 'No data';
 const km = (v: number | null, unit: UnitSystem) =>
@@ -24,7 +25,7 @@ export function WeeklyReportView({ report: r, unit }: { report: WeeklyReport; un
   return (
     <View style={styles.stack}>
       <Text variant="small" color={r.inProgress ? 'accent' : 'textSecondary'}>
-        {r.weekStart} – {r.weekEnd}
+        {formatDateRange(r.weekStart, r.weekEnd)}
         {r.inProgress ? ' · In progress' : ''}
       </Text>
 
@@ -42,7 +43,7 @@ export function WeeklyReportView({ report: r, unit }: { report: WeeklyReport; un
         <StatTile
           label="Change this week"
           value={changeText}
-          caption={`${r.weight.weighIns} ${r.weight.weighIns === 1 ? 'weigh-in' : 'weigh-ins'}`}
+          caption={plural(r.weight.weighIns, 'weigh-in')}
         />
       </View>
       {r.weight.trendKgPerWeek !== null ? (
@@ -78,9 +79,7 @@ export function WeeklyReportView({ report: r, unit }: { report: WeeklyReport; un
         <Text color="textSecondary">{NO_DATA}</Text>
       ) : (
         <Card>
-          <Text>
-            {r.activities.count} {r.activities.count === 1 ? 'activity' : 'activities'}
-          </Text>
+          <Text>{plural(r.activities.count, 'activity', 'activities')}</Text>
           {distances.map(([label, v]) => (
             <Text key={label} variant="small" color="textSecondary">
               {label}: {v}

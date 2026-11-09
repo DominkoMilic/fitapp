@@ -8,6 +8,7 @@ import { targetFor } from '@/features/dashboard/today';
 import { useToday } from '@/features/dashboard/useToday';
 import { useTargetHistory } from '@/features/profile/api';
 import { useWeightStats } from '@/features/weight/useWeightStats';
+import { formatDateRange } from '@/domain/format';
 
 const OUTCOME: Record<string, string> = {
   increase_fast_loss: 'Eat a little more',
@@ -39,7 +40,7 @@ function Details({ a }: { a: TargetAdjustment }) {
   return (
     <>
       <Text variant="small" color="textSecondary">
-        {a.window_start} – {a.window_end}
+        {formatDateRange(a.window_start, a.window_end)}
       </Text>
       <Text variant="small">
         Complete food days: {complete ?? '—'} of 21 ({Math.round(Number(a.adherence ?? 0) * 100)}%)

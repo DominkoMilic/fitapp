@@ -28,6 +28,7 @@ import { loggedAmount } from '@/features/nutrition/labels';
 import { useNutritionDay } from '@/features/nutrition/useNutritionDay';
 import { dayLabel } from '@/features/training/labels';
 import { spacing, useTheme } from '@/theme';
+import { plural } from '@/domain/format';
 
 const fmt = (v: number) => String(Math.round(v));
 
@@ -209,7 +210,7 @@ export default function Nutrition() {
             ))}
             {!items.length && yItems.length ? (
               <Button
-                title={`Repeat yesterday's ${MEAL_LABELS[meal].toLowerCase()} (${yItems.length} item${yItems.length > 1 ? 's' : ''})`}
+                title={`Repeat yesterday's ${MEAL_LABELS[meal].toLowerCase()} (${plural(yItems.length, 'item')})`}
                 variant="ghost"
                 fullWidth={false}
                 onPress={() =>

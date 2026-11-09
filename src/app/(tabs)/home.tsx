@@ -29,6 +29,7 @@ import { SyncBanner } from '@/features/sync/SyncBanner';
 import { useWeightStats } from '@/features/weight/useWeightStats';
 import { ResumeWorkoutCard } from '@/features/training/ResumeWorkoutCard';
 import { radius, spacing, TOUCH_TARGET, useTheme } from '@/theme';
+import { intensityLabel } from '@/domain/format';
 
 const WEEKDAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -202,7 +203,7 @@ export default function Home() {
         <Text variant="title">{session ? session.title : 'No plan for today'}</Text>
         {session && session.minutes ? (
           <Text variant="small" color="textSecondary">
-            {session.minutes} min · {session.intensity}
+            {session.minutes} min · {intensityLabel(session.intensity)}
           </Text>
         ) : null}
         {session?.notes.map((n) => (

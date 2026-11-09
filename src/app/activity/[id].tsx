@@ -14,6 +14,7 @@ import { useProfile } from '@/features/profile/api';
 import { useWeightStats } from '@/features/weight/useWeightStats';
 import { formatClock } from '@/hooks/useNow';
 import { spacing } from '@/theme';
+import { formatDate } from '@/domain/format';
 
 export default function ActivityDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -52,7 +53,7 @@ export default function ActivityDetail() {
     <Screen edges={['bottom']}>
       <Text variant="heading">{ACTIVITY_LABEL[type]}</Text>
       <Text variant="small" color="textSecondary">
-        {a.local_date} ·{' '}
+        {formatDate(a.local_date)} ·{' '}
         {a.source === 'manual'
           ? 'Added manually'
           : QUALITY_LABEL[a.gps_quality as keyof typeof QUALITY_LABEL]}

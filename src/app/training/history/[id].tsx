@@ -12,6 +12,7 @@ import { useSyncActions } from '@/features/sync/SyncProvider';
 import { useSessions } from '@/features/training/session-api';
 import { KG_PER_LB } from '@/domain/calculations/units';
 import { spacing } from '@/theme';
+import { completionLabel, formatDate } from '@/domain/format';
 
 export default function SessionDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -50,7 +51,7 @@ export default function SessionDetail() {
         {s.title}
       </Text>
       <Text color="textSecondary">
-        {s.local_date} · {s.completion_status}
+        {formatDate(s.local_date)} · {completionLabel(s.completion_status)}
         {s.source === 'manual' ? ' · logged manually' : ''}
       </Text>
       <View style={styles.row}>
@@ -64,8 +65,12 @@ export default function SessionDetail() {
       <View style={styles.row}>
         <StatTile
           label="Volume"
-          value={s.total_volume_kg ? `${Math.round(Number(s.total_volume_kg))}` : '—'}
-          unit={s.total_volume_kg ? 'kg' : undefined}
+          value={
+            s.total_volume_kg
+              ? `${Math.round(metric ? Number(s.total_volume_kg) : Number(s.total_volume_kg) / KG_PER_LB)}`
+              : '—'
+          }
+          unit={s.total_volume_kg ? (metric ? 'kg' : 'lb') : undefined}
         />
         <StatTile
           label="Calories"

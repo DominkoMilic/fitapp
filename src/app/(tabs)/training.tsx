@@ -15,6 +15,7 @@ import { useScheduledWorkouts, useScheduleGeneration } from '@/features/training
 import { ResumeWorkoutCard } from '@/features/training/ResumeWorkoutCard';
 import { ResumeActivityCard } from '@/features/activity/ResumeActivityCard';
 import { spacing } from '@/theme';
+import { EXERCISES } from '@/domain/training/catalogue';
 
 export default function Training() {
   const { today } = useToday();
@@ -115,7 +116,7 @@ export default function Training() {
       />
       <ListItem
         title="Exercise library"
-        subtitle="56 exercises with instructions"
+        subtitle={`${EXERCISES.length} exercises with instructions`}
         onPress={() => router.push('/training/exercises')}
       />
     </Screen>

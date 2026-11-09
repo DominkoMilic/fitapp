@@ -8,6 +8,7 @@ import { useActivities } from '@/features/activity/api';
 import { ACTIVITY_LABEL } from '@/features/activity/labels';
 import { useProfile } from '@/features/profile/api';
 import { formatClock } from '@/hooks/useNow';
+import { formatDate } from '@/domain/format';
 
 export default function ActivityHistory() {
   const { rows, isPending, isError, refetch } = useActivities();
@@ -48,7 +49,7 @@ export default function ActivityHistory() {
       }
       renderItem={(a) => (
         <ListItem
-          title={`${ACTIVITY_LABEL[a.activity_type as ActivityType]} · ${a.local_date}`}
+          title={`${ACTIVITY_LABEL[a.activity_type as ActivityType]} · ${formatDate(a.local_date)}`}
           subtitle={[
             a.distance_meters ? formatDistance(a.distance_meters, unit) : null,
             formatClock(a.moving_seconds),

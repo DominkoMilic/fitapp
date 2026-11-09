@@ -8,6 +8,7 @@ import { clearLocalData, requestAccountDeletion } from '@/features/account/delet
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useSyncActions, useSyncStatus } from '@/features/sync/SyncProvider';
 import { requireSupabase } from '@/integrations/supabase/client';
+import { plural } from '@/domain/format';
 
 const ERRORS = {
   reauthentication_required: 'Please enter your password again.',
@@ -77,7 +78,7 @@ export default function DeleteAccount() {
       {unsynced ? (
         <Banner
           tone="warning"
-          message={`${unsynced} change${unsynced > 1 ? 's' : ''} on this phone ${unsynced > 1 ? 'have' : 'has'} not synced and will be deleted too.`}
+          message={`${plural(unsynced, 'change')} on this phone ${unsynced === 1 ? 'has' : 'have'} not synced and will be deleted too.`}
         />
       ) : null}
       <TextField

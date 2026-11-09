@@ -23,6 +23,7 @@ import { OnboardingStep } from '@/features/onboarding/components/OnboardingStep'
 import { WEEKDAYS } from '@/features/onboarding/constants';
 import { useOnboardingDraft } from '@/features/onboarding/draft-store';
 import { spacing } from '@/theme';
+import { intensityLabel } from '@/domain/format';
 
 type Commitment = ScheduleValues['commitments'][number];
 
@@ -166,7 +167,8 @@ export default function ScheduleStep() {
         <Card key={`${c.title}-${i}`}>
           <Text variant="bodyStrong">{c.title}</Text>
           <Text variant="small" color="textSecondary">
-            {WEEKDAYS[c.weekday - 1]?.label} {c.localTime} · {c.durationMinutes} min · {c.intensity}
+            {WEEKDAYS[c.weekday - 1]?.label} {c.localTime} · {c.durationMinutes} min ·{' '}
+            {intensityLabel(c.intensity)}
           </Text>
           <Button
             title="Remove"

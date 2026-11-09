@@ -8,6 +8,7 @@ import { milestoneCatalogue } from '@/domain/milestones/evaluate';
 import { useGoalLike, useUnlockedMilestones } from '@/features/milestones/api';
 import { useProfile } from '@/features/profile/api';
 import { spacing, useTheme } from '@/theme';
+import { formatDate } from '@/domain/format';
 
 export default function MilestonesScreen() {
   const { colors } = useTheme();
@@ -58,7 +59,7 @@ export default function MilestonesScreen() {
             </Text>
             <Text variant="small" color="textSecondary">
               {u
-                ? `Unlocked ${String((u.metadata as { achieved_on?: string } | null)?.achieved_on ?? u.unlocked_at).slice(0, 10)}`
+                ? `Unlocked ${formatDate(String((u.metadata as { achieved_on?: string } | null)?.achieved_on ?? u.unlocked_at).slice(0, 10))}`
                 : description}
             </Text>
           </View>

@@ -7,6 +7,7 @@ import { addDays } from '@/domain/calculations/dates';
 import { useProfile } from '@/features/profile/api';
 import { useCachedReports, useWeeklyReport, useWeekStart } from '@/features/reports/api';
 import { WeeklyReportView } from '@/features/reports/WeeklyReportView';
+import { formatWeekOf } from '@/domain/format';
 
 /** This week (live) and the last 12 weeks. */
 export default function Reports() {
@@ -24,7 +25,7 @@ export default function Reports() {
       {past.map((w) => (
         <ListItem
           key={w}
-          title={`Week of ${w}`}
+          title={formatWeekOf(w)}
           subtitle={stored.has(w) ? 'Saved report' : undefined}
           onPress={() => router.push({ pathname: '/reports/[week]', params: { week: w } })}
         />

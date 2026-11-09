@@ -7,10 +7,14 @@ import { formatClock } from '@/hooks/useNow';
 import { useToday } from '@/features/dashboard/useToday';
 import { dayLabel } from '@/features/training/labels';
 import { useSessions } from '@/features/training/session-api';
+import { completionLabel, plural } from '@/domain/format';
+import { KG_PER_LB } from '@/domain/calculations/units';
+import { useProfile } from '@/features/profile/api';
 
 export default function History() {
   const { today } = useToday();
   const { sessions, sets, isPending, isError, refetch } = useSessions();
+  const metric = (useProfile().data?.unit_system ?? 'metric') === 'metric';
   // Completed sets per session, counted once (not per row).
   const doneBySession = useMemo(() => {
     const m = new Map<string, number>();
@@ -54,10 +58,12 @@ export default function History() {
             subtitle={[
               dayLabel(s.local_date, today),
               formatClock(s.duration_seconds),
-              done ? `${done} sets` : null,
-              s.total_volume_kg ? `${Math.round(Number(s.total_volume_kg))} kg volume` : null,
+              done ? plural(done, 'set') : null,
+              s.total_volume_kg
+                ? `${Math.round(metric ? Number(s.total_volume_kg) : Number(s.total_volume_kg) / KG_PER_LB)} ${metric ? 'kg' : 'lb'} volume`
+                : null,
               s.perceived_exertion !== null ? `RPE ${Number(s.perceived_exertion)}` : null,
-              s.completion_status !== 'completed' ? s.completion_status : null,
+              s.completion_status !== 'completed' ? completionLabel(s.completion_status) : null,
               s._pending ? 'not synced yet' : null,
             ]
               .filter(Boolean)

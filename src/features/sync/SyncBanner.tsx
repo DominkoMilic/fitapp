@@ -4,6 +4,7 @@ import { Banner } from '@/components/feedback';
 import { Card } from '@/components/ui';
 
 import { useSyncStatus } from './SyncProvider';
+import { plural } from '@/domain/format';
 
 /** Small sync indicator: only shown when something is waiting or failed. */
 export function SyncBanner() {
@@ -15,8 +16,8 @@ export function SyncBanner() {
         tone={failed ? 'danger' : 'info'}
         message={
           failed
-            ? `${failed} change${failed > 1 ? 's' : ''} couldn't be saved. Tap to review.`
-            : `${pending} change${pending > 1 ? 's' : ''} waiting to sync. They're safe on this phone.`
+            ? `${plural(failed, 'change')} couldn't be saved. Tap to review.`
+            : `${plural(pending, 'change')} waiting to sync. They're safe on this phone.`
         }
       />
     </Card>

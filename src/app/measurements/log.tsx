@@ -14,6 +14,7 @@ import { useToday } from '@/features/dashboard/useToday';
 import { useMeasurementActions } from '@/features/measurements/api';
 import { DateField } from '@/features/onboarding/components/DateField';
 import { useProfile } from '@/features/profile/api';
+import { plural } from '@/domain/format';
 
 export default function LogMeasurements() {
   const { today } = useToday();
@@ -40,7 +41,7 @@ export default function LogMeasurements() {
     try {
       await actions.saveMany(date, Object.fromEntries(entered.map(([k, v]) => [k, toCm(v)])));
       goBack('/progress/measurements');
-      showToast(`${entered.length} measurement${entered.length > 1 ? 's' : ''} saved`);
+      showToast(`${plural(entered.length, 'measurement')} saved`);
     } catch {
       setError("Couldn't save. Please try again.");
     } finally {

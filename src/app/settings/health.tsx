@@ -26,6 +26,7 @@ import {
 } from '@/features/profile/api';
 import { SaveState } from '@/features/profile/SaveState';
 import { spacing } from '@/theme';
+import { formatDate } from '@/domain/format';
 
 const STATUSES: InjuryStatus[] = [
   'active',
@@ -120,7 +121,7 @@ export default function HealthSettings() {
           <Text variant="small" color="textSecondary">
             {INJURY_STATUS_INFO[h.status as InjuryStatus].title}
             {h.pain_level !== null ? ` · pain ${h.pain_level}/10` : ''} · updated{' '}
-            {h.updated_at.slice(0, 10)}
+            {formatDate(h.updated_at.slice(0, 10))}
           </Text>
           <View style={{ flexDirection: 'row', gap: spacing.xs }}>
             <Button

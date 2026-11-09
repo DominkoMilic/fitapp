@@ -8,6 +8,7 @@ import { personalRecords, weekStartOf } from '@/domain/training/records';
 import { useActivities } from '@/features/activity/api';
 import { useProfile } from '@/features/profile/api';
 import { useSessions } from '@/features/training/session-api';
+import { formatDate, formatWeekOf } from '@/domain/format';
 
 export default function Records() {
   const { sessions, sets, isPending } = useSessions();
@@ -86,7 +87,7 @@ export default function Records() {
             {r.value} {unit[r.unit]}
           </Text>
           <Text variant="caption" color="textSecondary">
-            {r.key === 'week_minutes' ? `Week of ${r.date}` : r.date}
+            {r.key === 'week_minutes' ? formatWeekOf(r.date) : formatDate(r.date)}
           </Text>
         </Card>
       ))}
@@ -101,7 +102,7 @@ export default function Records() {
               : `${formatPace(r.value, units)} ${units === 'metric' ? '/km' : '/mi'}`}
           </Text>
           <Text variant="caption" color="textSecondary">
-            {r.date}
+            {formatDate(r.date)}
             {r.manual ? ' · entered manually' : ''}
           </Text>
         </Card>

@@ -12,6 +12,7 @@ import {
   useOwnedEquipment,
   useRestrictions,
 } from '@/features/training/library';
+import { categoryLabel, difficultyLabel, muscleLabel } from '@/domain/format';
 
 const EQUIPMENT_LABELS: Record<string, string> = {
   dumbbells: 'dumbbells',
@@ -62,7 +63,8 @@ export default function ExerciseDetail() {
         {e.name}
       </Text>
       <Text color="textSecondary">
-        {e.category} · {e.difficulty} · {e.muscleGroups.join(', ')}
+        {categoryLabel(e.category)} · {difficultyLabel(e.difficulty)} ·{' '}
+        {e.muscleGroups.map(muscleLabel).join(', ')}
       </Text>
       {restricted ? (
         <Banner

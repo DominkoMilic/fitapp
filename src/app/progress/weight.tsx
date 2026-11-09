@@ -19,6 +19,7 @@ import { kgToLb, type UnitSystem } from '@/domain/calculations/units';
 import { useProfile } from '@/features/profile/api';
 import { RANGE_DAYS, type RangeKey, useWeightStats } from '@/features/weight/useWeightStats';
 import { spacing } from '@/theme';
+import { formatDate } from '@/domain/format';
 
 const monthYear = (iso: string) =>
   new Date(`${iso}T12:00:00Z`).toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
@@ -65,7 +66,7 @@ export default function WeightScreen() {
   const fmtEntry = (e: (typeof s.weights.entries)[number]) => (
     <ListItem
       title={`${fmt(Number(e.weight_kg))} ${u}`}
-      subtitle={`${e.local_date}${e.note ? ` · ${e.note}` : ''}${e._failed ? ' · not saved, see Sync status' : e._pending ? ' · not synced yet' : ''}`}
+      subtitle={`${formatDate(e.local_date)}${e.note ? ` · ${e.note}` : ''}${e._failed ? ' · not saved, see Sync status' : e._pending ? ' · not synced yet' : ''}`}
       onPress={() => router.push({ pathname: '/weight/log', params: { id: e.id } })}
     />
   );

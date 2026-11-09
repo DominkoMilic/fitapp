@@ -12,6 +12,7 @@ import {
 } from '@/domain/measurements/measurements';
 import { useMeasurementActions, useMeasurements } from '@/features/measurements/api';
 import { useProfile } from '@/features/profile/api';
+import { formatDate } from '@/domain/format';
 
 export default function MeasurementsScreen() {
   const m = useMeasurements();
@@ -74,11 +75,11 @@ export default function MeasurementsScreen() {
         ))
       )}
       {m.rows.length ? <SectionHeader title="History" /> : null}
-      {m.rows.slice(0, 80).map((r) => (
+      {m.rows.map((r) => (
         <ListItem
           key={r.id}
           title={`${MEASUREMENT_LABELS[r.measurement_type as MeasurementType] ?? r.measurement_type}: ${fmt(Number(r.value_cm))}`}
-          subtitle={`${r.local_date}${r._failed ? ' · not saved, see Sync status' : r._pending ? ' · not synced yet' : ''}`}
+          subtitle={`${formatDate(r.local_date)}${r._failed ? ' · not saved, see Sync status' : r._pending ? ' · not synced yet' : ''}`}
           value="Delete"
           onPress={() => setToDelete(r.id)}
         />
