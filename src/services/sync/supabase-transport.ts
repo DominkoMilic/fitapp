@@ -60,6 +60,10 @@ export const ENTITY_CONFIG: Record<SyncEntity, EntityConfig> = {
   shopping_list_items: { onConflict: 'id', deleteMatch: byId },
   activities: { onConflict: 'id', deleteMatch: byId },
   activity_routes: { onConflict: 'id', deleteMatch: byId }, // handled by routeTransport
+  weekly_reports: {
+    onConflict: 'user_id,week_start',
+    deleteMatch: (op) => ({ user_id: op.userId, week_start: op.recordKey }),
+  },
 };
 
 /** Sends one outbox op to Supabase. Payloads are built by typed repositories. */

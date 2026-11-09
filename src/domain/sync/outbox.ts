@@ -27,7 +27,8 @@ export type SyncEntity =
   | 'shopping_lists'
   | 'shopping_list_items'
   | 'activities'
-  | 'activity_routes';
+  | 'activity_routes'
+  | 'weekly_reports';
 
 /** Parents sync before children (e.g. sessions → sets, recipes → plan entries, lists → items). */
 export const ENTITY_ORDER: Record<SyncEntity, number> = {
@@ -52,6 +53,7 @@ export const ENTITY_ORDER: Record<SyncEntity, number> = {
   activities: 1,
   // Route JSON is uploaded after the activity row exists (storage path is checked against it).
   activity_routes: 2,
+  weekly_reports: 0,
 };
 
 export type OpKind = 'upsert' | 'delete';

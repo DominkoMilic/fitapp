@@ -1193,6 +1193,78 @@ export type Database = {
         };
         Relationships: [];
       };
+      target_adjustments: {
+        Row: {
+          actual_rate_kg_week: number | null;
+          adherence: number | null;
+          created_at: string;
+          current_kcal: number;
+          decided_at: string | null;
+          id: string;
+          inputs: NonNullable<Json>;
+          observed_tdee: number | null;
+          proposed_at: string;
+          proposed_kcal: number | null;
+          reason_code: string;
+          resulting_target_id: string | null;
+          slow: boolean;
+          status: string;
+          updated_at: string;
+          user_id: string;
+          window_end: string;
+          window_start: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          actual_rate_kg_week?: number | null;
+          adherence?: number | null;
+          created_at?: string;
+          current_kcal: number;
+          decided_at?: string | null;
+          id?: string;
+          inputs?: NonNullable<Json>;
+          observed_tdee?: number | null;
+          proposed_at?: string;
+          proposed_kcal?: number | null;
+          reason_code: string;
+          resulting_target_id?: string | null;
+          slow?: boolean;
+          status: string;
+          updated_at?: string;
+          user_id: string;
+          window_end: string;
+          window_start: string;
+        };
+        Update: {
+          actual_rate_kg_week?: number | null;
+          adherence?: number | null;
+          created_at?: string;
+          current_kcal?: number;
+          decided_at?: string | null;
+          id?: string;
+          inputs?: NonNullable<Json>;
+          observed_tdee?: number | null;
+          proposed_at?: string;
+          proposed_kcal?: number | null;
+          reason_code?: string;
+          resulting_target_id?: string | null;
+          slow?: boolean;
+          status?: string;
+          updated_at?: string;
+          user_id?: string;
+          window_end?: string;
+          window_start?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'target_adjustments_resulting_target_id_fkey';
+            columns: ['resulting_target_id'];
+            isOneToOne: false;
+            referencedRelation: 'nutrition_targets';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       training_plans: {
         Row: {
           created_at: string;
@@ -1454,6 +1526,40 @@ export type Database = {
         };
         Relationships: [];
       };
+      weekly_reports: {
+        Row: {
+          client_updated_at: string | null;
+          created_at: string;
+          generated_at: string;
+          id: string;
+          payload: NonNullable<Json>;
+          updated_at: string;
+          user_id: string;
+          week_start: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          client_updated_at?: string | null;
+          created_at?: string;
+          generated_at?: string;
+          id?: string;
+          payload: NonNullable<Json>;
+          updated_at?: string;
+          user_id: string;
+          week_start: string;
+        };
+        Update: {
+          client_updated_at?: string | null;
+          created_at?: string;
+          generated_at?: string;
+          id?: string;
+          payload?: NonNullable<Json>;
+          updated_at?: string;
+          user_id?: string;
+          week_start?: string;
+        };
+        Relationships: [];
+      };
       weight_entries: {
         Row: {
           client_updated_at: string | null;
@@ -1685,6 +1791,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      accept_target_adjustment: {
+        Args: { p_adjustment_id: string; p_target: Json };
+        Returns: string;
+      };
       complete_onboarding: { Args: { payload: Json }; Returns: undefined };
       hit_rate_limit: {
         Args: { bucket_name: string; max_hits: number; uid: string; window_seconds: number };
