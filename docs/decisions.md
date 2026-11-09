@@ -103,3 +103,7 @@ Clarifications of, and deviations from, `docs/PACE_SPEC.md`. Newest first.
 8. **A root error boundary and a not-found route** replace the framework's developer screens.
 9. **Shared UX helpers:** `useSubmit` (one save at a time, error toast), `useGuardedAction`, `LoadErrorBanner`, `announce()` for screen readers, display formatters in `src/domain/format`.
 10. **npm audit:** 21 moderate and 1 low advisories, all in build/CLI/test tooling (`minimatch`/`glob` via the Expo CLI, the jest chain). The suggested fix is a major downgrade, so no change. Re-check when Expo SDK updates.
+
+## 2026-11-09: Test runner
+
+1. **Jest runs tests in worker threads** (`"workerThreads": true` in `package.json`). On Node 24, Jest's child-process workers occasionally crashed with SIGSEGV (about 1 run in 6), dropping a random test file from the run. With worker threads, 10 of 10 runs were clean. CI uses Node 22.

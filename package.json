@@ -101,7 +101,8 @@
     ],
     "setupFiles": [
       "<rootDir>/tests/setup/jest.setup.ts"
-    ]
+    ],
+    "workerThreads": true
   },
   "engines": {
     "node": ">=20"
