@@ -133,7 +133,7 @@ On-device storage:
 
 ## 8. Manual actions
 
-1. Hosted project: apply migrations `20261114000100` and `20261114000200`, then redeploy `recipes-proxy` and `delete-account`. I did this through the dashboard; see the final message.
+1. ~~Hosted project: apply migrations `20261114000100` and `20261114000200`, then redeploy `recipes-proxy` and `delete-account`.~~ **Done on 2026-11-09 through the dashboard.** Verified: 18 migrations, all 5 safety triggers, the onboarding flag, the public photo bucket, 0 cached TheMealDB photo links, and both functions answering 401 without a session.
 2. Production Auth:
    - remove `exp://**` from the redirect URLs
    - enable secure password change
