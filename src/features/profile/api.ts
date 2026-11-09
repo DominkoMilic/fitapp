@@ -288,6 +288,7 @@ export async function regenerateWeeklyPattern(userId: string): Promise<void> {
     maxSessionMinutes: p?.max_session_minutes ?? 45,
     commitments,
     focusTags: unwrap(goal)?.focus_tags ?? [],
+    sports: p?.sports ?? [],
     injuries: (unwrap(health) ?? []).map((h) => ({
       bodyArea: h.body_area as BodyArea | null,
       status: h.status as InjuryStatus,

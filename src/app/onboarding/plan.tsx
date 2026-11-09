@@ -71,6 +71,7 @@ export default function PlanStep() {
       maxSessionMinutes: schedule.maxSessionMinutes,
       commitments: schedule.commitments,
       focusTags: goals.focusTags,
+      sports: goals.sports,
       injuries: health.injuries.map((i) => ({ bodyArea: i.bodyArea, status: i.status })),
     });
     return { plan, pattern };

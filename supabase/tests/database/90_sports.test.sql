@@ -1,6 +1,6 @@
 -- All-sport support: any sport's events, a sports list, sport drills; garbage rejected.
 begin;
-select plan(12);
+select plan(14);
 select tests.create_user('99999999-0000-0000-0000-000000000001', 'sport@example.com');
 select tests.authenticate_as('99999999-0000-0000-0000-000000000001');
 
@@ -37,6 +37,11 @@ select tests.clear_authentication();
 
 select ok(position('pr -> ''sports''' in pg_get_functiondef('public.complete_onboarding(jsonb)'::regprocedure)) > 0,
   'onboarding saves the sports list');
+
+select is((select count(*) from public.workout_templates where category = 'sport_skills')::int, 12,
+  'a sport-skills pack per drill family is seeded');
+select is((select sports from public.exercises where slug = 'ball-mastery' and owner_id is null),
+  array['football', 'futsal'], 'football drills are sport drills tagged with their sports');
 
 select * from finish();
 rollback;

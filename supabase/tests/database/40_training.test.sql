@@ -6,18 +6,18 @@ select tests.create_user('aaaaaaaa-0000-0000-0000-0000000000c1', 'ta@example.com
 select tests.create_user('bbbbbbbb-0000-0000-0000-0000000000c2', 'tb@example.com');
 
 -- Seeded catalogue
-select is((select count(*) from public.exercises where owner_id is null)::int, 56, '56 system exercises seeded');
-select is((select count(*) from public.workout_templates)::int, 9, '9 templates seeded');
+select is((select count(*) from public.exercises where owner_id is null)::int, 87, '87 system exercises seeded');
+select is((select count(*) from public.workout_templates)::int, 20, '20 templates seeded');
 select is((select count(*) from public.workout_template_exercises t left join public.exercises e on e.id = t.exercise_id where e.id is null)::int, 0,
   'every template exercise exists');
-select is((select count(*) from public.exercises where owner_id is null and array_length(instructions, 1) >= 2 and caution_notes is not null)::int, 56,
+select is((select count(*) from public.exercises where owner_id is null and array_length(instructions, 1) >= 2 and caution_notes is not null)::int, 87,
   'every system exercise has instructions and caution notes');
 
 -- Custom exercises
 select tests.authenticate_as('aaaaaaaa-0000-0000-0000-0000000000c1');
 select lives_ok($$ insert into public.exercises (id, owner_id, name, category, tracking_type)
   values ('e0000000-0000-0000-0000-0000000000e1', 'aaaaaaaa-0000-0000-0000-0000000000c1', 'Farmer walk', 'core', 'time') $$, 'A creates a custom exercise');
-select is((select count(*) from public.exercises)::int, 57, 'A sees system + own exercises');
+select is((select count(*) from public.exercises)::int, 88, 'A sees system + own exercises');
 update public.exercises set name = 'hacked' where slug = 'push-up';
 select tests.clear_authentication();
 select is((select name from public.exercises where slug = 'push-up'), 'Push-up', 'users cannot modify system exercises');
@@ -53,7 +53,7 @@ select tests.clear_authentication();
 
 -- Isolation
 select tests.authenticate_as('bbbbbbbb-0000-0000-0000-0000000000c2');
-select is((select count(*) from public.exercises)::int, 56, 'B does not see A custom exercise');
+select is((select count(*) from public.exercises)::int, 87, 'B does not see A custom exercise');
 select is((select count(*) from public.scheduled_workouts)::int, 0, 'B cannot see A schedule');
 select is((select count(*) from public.workout_sessions)::int, 0, 'B cannot see A sessions');
 select is((select count(*) from public.exercise_sets)::int, 0, 'B cannot see A sets');
@@ -71,7 +71,7 @@ select is((select count(*) from public.exercise_sets where user_id = 'aaaaaaaa-0
   + (select count(*) from public.scheduled_workouts where user_id = 'aaaaaaaa-0000-0000-0000-0000000000c1')::int
   + (select count(*) from public.exercises where owner_id = 'aaaaaaaa-0000-0000-0000-0000000000c1')::int, 0,
   'account deletion removes all training data');
-select is((select count(*) from public.exercises where owner_id is null)::int, 56, 'system exercises remain');
+select is((select count(*) from public.exercises where owner_id is null)::int, 87, 'system exercises remain');
 
 select * from finish();
 rollback;

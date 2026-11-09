@@ -107,3 +107,10 @@ Clarifications of, and deviations from, `docs/PACE_SPEC.md`. Newest first.
 ## 2026-11-09: Test runner
 
 1. **Jest runs tests in worker threads** (`"workerThreads": true` in `package.json`). On Node 24, Jest's child-process workers occasionally crashed with SIGSEGV (about 1 run in 6), dropping a random test file from the run. With worker threads, 10 of 10 runs were clean. CI uses Node 22.
+
+## 2026-11-09: All-sport support
+
+1. **Sports are a catalogue, not a schema enum.** `src/domain/sports/catalogue.ts` lists 17 sports (labels, game/practice words, METs, the body areas each one loads, drill pack). Events are stored as `<sport>_match` / `<sport>_practice`, so existing `futsal_*` / `football_*` rows stay valid. The database checks only the shape; the app checks the catalogue.
+2. **Injury checks are per sport.** A sport is restricted only when an injury that isn't cleared for sport affects a body area that sport loads. Unknown sports and "Other" use every area.
+3. **Per-sport drill packs** (11 packs, no contact or sparring drills). Ball drills accept the old "football" equipment value. One weekly session becomes "<Sport> skills" (first sport's pack) when the user plays a sport, has the sport focus, trains at least 3 days and isn't restricted for that sport. The drill content should be reviewed by a coach or physiotherapist before public release.
+4. **The training seed moves to a new migration** (`20261115000200_training_seed_sports.sql`). Applied migrations are never edited, and the original seed runs before the `exercises.sports` column exists. The seed is an idempotent upsert, so the newest seed file brings any database up to date.

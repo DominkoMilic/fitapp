@@ -49,13 +49,7 @@ export interface OccurrenceRow {
 const kindOf = (k: string): OccurrenceRow['kind'] =>
   k === 'rest' ? 'rest' : k === 'recovery' ? 'recovery' : 'workout';
 const categoryOf = (k: string) =>
-  k === 'conditioning'
-    ? 'conditioning'
-    : k === 'recovery'
-      ? 'recovery'
-      : k === 'rest'
-        ? 'rest'
-        : 'strength';
+  k === 'conditioning' || k === 'sport_skills' || k === 'recovery' || k === 'rest' ? k : 'strength';
 const intensityOf = (v: string): OccurrenceRow['intensity'] =>
   v === 'easy' || v === 'moderate' || v === 'hard' || v === 'rest' ? v : 'moderate';
 

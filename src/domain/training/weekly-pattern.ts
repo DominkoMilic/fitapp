@@ -1,5 +1,5 @@
 import { type BodyArea, type InjuryLike, LOWER_BODY_AREAS, sportRestricted } from './injury';
-import { eventNoun, isMatchCategory, parseSportCategory } from '../sports/catalogue';
+import { SPORT_BY_KEY, eventNoun, isMatchCategory, parseSportCategory } from '../sports/catalogue';
 
 /**
  * Weekly training pattern generator (spec 10.2), version 1.
@@ -31,6 +31,7 @@ export type SessionKind =
   | 'full_body'
   | 'full_body_short'
   | 'conditioning'
+  | 'sport_skills'
   | 'recovery'
   | 'rest';
 
@@ -52,6 +53,8 @@ export interface PatternInputs {
   commitments: readonly Commitment[];
   focusTags: readonly string[];
   injuries: readonly InjuryLike[];
+  /** Sports the user plays (sports catalogue keys). The first one's drill pack can fill a session. */
+  sports?: readonly string[];
 }
 
 export interface WeeklyPattern {
@@ -71,7 +74,7 @@ const prev = (d: number) => (d === 1 ? 7 : d - 1);
 const next = (d: number) => (d === 7 ? 1 : d + 1);
 const isMatch = (c: Commitment) => isMatchCategory(c.category);
 
-const TITLES: Record<Exclude<SessionKind, 'commitment'>, string> = {
+const TITLES: Record<Exclude<SessionKind, 'commitment' | 'sport_skills'>, string> = {
   strength_upper: 'Strength A — Upper & core',
   strength_lower: 'Strength B — Lower & core',
   strength_lower_safe: 'Strength B — Lower & core (injury-safe)',
@@ -82,7 +85,7 @@ const TITLES: Record<Exclude<SessionKind, 'commitment'>, string> = {
   rest: 'Rest',
 };
 
-const TEMPLATE: Record<Exclude<SessionKind, 'commitment'>, string | null> = {
+const TEMPLATE: Record<Exclude<SessionKind, 'commitment' | 'sport_skills'>, string | null> = {
   strength_upper: 'strength-a-upper',
   strength_lower: 'strength-b-lower',
   strength_lower_safe: 'strength-b-ankle-safe',
@@ -188,6 +191,18 @@ export function generateWeeklyPattern(input: PatternInputs): WeeklyPattern {
   const short = input.maxSessionMinutes < 30;
   const minutes = Math.min(input.maxSessionMinutes, 45);
   const kinds = sessionKinds(chosen.length, input.focusTags, short);
+  // One weekly sport-skills session (the first sport's drill pack) for people who play a sport,
+  // train at least 3 days and are not injury-restricted for it. It replaces the third session.
+  const mainSport = input.sports?.[0] ? SPORT_BY_KEY[input.sports[0]] : undefined;
+  if (
+    mainSport &&
+    !short &&
+    chosen.length >= 3 &&
+    input.focusTags.includes('sport') &&
+    !sportRestricted(input.injuries, [mainSport.key])
+  ) {
+    kinds[2] = 'sport_skills';
+  }
   // Put lower-body work on the day furthest from the next hard day (never MD-1).
   const hardList = [...hardDays];
   const daysToNextHard = (d: number) => {
@@ -216,13 +231,25 @@ export function generateWeeklyPattern(input: PatternInputs): WeeklyPattern {
       notes.push('Adjusted for your injury: no jumping, lateral or single-leg balance work.');
     }
     if (afterHard.has(day)) notes.push('Day after a hard session — keep the effort moderate.');
+    if (kind === 'sport_skills' && mainSport) {
+      byDay.set(day, {
+        weekday: day,
+        kind,
+        title: `${mainSport.label} skills`,
+        intensity: 'moderate',
+        minutes: Math.min(input.maxSessionMinutes, 30),
+        templateSlug: mainSport.drillPack,
+        notes,
+      });
+      return;
+    }
     byDay.set(day, {
       weekday: day,
       kind,
-      title: TITLES[kind as Exclude<SessionKind, 'commitment'>],
+      title: TITLES[kind as Exclude<SessionKind, 'commitment' | 'sport_skills'>],
       intensity: 'moderate',
       minutes: kind === 'full_body_short' ? 20 : minutes,
-      templateSlug: TEMPLATE[kind as Exclude<SessionKind, 'commitment'>],
+      templateSlug: TEMPLATE[kind as Exclude<SessionKind, 'commitment' | 'sport_skills'>],
       notes,
     });
   });
