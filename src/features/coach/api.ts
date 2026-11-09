@@ -4,6 +4,7 @@ import { targetsFromEditedCalories } from '@/domain/calculations/targets';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { profileKeys, type NutritionTarget } from '@/features/profile/api';
 import { requireSupabase } from '@/integrations/supabase/client';
+import { fetchAllPages } from '@/integrations/supabase/paging';
 import type { Json, Tables, TablesInsert } from '@/integrations/supabase/database.types';
 
 export type TargetAdjustment = Tables<'target_adjustments'>;
@@ -32,30 +33,46 @@ export function useNutritionRange(from: string, to: string) {
     enabled: !!userId,
     staleTime: 5 * 60_000,
     queryFn: async () => {
-      const [status, items, water] = await Promise.all([
-        db()
-          .from('day_log_status')
-          .select('local_date')
-          .eq('user_id', userId as string)
-          .eq('nutrition_complete', true)
-          .gte('local_date', from)
-          .lte('local_date', to),
-        db()
-          .from('meal_log_items')
-          .select('local_date, kcal, protein_g')
-          .eq('user_id', userId as string)
-          .gte('local_date', from)
-          .lte('local_date', to)
-          .limit(5000),
-        db()
-          .from('water_logs')
-          .select('local_date, amount_ml')
-          .eq('user_id', userId as string)
-          .gte('local_date', from)
-          .lte('local_date', to)
-          .limit(5000),
+      // All rows in the range, past the 1000-row API cap (a 90-day food log is easily more).
+      const uid = userId as string;
+      const [statusRows, itemRows, waterRows] = await Promise.all([
+        fetchAllPages((a, b) =>
+          db()
+            .from('day_log_status')
+            .select('local_date')
+            .eq('user_id', uid)
+            .eq('nutrition_complete', true)
+            .gte('local_date', from)
+            .lte('local_date', to)
+            .order('local_date')
+            .range(a, b),
+        ),
+        fetchAllPages((a, b) =>
+          db()
+            .from('meal_log_items')
+            .select('local_date, kcal, protein_g')
+            .eq('user_id', uid)
+            .gte('local_date', from)
+            .lte('local_date', to)
+            .order('local_date')
+            .order('id')
+            .range(a, b),
+        ),
+        fetchAllPages((a, b) =>
+          db()
+            .from('water_logs')
+            .select('local_date, amount_ml')
+            .eq('user_id', uid)
+            .gte('local_date', from)
+            .lte('local_date', to)
+            .order('local_date')
+            .order('id')
+            .range(a, b),
+        ),
       ]);
-      for (const r of [status, items, water]) if (r.error) throw r.error;
+      const status = { data: statusRows };
+      const items = { data: itemRows };
+      const water = { data: waterRows };
       const byDay = new Map<string, DayTotals>();
       for (const i of items.data ?? []) {
         const d = byDay.get(i.local_date) ?? { date: i.local_date, kcal: 0, proteinG: 0 };

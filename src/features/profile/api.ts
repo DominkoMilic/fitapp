@@ -9,6 +9,7 @@ import {
 import { useAuth } from '@/features/auth/AuthProvider';
 import { clearFutureGenerated, ensureSchedule } from '@/features/training/schedule-sync';
 import { requireSupabase } from '@/integrations/supabase/client';
+import { fetchAllPages } from '@/integrations/supabase/paging';
 import type { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/database.types';
 
 export type Profile = Tables<'profiles'>;
@@ -72,13 +73,15 @@ export const useActiveGoal = () =>
 
 /** All target versions, newest first. The current one is the latest with effective_from <= today. */
 export const useTargetHistory = () =>
-  useUserQuery(profileKeys.targets, async (id) =>
-    unwrap(
-      await db()
+  useUserQuery(profileKeys.targets, (id) =>
+    fetchAllPages((a, b) =>
+      db()
         .from('nutrition_targets')
         .select('*')
         .eq('user_id', id)
-        .order('effective_from', { ascending: false }),
+        .order('effective_from', { ascending: false })
+        .order('id')
+        .range(a, b),
     ),
   );
 

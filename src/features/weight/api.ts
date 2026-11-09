@@ -8,6 +8,7 @@ import { useProfile } from '@/features/profile/api';
 import { eventTime } from '@/features/sync/local-time';
 import { syncKeys, useOutbox, useSyncActions } from '@/features/sync/SyncProvider';
 import { requireSupabase } from '@/integrations/supabase/client';
+import { fetchAllPages } from '@/integrations/supabase/paging';
 import type { Tables } from '@/integrations/supabase/database.types';
 
 export type WeightEntry = Tables<'weight_entries'> & { _pending?: boolean; _failed?: boolean };
@@ -20,13 +21,15 @@ export function useWeightEntries() {
     queryKey: syncKeys.entity(userId ?? 'anonymous', 'weight_entries'),
     enabled: !!userId,
     queryFn: async () => {
-      const { data, error } = await requireSupabase()
-        .from('weight_entries')
-        .select('*')
-        .eq('user_id', userId as string)
-        .order('measured_at', { ascending: false });
-      if (error) throw error;
-      return data;
+      return fetchAllPages((from, to) =>
+        requireSupabase()
+          .from('weight_entries')
+          .select('*')
+          .eq('user_id', userId as string)
+          .order('measured_at', { ascending: false })
+          .order('id')
+          .range(from, to),
+      );
     },
   });
   const entries = useMemo(

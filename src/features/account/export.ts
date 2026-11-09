@@ -1,5 +1,11 @@
-import { EXPORT_FORMAT_VERSION, EXPORT_PAGE, EXPORT_TABLES } from '@/domain/account/export-tables';
+import {
+  EXPORT_FORMAT_VERSION,
+  EXPORT_ORDER_KEY,
+  EXPORT_PAGE,
+  EXPORT_TABLES,
+} from '@/domain/account/export-tables';
 import { requireSupabase } from '@/integrations/supabase/client';
+import { fetchAllPages } from '@/integrations/supabase/paging';
 
 export interface ExportProgress {
   done: number;
@@ -21,19 +27,21 @@ export async function buildExport(
   let done = 0;
   for (const [table, ownerColumn] of EXPORT_TABLES) {
     onProgress({ done, total, label: table.replace(/_/g, ' ') });
-    const rows: unknown[] = [];
-    for (let from = 0; ; from += EXPORT_PAGE) {
-      const { data, error } = await db
-        .from(table)
-        .select('*')
-        // The table list is a union, so the column type can't be narrowed per table.
-        .eq(ownerColumn as never, user.id as never)
-        .range(from, from + EXPORT_PAGE - 1);
-      if (error) throw new Error(`${table}: ${error.message}`);
-      rows.push(...(data ?? []));
-      if (!data || data.length < EXPORT_PAGE) break;
+    try {
+      tables[table] = await fetchAllPages<unknown>(
+        (from, to) =>
+          db
+            .from(table)
+            .select('*')
+            // The table list is a union, so the column type can't be narrowed per table.
+            .eq(ownerColumn as never, user.id as never)
+            .order((EXPORT_ORDER_KEY[table] ?? 'id') as never)
+            .range(from, to),
+        { pageSize: EXPORT_PAGE },
+      );
+    } catch (e) {
+      throw new Error(`${table}: ${e instanceof Error ? e.message : 'read failed'}`);
     }
-    tables[table] = rows;
     done++;
   }
 

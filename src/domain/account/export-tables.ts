@@ -41,5 +41,13 @@ export const NOT_EXPORTED = ['edge_rate_limits'] as const;
 
 export type ExportTable = (typeof EXPORT_TABLES)[number][0];
 
+/** Unique per-user sort key for stable paging (tables without an `id` column). */
+export const EXPORT_ORDER_KEY: Partial<Record<ExportTable, string>> = {
+  daily_checkins: 'local_date',
+  day_log_status: 'local_date',
+  saved_recipes: 'recipe_id',
+  user_preferences: 'user_id',
+};
+
 export const EXPORT_PAGE = 1000;
 export const EXPORT_FORMAT_VERSION = 1;

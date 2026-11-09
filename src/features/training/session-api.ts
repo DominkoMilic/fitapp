@@ -6,6 +6,7 @@ import { applyPending } from '@/domain/sync/outbox';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { syncKeys, useOutbox, useSyncActions } from '@/features/sync/SyncProvider';
 import { requireSupabase } from '@/integrations/supabase/client';
+import { fetchAllPages } from '@/integrations/supabase/paging';
 import type { Tables } from '@/integrations/supabase/database.types';
 
 import { type ScheduledWorkout, useScheduleActions } from './schedule-api';
@@ -127,14 +128,16 @@ export function useSessions() {
     queryKey: syncKeys.entity(userId ?? 'anonymous', 'exercise_sets'),
     enabled: !!userId,
     queryFn: async () => {
-      const { data, error } = await requireSupabase()
-        .from('exercise_sets')
-        .select('*')
-        .eq('user_id', userId as string)
-        .order('created_at', { ascending: false })
-        .limit(5000);
-      if (error) throw error;
-      return data;
+      // Every set (records and milestones need full history), past the 1000-row API cap.
+      return fetchAllPages((from, to) =>
+        requireSupabase()
+          .from('exercise_sets')
+          .select('*')
+          .eq('user_id', userId as string)
+          .order('created_at', { ascending: false })
+          .order('id')
+          .range(from, to),
+      );
     },
   });
   const sessionRows = useMemo(

@@ -11,6 +11,7 @@ import { useToday } from '@/features/dashboard/useToday';
 import { profileKeys } from '@/features/profile/api';
 import { syncKeys, useOutbox, useSyncActions } from '@/features/sync/SyncProvider';
 import { requireSupabase } from '@/integrations/supabase/client';
+import { fetchAllPages } from '@/integrations/supabase/paging';
 import type { Tables } from '@/integrations/supabase/database.types';
 
 import { clearFutureGenerated, ensureSchedule } from './schedule-sync';
@@ -64,16 +65,18 @@ export function useScheduledWorkouts(from: string, to: string) {
     queryKey: [...syncKeys.entity(userId ?? 'anonymous', 'scheduled_workouts'), from, to],
     enabled: !!userId,
     queryFn: async () => {
-      const { data, error } = await db()
-        .from('scheduled_workouts')
-        .select('*')
-        .eq('user_id', userId as string)
-        .gte('scheduled_date', from)
-        .lte('scheduled_date', to)
-        .order('scheduled_date')
-        .order('scheduled_time', { nullsFirst: true });
-      if (error) throw error;
-      return data;
+      return fetchAllPages((a, b) =>
+        db()
+          .from('scheduled_workouts')
+          .select('*')
+          .eq('user_id', userId as string)
+          .gte('scheduled_date', from)
+          .lte('scheduled_date', to)
+          .order('scheduled_date')
+          .order('scheduled_time', { nullsFirst: true })
+          .order('id')
+          .range(a, b),
+      );
     },
   });
   const rows = useMemo(
