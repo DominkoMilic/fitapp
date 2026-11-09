@@ -10,6 +10,7 @@ export default function NutritionLayout() {
         'food-new': 'Your food',
         'item/[id]': 'Edit entry',
         'saved-meals': 'Saved meals',
+        'meal-edit': 'Your meal',
         recipes: 'Recipes',
         'recipe/[id]': 'Recipe',
         'recipe-new': 'New recipe',

@@ -1,6 +1,7 @@
 /** Planned meals → shopping list sources (spec 12.7). Pure. */
 import { parseMeasure } from './measure-parser';
 import { readIngredients } from './recipe-ingredients';
+import { readMealItems } from './saved-meal-draft';
 import type { ShoppingSource } from './shopping';
 
 export interface PlanEntryLike {
@@ -18,24 +19,6 @@ export interface RecipeLike {
 export interface SavedMealLike {
   name: string;
   items: unknown;
-}
-
-/** Saved meal snapshot items → name + grams (defensive). */
-function mealItems(m: SavedMealLike): { name: string; grams: number | null }[] {
-  if (!Array.isArray(m.items)) return [];
-  return m.items.flatMap((x) =>
-    x && typeof x === 'object' && typeof (x as { name?: unknown }).name === 'string'
-      ? [
-          {
-            name: (x as { name: string }).name,
-            grams:
-              typeof (x as { grams?: unknown }).grams === 'number'
-                ? (x as { grams: number }).grams
-                : null,
-          },
-        ]
-      : [],
-  );
 }
 
 /** Builds shopping sources from planned entries (pure apart from the lookups passed in). */
@@ -66,14 +49,26 @@ export function shoppingSources(input: {
     } else if (e.saved_meal_id) {
       const m = input.savedMeals.get(e.saved_meal_id);
       if (!m) continue;
-      sources.push({
-        recipeName: m.name,
-        factor: servings,
-        ingredients: mealItems(m).map((i) => ({
-          name: i.name,
-          measure: parseMeasure(i.grams ? `${i.grams} g` : ''),
-        })),
-      });
+      const loose: ShoppingSource['ingredients'] = [];
+      for (const i of readMealItems(m.items)) {
+        const r = i.kind === 'recipe' && i.recipeId ? input.recipes.get(i.recipeId) : undefined;
+        if (r) {
+          // A recipe inside a meal: its ingredients, scaled to the servings in the meal × planned.
+          const base = r.servings_stated ?? input.saved.get(r.id)?.base_servings ?? null;
+          if (!base) unscaled.push(r.name);
+          sources.push({
+            recipeName: r.name,
+            factor: base ? (servings * (i.quantity ?? 1)) / base : 1,
+            ingredients: readIngredients(r.ingredients).map((x) => ({
+              name: x.name,
+              measure: x.measure,
+            })),
+          });
+        } else {
+          loose.push({ name: i.name, measure: parseMeasure(i.grams ? `${i.grams} g` : '') });
+        }
+      }
+      if (loose.length) sources.push({ recipeName: m.name, factor: servings, ingredients: loose });
     }
   }
   return { sources, unscaled };

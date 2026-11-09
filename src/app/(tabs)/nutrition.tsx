@@ -12,16 +12,10 @@ import {
   Screen,
   SectionHeader,
   Text,
-  TextField,
   Toggle,
 } from '@/components/ui';
 import { addDays } from '@/domain/calculations/dates';
-import {
-  MEAL_LABELS,
-  MEAL_TYPES,
-  type MealType,
-  waterNeedsConfirm,
-} from '@/domain/nutrition/totals';
+import { MEAL_LABELS, MEAL_TYPES, waterNeedsConfirm } from '@/domain/nutrition/totals';
 import { useToday } from '@/features/dashboard/useToday';
 import { useDayLog, useNutritionActions } from '@/features/nutrition/api';
 import { loggedAmount } from '@/features/nutrition/labels';
@@ -41,8 +35,6 @@ export default function Nutrition() {
   const actions = useNutritionActions();
   const showToast = useToast((s) => s.show);
   const [confirmWater, setConfirmWater] = useState<number | null>(null);
-  const [saveMeal, setSaveMeal] = useState<MealType | null>(null);
-  const [mealName, setMealName] = useState('');
 
   if (day.isPending)
     return (
@@ -225,10 +217,9 @@ export default function Nutrition() {
                 title="Save as a meal"
                 variant="ghost"
                 fullWidth={false}
-                onPress={() => {
-                  setMealName('');
-                  setSaveMeal(meal);
-                }}
+                onPress={() =>
+                  router.push({ pathname: '/nutrition/meal-edit', params: { date, meal } })
+                }
               />
             ) : null}
           </View>
@@ -276,28 +267,6 @@ export default function Nutrition() {
           setConfirmWater(null);
         }}
       />
-      {saveMeal ? (
-        <Card raised>
-          <TextField
-            label={`Name this ${MEAL_LABELS[saveMeal].toLowerCase()}`}
-            value={mealName}
-            onChangeText={setMealName}
-            maxLength={80}
-            autoFocus
-          />
-          <Button
-            title="Save meal"
-            disabled={!mealName.trim()}
-            onPress={() =>
-              void actions.saveMeal(mealName, saveMeal, day.byMeal[saveMeal]).then(() => {
-                setSaveMeal(null);
-                showToast('Meal saved');
-              })
-            }
-          />
-          <Button title="Cancel" variant="ghost" onPress={() => setSaveMeal(null)} />
-        </Card>
-      ) : null}
     </Screen>
   );
 }

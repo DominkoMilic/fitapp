@@ -3,6 +3,7 @@ import { CircleCheck, Circle } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { plural } from '@/domain/format';
 import { Banner, ConfirmDialog, EmptyState, LoadingState, useToast } from '@/components/feedback';
 import { Button, Card, Screen, Text, TextField } from '@/components/ui';
 import { formatAmount } from '@/domain/nutrition/measure-parser';
@@ -56,6 +57,9 @@ export default function Shopping() {
   const [manual, setManual] = useState('');
   const [confirmNew, setConfirmNew] = useState(false);
 
+  const plannedCount = plan.rows.filter(
+    (e) => e.status !== 'skipped' && (e.recipe_id || e.saved_meal_id),
+  ).length;
   const built = useMemo(() => {
     const recipes = new Map([...mine.rows, ...(savedRows.data ?? [])].map((r) => [r.id, r]));
     return shoppingSources({
@@ -95,7 +99,7 @@ export default function Shopping() {
           title="No shopping list yet"
           message={
             built.sources.length
-              ? `Create one from ${built.sources.length} planned meal(s) for ${dayLabel(from, '')} – ${dayLabel(to, '')}.`
+              ? `Create one from ${plural(plannedCount, 'planned meal')} for ${dayLabel(from, '')} – ${dayLabel(to, '')}.`
               : 'Plan some meals with recipes or saved meals first.'
           }
           actionLabel={built.sources.length ? 'Create shopping list' : undefined}

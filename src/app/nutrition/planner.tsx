@@ -150,6 +150,7 @@ export default function Planner() {
           meal,
           name: i.name,
           foodId: i.food_id,
+          recipeId: i.recipe_id,
           quantity: i.quantity === null ? null : i.quantity * s,
           unit: i.unit,
           grams: n(i.grams),
@@ -161,7 +162,7 @@ export default function Planner() {
             fibre_g: n(i.fibre_g),
           },
           source: 'meal_plan',
-          confidence: 'user',
+          confidence: i.confidence,
         });
       }
     } else {

@@ -29,7 +29,8 @@ import {
   rowToDraft,
 } from '@/domain/nutrition/recipe-draft';
 import type { Nutrition } from '@/domain/nutrition/totals';
-import { type Food, useCustomFoods, useFoodSearch } from '@/features/nutrition/api';
+import { FoodPicker } from '@/features/nutrition/FoodPicker';
+import { RowActions } from '@/features/nutrition/RowActions';
 import {
   useFoodNutrition,
   useMyRecipes,
@@ -259,8 +260,13 @@ function Editor({
       )}
       {adding === 'food' ? (
         <FoodPicker
-          onPick={(ing) => {
-            set({ ingredients: [...d.ingredients, ing] });
+          onPick={({ food, grams, per100 }) => {
+            set({
+              ingredients: [
+                ...d.ingredients,
+                { kind: 'food', foodId: food.id, name: food.name, grams, per100 },
+              ],
+            });
             setAdding(null);
           }}
           onCancel={() => setAdding(null)}
@@ -360,48 +366,6 @@ function Editor({
   );
 }
 
-function RowActions({
-  label,
-  first,
-  last,
-  onMove,
-  onRemove,
-}: {
-  label: string;
-  first: boolean;
-  last: boolean;
-  onMove: (dir: -1 | 1) => void;
-  onRemove: () => void;
-}) {
-  return (
-    <View style={styles.actions}>
-      <Button
-        title="Move up"
-        variant="ghost"
-        fullWidth={false}
-        disabled={first}
-        accessibilityLabel={`Move ${label} up`}
-        onPress={() => onMove(-1)}
-      />
-      <Button
-        title="Move down"
-        variant="ghost"
-        fullWidth={false}
-        disabled={last}
-        accessibilityLabel={`Move ${label} down`}
-        onPress={() => onMove(1)}
-      />
-      <Button
-        title="Remove"
-        variant="ghost"
-        fullWidth={false}
-        accessibilityLabel={`Remove ${label}`}
-        onPress={onRemove}
-      />
-    </View>
-  );
-}
-
 function IngredientForm({
   initial,
   onDone,
@@ -461,89 +425,6 @@ function IngredientForm({
         disabled={!name.trim()}
         onPress={() => onDone({ kind: 'text', name: name.trim(), amount: amount.trim() })}
       />
-      <Button title="Cancel" variant="ghost" onPress={onCancel} />
-    </Card>
-  );
-}
-
-function FoodPicker({
-  onPick,
-  onCancel,
-}: {
-  onPick: (i: DraftIngredient) => void;
-  onCancel: () => void;
-}) {
-  const [query, setQuery] = useState('');
-  const [picked, setPicked] = useState<Food | null>(null);
-  const [grams, setGrams] = useState<number | null>(100);
-  const search = useFoodSearch(query);
-  const custom = useCustomFoods();
-  const q = query.trim().toLowerCase();
-  const options = [
-    ...custom.rows.filter((f) => q.length >= 2 && f.name.toLowerCase().includes(q)),
-    ...(search.data ?? []).filter((f) => f.owner_id === null),
-  ].slice(0, 12);
-  const num = (v: number | string | null) => (v === null ? null : Number(v));
-
-  if (picked) {
-    const ok = grams !== null && grams > 0 && grams <= 5000;
-    return (
-      <Card raised>
-        <Text variant="bodyStrong">{picked.name}</Text>
-        <NumberField label="Amount" suffix="g" value={grams} onChangeValue={setGrams} />
-        <Button
-          title="Add ingredient"
-          disabled={!ok}
-          onPress={() =>
-            onPick({
-              kind: 'food',
-              foodId: picked.id,
-              name: picked.name,
-              grams: grams as number,
-              per100:
-                picked.kcal === null
-                  ? null
-                  : {
-                      kcal: num(picked.kcal),
-                      protein_g: num(picked.protein_g),
-                      carbs_g: num(picked.carbs_g),
-                      fat_g: num(picked.fat_g),
-                      fibre_g: num(picked.fibre_g),
-                    },
-            })
-          }
-        />
-        <Button title="Back to search" variant="ghost" onPress={() => setPicked(null)} />
-      </Card>
-    );
-  }
-  return (
-    <Card raised>
-      <TextField
-        label="Search foods"
-        placeholder="e.g. chicken breast"
-        value={query}
-        onChangeText={setQuery}
-        autoCorrect={false}
-        autoFocus
-      />
-      {search.isError ? (
-        <Banner
-          tone="warning"
-          message="Food search needs a connection. Your own foods still appear."
-        />
-      ) : null}
-      {q.length >= 2 && !search.isPending && options.length === 0 ? (
-        <Text color="textSecondary">No foods found. You can type the ingredient instead.</Text>
-      ) : null}
-      {options.map((f) => (
-        <ListItem
-          key={f.id}
-          title={f.name}
-          subtitle={`${f.kcal === null ? '—' : Math.round(Number(f.kcal))} kcal per 100 g`}
-          onPress={() => setPicked(f)}
-        />
-      ))}
       <Button title="Cancel" variant="ghost" onPress={onCancel} />
     </Card>
   );
@@ -634,5 +515,4 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: spacing.xs },
   flex: { flex: 1 },
   tiles: { flexDirection: 'row', gap: spacing.xs, flexWrap: 'wrap' },
-  actions: { flexDirection: 'row', justifyContent: 'flex-end', flexWrap: 'wrap' },
 });

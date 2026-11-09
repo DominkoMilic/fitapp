@@ -2,6 +2,12 @@ import { useQuery } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
 import { useCallback } from 'react';
 
+import {
+  type MealDraft,
+  type MealItem,
+  mealItemToJson,
+  readMealItems,
+} from '@/domain/nutrition/saved-meal-draft';
 import { type MealType, type Nutrition, nutritionForGrams } from '@/domain/nutrition/totals';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useProfile } from '@/features/profile/api';
@@ -348,30 +354,21 @@ export function useNutritionActions() {
         createdOffline: !existsOnServer,
         payload: { local_date: date, nutrition_complete: complete },
       }),
-    saveMeal: async (name: string, meal: MealType | null, items: readonly MealLogItem[]) => {
-      const id = randomUUID();
+    /** Create (new id) or replace (existing id) one of your saved meals. Works offline. */
+    saveSavedMeal: async (draft: MealDraft, existing?: { id: string; onServer: boolean }) => {
+      const id = existing?.id ?? randomUUID();
       await write({
         id: randomUUID(),
         entity: 'saved_meals',
         recordKey: id,
         kind: 'upsert',
-        createdOffline: true,
+        createdOffline: !existing?.onServer,
         payload: {
           id,
-          name: name.trim().slice(0, 80),
-          meal_type: meal,
-          items: items.map((it) => ({
-            name: it.name_snapshot,
-            food_id: it.food_id,
-            quantity: it.quantity === null ? null : Number(it.quantity),
-            unit: it.unit,
-            grams: num(it.grams),
-            kcal: num(it.kcal),
-            protein_g: num(it.protein_g),
-            carbs_g: num(it.carbs_g),
-            fat_g: num(it.fat_g),
-            fibre_g: num(it.fibre_g),
-          })),
+          name: draft.name.trim().slice(0, 80),
+          meal_type: draft.mealType,
+          items: draft.items.map(mealItemToJson),
+          archived_at: null,
         },
       });
       return id;
@@ -441,10 +438,12 @@ export function useNutritionActions() {
   };
 }
 
-/** Saved meal items as validated snapshots. */
+/** Saved meal items as validated snapshots (flat shape for totals and logging). */
 export interface SavedMealItem {
+  kind: MealItem['kind'];
   name: string;
   food_id: string | null;
+  recipe_id: string | null;
   quantity: number | null;
   unit: string | null;
   grams: number | null;
@@ -453,28 +452,21 @@ export interface SavedMealItem {
   carbs_g: number | null;
   fat_g: number | null;
   fibre_g: number | null;
+  confidence: string;
 }
 
 export function savedMealItems(m: Pick<SavedMeal, 'items'>): SavedMealItem[] {
-  if (!Array.isArray(m.items)) return [];
-  return m.items.flatMap((x) => {
-    if (!x || typeof x !== 'object' || Array.isArray(x) || typeof x.name !== 'string') return [];
-    const n = (k: string) => (typeof x[k] === 'number' ? (x[k] as number) : null);
-    return [
-      {
-        name: x.name,
-        food_id: typeof x.food_id === 'string' ? x.food_id : null,
-        quantity: n('quantity'),
-        unit: typeof x.unit === 'string' ? x.unit : null,
-        grams: n('grams'),
-        kcal: n('kcal'),
-        protein_g: n('protein_g'),
-        carbs_g: n('carbs_g'),
-        fat_g: n('fat_g'),
-        fibre_g: n('fibre_g'),
-      },
-    ];
-  });
+  return readMealItems(m.items).map((i) => ({
+    kind: i.kind,
+    name: i.name,
+    food_id: i.foodId,
+    recipe_id: i.recipeId,
+    quantity: i.quantity,
+    unit: i.unit,
+    grams: i.grams,
+    ...i.nutrition,
+    confidence: i.confidence,
+  }));
 }
 
 const num = (v: number | string | null) => (v === null ? null : Number(v));
