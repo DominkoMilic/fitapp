@@ -17,8 +17,8 @@ const { EXERCISES, TEMPLATES } = await import(join(root, 'src/domain/training/ca
 const { exerciseId, stableUuid } = await import(join(root, 'src/domain/training/stable-id.ts'));
 // Applied seed migrations are never edited: when the catalogue's shape changes, point OUT at a new
 // migration (the seed is an idempotent upsert, so the newest one brings every database up to date).
-// 20261110000200_training_seed.sql is the frozen original (before per-sport drills).
-const OUT = join(root, 'supabase/migrations/20261115000200_training_seed_sports.sql');
+// Frozen (already applied): 20261110000200_training_seed.sql, 20261115000200_training_seed_sports.sql.
+const OUT = join(root, 'supabase/migrations/20261116000200_training_seed_warmup.sql');
 
 const q = (v) => (v === null || v === undefined ? 'null' : `'${String(v).replace(/'/g, "''")}'`);
 const arr = (a) => (a.length ? `array[${a.map(q).join(', ')}]::text[]` : `'{}'::text[]`);

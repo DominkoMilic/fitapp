@@ -14,12 +14,13 @@ import {
   Text,
 } from '@/components/ui';
 import { envResult } from '@/config/env';
-import { calculateNutritionPlan } from '@/domain/calculations/plan';
+import { calculateNutritionPlan, trainingSummary } from '@/domain/calculations/plan';
 import { checkEditedCalories, macroKcal } from '@/domain/calculations/targets';
 import { formatWeight } from '@/domain/calculations/units';
 import { weightMilestones } from '@/domain/milestones/weight-milestones';
 import { generateWeeklyPattern } from '@/domain/training/weekly-pattern';
 import { onboardingErrorMessage, useCompleteOnboarding } from '@/features/onboarding/api';
+import { TrainingNutritionNotes } from '@/features/profile/TrainingNutritionNotes';
 import { WEEKDAY_NAMES } from '@/features/onboarding/constants';
 import { OnboardingStep } from '@/features/onboarding/components/OnboardingStep';
 import {
@@ -64,6 +65,11 @@ export default function PlanStep() {
       targetWeightKg: goals.targetWeightKg,
       weeklyRatePct: goals.weeklyRatePct,
       asOf,
+      training: trainingSummary({
+        commitments: schedule.commitments,
+        trainingDaysPerWeek: schedule.trainingDaysPerWeek,
+        sports: goals.sports,
+      }),
     });
     const pattern = generateWeeklyPattern({
       trainingDaysPerWeek: schedule.trainingDaysPerWeek,
@@ -200,6 +206,7 @@ export default function PlanStep() {
               message="Your chosen rate needed a larger deficit than PACE allows, so the daily deficit was capped."
             />
           ) : null}
+          <TrainingNutritionNotes plan={plan} carbsG={targets.carbsG} />
           {targets.warnings.includes('low_carbs') ? (
             <Banner
               tone="warning"

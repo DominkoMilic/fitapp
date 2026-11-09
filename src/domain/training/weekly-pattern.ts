@@ -220,6 +220,26 @@ export function generateWeeklyPattern(input: PatternInputs): WeeklyPattern {
     }
   }
 
+  // The sport-skills session (fast, reactive work) avoids two days before a game and the days
+  // next to a hard commitment when another training day is free; lower-body work keeps its day.
+  const sportIdx = kinds.indexOf('sport_skills');
+  if (sportIdx >= 0) {
+    const penalty = (d: number) =>
+      (matchDays.some((m) => prev(prev(m)) === d) ? 2 : 0) +
+      (hardDays.has(prev(d)) || hardDays.has(next(d)) ? 1 : 0);
+    const options = chosen
+      .map((d, i) => ({ d, i }))
+      .filter(({ i }) => kinds[i] !== 'strength_lower');
+    const best = [...options].sort((a, b) => penalty(a.d) - penalty(b.d) || a.d - b.d)[0];
+    if (best && best.i !== sportIdx && penalty(best.d) < penalty(chosen[sportIdx] as number)) {
+      kinds[sportIdx] = kinds[best.i] ?? 'full_body';
+      kinds[best.i] = 'sport_skills';
+    }
+    // Drills are demanding: count them with games and hard practices for the hard-day warning.
+    if (hardDays.size + 1 > 4 && !warnings.includes('too_many_hard_days'))
+      warnings.push('too_many_hard_days');
+  }
+
   chosen.forEach((day, i) => {
     let kind: SessionKind = kinds[i] ?? 'full_body';
     const notes: string[] = [];

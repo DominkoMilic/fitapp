@@ -1175,6 +1175,140 @@ export const EXERCISES: CatalogueExercise[] = [
     contraindications: [],
     met: 8.0,
   }),
+  // ------------------------------------------------------------------ dynamic warm-up (sport packs)
+  // RAMP-style: raise, activate and mobilise, then potentiate with gradual build-ups (spec 25.3).
+  ex({
+    slug: 'march-in-place',
+    name: 'March or easy jog in place',
+    category: 'conditioning',
+    muscleGroups: ['legs'],
+    equipment: [],
+    difficulty: 'beginner',
+    tracking: 'time',
+    unilateral: false,
+    defaultSets: 1,
+    repsMin: null,
+    repsMax: null,
+    durationS: 120,
+    instructions: [
+      'March on the spot, lifting your knees and swinging your arms.',
+      'After a minute, change to an easy jog in place if that feels fine.',
+      'Breathe easily; this only raises your temperature.',
+    ],
+    caution: 'Keep it easy. March instead of jogging if your feet or knees are sore.',
+    contraindications: [],
+    met: 3.5,
+  }),
+  ex({
+    slug: 'leg-swings',
+    name: 'Leg swings (front and side)',
+    category: 'mobility',
+    muscleGroups: ['hips', 'hamstrings', 'adductors'],
+    equipment: [],
+    difficulty: 'beginner',
+    tracking: 'reps',
+    unilateral: true,
+    defaultSets: 1,
+    repsMin: 10,
+    repsMax: 10,
+    durationS: null,
+    instructions: [
+      'Hold a wall or post for balance.',
+      'Swing one leg forward and back, gradually higher, keeping your trunk tall.',
+      'Then swing it across your body and out to the side. Change legs.',
+    ],
+    caution: 'Controlled swings within a comfortable range; never kick hard.',
+    contraindications: ['deep_hip_flexion'],
+    met: 2.5,
+  }),
+  ex({
+    slug: 'lateral-lunge',
+    name: 'Lateral lunge (bodyweight)',
+    category: 'mobility',
+    muscleGroups: ['adductors', 'glutes', 'quads'],
+    equipment: [],
+    difficulty: 'beginner',
+    tracking: 'reps',
+    unilateral: true,
+    defaultSets: 1,
+    repsMin: 6,
+    repsMax: 6,
+    durationS: null,
+    instructions: [
+      'Stand with feet wide, toes forward.',
+      'Shift your hips to one side, bending that knee while the other leg stays straight.',
+      'Push back to the middle and alternate sides.',
+    ],
+    caution: 'Only as deep as is comfortable for your knees and groin.',
+    contraindications: ['lateral', 'deep_knee_flexion'],
+    met: 3.0,
+  }),
+  ex({
+    slug: 'walking-knee-hug',
+    name: 'Walking knee hug',
+    category: 'mobility',
+    muscleGroups: ['glutes', 'hip flexors'],
+    equipment: [],
+    difficulty: 'beginner',
+    tracking: 'reps',
+    unilateral: true,
+    defaultSets: 1,
+    repsMin: 6,
+    repsMax: 6,
+    durationS: null,
+    instructions: [
+      'Step forward and pull one knee towards your chest with both hands.',
+      'Rise onto the toes of the standing foot for a second.',
+      'Step down and repeat on the other side.',
+    ],
+    caution: 'Hold on to something if your balance is unsure.',
+    contraindications: ['single_leg_balance'],
+    met: 2.5,
+  }),
+  ex({
+    slug: 'arm-circles',
+    name: 'Arm circles and hugs',
+    category: 'mobility',
+    muscleGroups: ['shoulders', 'upper back'],
+    equipment: [],
+    difficulty: 'beginner',
+    tracking: 'time',
+    unilateral: false,
+    defaultSets: 1,
+    repsMin: null,
+    repsMax: null,
+    durationS: 45,
+    instructions: [
+      'Make small arm circles forwards, growing them bigger, then backwards.',
+      'Finish with open-and-close hugs across your chest.',
+      'Keep your shoulders relaxed, away from your ears.',
+    ],
+    caution: 'Stay below shoulder height if overhead movement hurts.',
+    contraindications: ['overhead'],
+    met: 2.5,
+  }),
+  ex({
+    slug: 'build-up-runs',
+    name: 'Build-up runs',
+    category: 'conditioning',
+    muscleGroups: ['legs'],
+    equipment: [],
+    difficulty: 'beginner',
+    tracking: 'reps',
+    unilateral: false,
+    defaultSets: 1,
+    repsMin: 2,
+    repsMax: 3,
+    durationS: null,
+    instructions: [
+      'Run 15–20 m, starting slowly and building to about 70% of full speed.',
+      'Decelerate gradually over several steps.',
+      'Walk back; each run a little quicker than the last.',
+    ],
+    caution: 'Never flat out. These prepare you for faster drills; stop if anything pulls.',
+    contraindications: ['impact', 'sprint'],
+    met: 7.0,
+  }),
   // ------------------------------------------------------------------ football / futsal
   ex({
     slug: 'ball-mastery',
@@ -1290,7 +1424,8 @@ export const EXERCISES: CatalogueExercise[] = [
     caution: 'High ankle and knee load. Only when cleared for sport.',
     contraindications: ['impact', 'lateral', 'sprint', 'ankle_load_high'],
     met: 9.0,
-  }), // ------------------------------------------------------------------ sport drills (per-sport packs)
+  }),
+  // ------------------------------------------------------------------ sport drills (per-sport packs)
   // Conservative, no-contact drills. Ball drills accept any ball ("ball" or the legacy "football").
   ex({
     slug: 'split-step-reaction',
@@ -2063,6 +2198,27 @@ const COOLDOWN = [
   te('hamstring-stretch', 'cooldown', 1, null, 30, 0),
 ];
 
+/**
+ * Dynamic warm-up before sport drills (RAMP: raise, activate/mobilise, potentiate), about 8–10
+ * minutes. Build-up runs come last and are swapped for marching when impact or sprinting is
+ * restricted.
+ */
+const SPORT_WARMUP = [
+  te('march-in-place', 'warmup', 1, null, 120, 0),
+  te('leg-swings', 'warmup', 1, [10, 10], null, 0, 'hip-flexor-stretch'),
+  te('lateral-lunge', 'warmup', 1, [6, 6], null, 0, 'glute-bridge'),
+  te('walking-knee-hug', 'warmup', 1, [6, 6], null, 0, 'glute-bridge'),
+  te('arm-circles', 'warmup', 1, null, 45, 0, 'cat-cow'),
+  te('build-up-runs', 'warmup', 1, [2, 3], null, 45, 'march-in-place'),
+];
+/** Dryland warm-up for swimming and cycling packs: no running build-ups. */
+const DRYLAND_WARMUP = [
+  te('march-in-place', 'warmup', 1, null, 120, 0),
+  te('arm-circles', 'warmup', 1, null, 45, 0, 'cat-cow'),
+  te('leg-swings', 'warmup', 1, [10, 10], null, 0, 'hip-flexor-stretch'),
+  te('cat-cow', 'warmup', 1, [8, 8], null, 0),
+];
+
 export const TEMPLATES: CatalogueTemplate[] = [
   {
     slug: 'strength-a-upper',
@@ -2221,7 +2377,7 @@ export const TEMPLATES: CatalogueTemplate[] = [
     shortVersion: null,
     description: 'Ball work and acceleration. Only when cleared for sport.',
     exercises: [
-      ...WARMUP,
+      ...SPORT_WARMUP,
       te('ball-mastery', 'main', 5, null, 60, 30, 'quick-feet'),
       te('wall-passing', 'main', 4, null, 120, 30),
       te('cone-dribbling', 'main', 6, null, 30, 45, 'defensive-slides'),
@@ -2238,12 +2394,12 @@ export const TEMPLATES: CatalogueTemplate[] = [
     shortVersion: null,
     description: 'Ball handling, defensive footwork and landings. Only when cleared for sport.',
     exercises: [
-      ...WARMUP,
+      ...SPORT_WARMUP,
       te('stationary-dribble-series', 'main', 4, null, 45, 30, 'quick-feet'),
       te('defensive-slides', 'main', 4, null, 20, 40, 'low-stance-hold'),
       te('form-shooting', 'main', 3, null, 120, 30),
       te('jump-stop-landing', 'main', 3, [6, 8], null, 60, 'bodyweight-squat'),
-      te('closeout-sprints', 'main', 1, [6, 8], null, 60),
+      te('closeout-sprints', 'main', 1, [6, 8], null, 90),
       ...COOLDOWN,
     ],
   },
@@ -2257,7 +2413,7 @@ export const TEMPLATES: CatalogueTemplate[] = [
     description:
       'Passing, defensive footwork, landings and throwing strength. Only when cleared for sport.',
     exercises: [
-      ...WARMUP,
+      ...SPORT_WARMUP,
       te('wall-pass-catch', 'main', 4, null, 60, 30),
       te('defensive-slides', 'main', 4, null, 20, 40, 'low-stance-hold'),
       te('jump-stop-landing', 'main', 3, [6, 8], null, 60, 'bodyweight-squat'),
@@ -2277,8 +2433,8 @@ export const TEMPLATES: CatalogueTemplate[] = [
     description:
       'Approach footwork, block jumps, setting and shoulder care. Only when cleared for sport.',
     exercises: [
-      ...WARMUP,
-      te('approach-footwork', 'main', 4, [6, 6], null, 30),
+      ...SPORT_WARMUP,
+      te('approach-footwork', 'main', 4, [6, 6], null, 90),
       te('split-step-reaction', 'main', 4, null, 30, 30, 'low-stance-hold'),
       te('block-jumps', 'main', 3, [6, 8], null, 60, 'bodyweight-squat'),
       te('overhead-wall-setting', 'main', 4, null, 60, 30),
@@ -2296,10 +2452,10 @@ export const TEMPLATES: CatalogueTemplate[] = [
     description:
       'Split steps, shadow swings, recovery footwork and wrist care. Only when cleared for sport.',
     exercises: [
-      ...WARMUP,
+      ...SPORT_WARMUP,
       te('split-step-reaction', 'main', 4, null, 30, 30, 'low-stance-hold'),
       te('shadow-swings', 'main', 4, null, 45, 30),
-      te('crossover-recovery-steps', 'main', 3, [6, 8], null, 45, 'defensive-slides'),
+      te('crossover-recovery-steps', 'main', 3, [6, 8], null, 90, 'defensive-slides'),
       te('wrist-band-series', 'main', 2, [12, 15], null, 30, 'wrist-forearm-mobility'),
       te('single-leg-balance', 'main', 2, null, 30, 15),
       ...COOLDOWN,
@@ -2315,10 +2471,10 @@ export const TEMPLATES: CatalogueTemplate[] = [
     description:
       'Stickhandling, low stance strength and lateral power. Only when cleared for sport.',
     exercises: [
-      ...WARMUP,
+      ...SPORT_WARMUP,
       te('stickhandling-figure-8', 'main', 4, null, 45, 30, 'quick-feet'),
       te('low-stance-hold', 'main', 3, null, 30, 30),
-      te('lateral-bounds', 'main', 3, [6, 8], null, 60, 'defensive-slides'),
+      te('lateral-bounds', 'main', 2, [6, 6], null, 90, 'defensive-slides'),
       te('defensive-slides', 'main', 3, null, 20, 40),
       te('wrist-band-series', 'main', 2, [12, 15], null, 30, 'wrist-forearm-mobility'),
       ...COOLDOWN,
@@ -2334,7 +2490,7 @@ export const TEMPLATES: CatalogueTemplate[] = [
     description:
       'Footwork, acceleration, crawling strength and gentle neck work. No contact. Only when cleared for sport.',
     exercises: [
-      ...WARMUP,
+      ...SPORT_WARMUP,
       te('quick-feet', 'main', 4, null, 20, 40),
       te('acceleration-sprints', 'main', 1, [6, 8], null, 90),
       te('bear-crawl', 'main', 3, null, 30, 45, 'dead-bug'),
@@ -2352,7 +2508,7 @@ export const TEMPLATES: CatalogueTemplate[] = [
     shortVersion: null,
     description: 'Shoulder care, streamline strength and core for the water.',
     exercises: [
-      ...WARMUP,
+      ...DRYLAND_WARMUP,
       te('shoulder-band-series', 'main', 2, [12, 15], null, 30, 'prone-y-raise'),
       te('streamline-squat', 'main', 3, [10, 12], null, 45, 'bodyweight-squat'),
       te('flutter-kick-hold', 'main', 3, null, 30, 30),
@@ -2370,7 +2526,7 @@ export const TEMPLATES: CatalogueTemplate[] = [
     shortVersion: null,
     description: 'Shadow rounds, footwork, hip mobility and neck and shoulder prep. No sparring.',
     exercises: [
-      ...WARMUP,
+      ...SPORT_WARMUP,
       te('neck-shoulder-prep', 'main', 1, null, 60, 0),
       te('shadow-boxing', 'main', 4, null, 120, 60),
       te('footwork-box', 'main', 4, null, 60, 30, 'shadow-boxing'),
@@ -2388,7 +2544,7 @@ export const TEMPLATES: CatalogueTemplate[] = [
     shortVersion: null,
     description: 'Running form drills, strides, balance and calf strength.',
     exercises: [
-      ...WARMUP,
+      ...SPORT_WARMUP,
       te('a-skips', 'main', 3, null, 20, 40),
       te('strides', 'main', 1, [4, 6], null, 90),
       te('single-leg-balance', 'main', 2, null, 30, 15),
@@ -2406,7 +2562,7 @@ export const TEMPLATES: CatalogueTemplate[] = [
     shortVersion: null,
     description: 'Glutes, core, upper back and hips to balance hours on the bike.',
     exercises: [
-      ...WARMUP,
+      ...DRYLAND_WARMUP,
       te('single-leg-glute-bridge', 'main', 3, [8, 10], null, 45, 'glute-bridge'),
       te('plank', 'main', 3, null, 30, 30, 'dead-bug'),
       te('prone-y-raise', 'main', 2, [10, 12], null, 30),
@@ -2425,9 +2581,9 @@ export const TEMPLATES: CatalogueTemplate[] = [
     description:
       'Quick feet, lateral power, throwing and balance for any sport. Only when cleared for sport.',
     exercises: [
-      ...WARMUP,
+      ...SPORT_WARMUP,
       te('quick-feet', 'main', 4, null, 20, 40),
-      te('skater-jumps', 'main', 3, [8, 10], null, 60, 'defensive-slides'),
+      te('skater-jumps', 'main', 2, [6, 6], null, 90, 'defensive-slides'),
       te('defensive-slides', 'main', 3, null, 20, 40),
       te('medball-overhead-throw', 'main', 3, [8, 10], null, 60, 'push-up'),
       te('single-leg-balance', 'main', 2, null, 30, 15),

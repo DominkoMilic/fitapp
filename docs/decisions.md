@@ -137,3 +137,13 @@ Clarifications of, and deviations from, `docs/PACE_SPEC.md`. Newest first.
 3. **The two-week calorie review doesn't run while off**, because it depends on logged intake (8.9).
 4. **Older app versions keep working**: onboarding treats a missing value as on.
 
+## 2026-11-09: Science pass before expert review
+
+1. **Calculation version 2.1.0.** With 4+ hard sessions a week the maximum deficit is 500 kcal (was 750 for everyone), to lower the risk of low energy availability (IOC REDs consensus). Without known training the results are identical to 2.0.0, so the spec 29 vectors stand.
+2. **Sport carbohydrate guidance is information only** (≥ 3 g/kg for sport players with 3+ sessions a week). Changing the macro split automatically would need expert input first.
+3. **Hydration on training days is a note, not a target change**, for the same reason.
+4. **Sport packs get a RAMP dynamic warm-up**; the old mobility warm-up stays for strength sessions. Sprint-type rests ≥ 90 s and ≤ 30 jump contacts per pack are enforced by tests.
+5. **The sport-skills session avoids MD-2 and days next to hard practices**, and counts towards the hard-day warning.
+6. **The training seed moves to `20261116000200_training_seed_warmup.sql`**; earlier seed migrations are applied and frozen.
+7. **`docs/expert-review-pack.md`** lists every number with its source and status, and the questions for each expert.
+

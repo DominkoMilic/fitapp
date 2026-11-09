@@ -301,7 +301,7 @@ Rules: progress bar, back navigation, draft saved locally after each step (resum
 
 ## 8. Calculation engine (normative)
 
-All functions live in `src/domain/calculations`, are pure, and take explicit inputs (including `asOf` date). Store `calculation_version` (start at `"2.0.0"`) and the full inputs with every target version.
+All functions live in `src/domain/calculations`, are pure, and take explicit inputs (including `asOf` date). Store `calculation_version` (current `"2.1.0"`; 2.1.0 added the frequent-training deficit cap and the sport carbohydrate and hydration guidance, and gives identical results when no training is known) and the full inputs with every target version.
 
 ### 8.1 Age
 
@@ -332,12 +332,13 @@ Shown with the note: "This is an estimate. It includes your usual exercise, so e
 
 ### 8.4 Calorie target
 
-Constants: `KCAL_PER_KG = 7700`, `MAX_DEFICIT_KCAL = 750`, `MAX_DEFICIT_FRACTION = 0.25`, `MAX_SURPLUS_KCAL = 300`.
+Constants: `KCAL_PER_KG = 7700`, `MAX_DEFICIT_KCAL = 750`, `MAX_DEFICIT_FRACTION = 0.25`, `MAX_SURPLUS_KCAL = 300`, `FREQUENT_TRAINING = { hardSessionsPerWeek: 4, maxDeficitKcal: 500 }`.
 
 ```
 lose:
   desired_deficit = weekly_rate_pct/100 × weight_kg × 7700 / 7
-  deficit = min(desired_deficit, 750, 0.25 × TDEE)
+  max_kcal = 500 if hard_sessions_per_week ≥ 4 else 750   # games + hard practices (2.1.0)
+  deficit = min(desired_deficit, max_kcal, 0.25 × TDEE)
   raw = TDEE − deficit
 maintain / general fitness:
   raw = TDEE
@@ -347,7 +348,7 @@ build muscle:
 target = max(round_to_10(raw), floor)
 ```
 
-`round_to_10(x) = Math.round(x / 10) × 10`. If the floor raised the target, set `limited_by_floor = true` and show "Your target is limited by the safety minimum." Recompute and show the resulting projected weekly rate: `rate_kg_week = (TDEE − target) × 7 / 7700`.
+`round_to_10(x) = Math.round(x / 10) × 10`. If the floor raised the target, set `limited_by_floor = true` and show "Your target is limited by the safety minimum." Recompute and show the resulting projected weekly rate: `rate_kg_week = (TDEE − target) × 7 / 7700`. When the 500 kcal cap applied (`frequent_training_cap`), explain: "You train hard N times a week, so the daily deficit is limited to 500 kcal…" (lower risk of low energy availability, RED-S). Hard sessions per week come from the user's recurring games and practices with intensity hard.
 
 ### 8.5 Safety floor
 
@@ -365,11 +366,11 @@ fat_g     = round(fat_pct × target / 9)                    default 0.25, allowe
 carbs_g   = floor((target − protein_g×4 − fat_g×9) / 4)
 ```
 
-Validation: `|protein×4 + carbs×4 + fat×9 − target| ≤ 10`. If carbs < 50 g, warn and suggest lower fat %. Editing rules: when the user edits macros directly, calories are derived from macros (single source of truth); when the user edits calories, carbs absorb the change. Fibre target (display only): 14 g per 1000 kcal.
+Validation: `|protein×4 + carbs×4 + fat×9 − target| ≤ 10`. If carbs < 50 g, warn and suggest lower fat %. **Sport carbohydrate note (2.1.0, information only):** when the user plays a sport and has ≥ 3 sessions a week (training days + games + practices) and `carbs_g < 3 × weight_kg`, show "Sport guidance suggests about X g of carbohydrate or more on training days…". The macro split is not changed. Editing rules: when the user edits macros directly, calories are derived from macros (single source of truth); when the user edits calories, carbs absorb the change. Fibre target (display only): 14 g per 1000 kcal.
 
 ### 8.7 Water
 
-`water_ml = clamp(round_to_50(35 × weight_kg), 1500, 4000)`. Displayed as a general guideline, editable. Training days are not adjusted in V1 (message suggests extra fluids around training).
+`water_ml = clamp(round_to_50(35 × weight_kg), 1500, 4000)`. Displayed as a general guideline, editable. Training days are not adjusted in V1; the targets screens show "On training days, drink roughly 500 ml extra per hour of training, more in heat" (`HYDRATION_ML_PER_TRAINING_HOUR`).
 
 ### 8.8 Projection
 
@@ -477,7 +478,7 @@ Hard constraints:
 7. Sessions never exceed max duration; if max < 30 min, use short versions.
 8. Exercises filtered by equipment and injury rules.
 
-Soft preferences: preferred days first; alternate upper/lower or full-body; spread strength sessions ≥ 48 h apart; put lower-body strength at MD-2 or earlier.
+Soft preferences: preferred days first; alternate upper/lower or full-body; spread strength sessions ≥ 48 h apart; put lower-body strength at MD-2 or earlier. The weekly **sport-skills** session (first sport's pack; needs a sport, the sport focus, ≥ 3 training days and no restriction for that sport) avoids MD-2 and days next to a hard commitment when another training day is free, never displaces lower-body strength, and counts towards the hard-day warning.
 
 Generation is idempotent: occurrences are keyed by `(recurring_event_id, scheduled_date)` or `(training_plan_id, scheduled_date, slot)` with unique constraints. Regeneration after settings changes only replaces future `planned` occurrences; completed, skipped and user-moved ones are untouched.
 
@@ -1327,7 +1328,9 @@ Every system exercise MUST have instructions (3–6 steps), caution notes, and a
 | Football & futsal skills (`futsal-skills`) | moderate | 30 | ball-mastery, wall-passing, cone-dribbling, acceleration-sprints | not scheduled while restricted |
 | Per-sport packs (11) | moderate | 30 | 4–6 sport drills each (31 drills, no contact or sparring): basketball-, handball-, volleyball-, racket-, hockey-, rugby-, swim-, combat-, run-, cycle- and athletic-skills | one weekly session uses the first sport's pack when the user plays a sport, has the sport focus, trains ≥ 3 days and is not restricted for that sport; every pack still works with no equipment |
 
-Every template includes a 5-minute warm-up and a short cool-down.
+Every template includes a warm-up and a short cool-down. Strength templates use a 5-minute mobility warm-up (cat-cow, thoracic rotation, glute bridge).
+
+**Sport packs (all 12)** use a RAMP-style dynamic warm-up of about 8–10 minutes: march or easy jog in place 2 min → leg swings 10/side → lateral lunge 6/side → walking knee hug 6/side → arm circles 45 s → 2–3 build-up runs to about 70% (swapped for marching when impact or sprinting is restricted). Swimming and cycling packs use a dryland version without running (march, arm circles, leg swings, cat-cow). Dosage rules, checked by tests: sprint, change-of-direction and approach drills rest ≥ 90 s between sets; jumping drills total ≤ 30 foot contacts per pack. Numbers, sources and open questions for the dietitian, physiotherapist and S&C coach are in `docs/expert-review-pack.md`.
 
 ### 25.4 MET reference (from the Adult Compendium of Physical Activities; verify values during implementation)
 

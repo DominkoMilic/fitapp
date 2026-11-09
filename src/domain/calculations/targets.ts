@@ -6,6 +6,8 @@ import {
   MAX_DEFICIT_FRACTION,
   MAX_DEFICIT_KCAL,
   MAX_SURPLUS_KCAL,
+  FREQUENT_TRAINING,
+  SPORT_CARBS,
   MIN_CARBS_WARNING_G,
   PROTEIN_G_PER_KG,
   SEX_FLOOR_KCAL,
@@ -33,6 +35,8 @@ export interface CalorieTargetResult {
   deficitCapped: boolean;
   /** Projected weekly change in kg (positive = loss) at this target, from the estimated TDEE. */
   projectedRateKgPerWeek: number;
+  /** The smaller deficit cap for 4+ hard sessions a week was applied (8.4). */
+  frequentTrainingCap: boolean;
 }
 
 /** Calorie target (spec 8.4). weeklyRatePct is a percentage of body weight, e.g. 0.5. */
@@ -43,6 +47,8 @@ export function calorieTarget(input: {
   sex: CalcSex;
   weightKg: number;
   weeklyRatePct: number | null;
+  /** Hard sessions a week (games, hard practices). 4+ lowers the maximum deficit to 500 kcal. */
+  hardSessionsPerWeek?: number;
 }): CalorieTargetResult {
   const floorKcal = safetyFloor(input.sex, input.bmr);
   const ratePct = input.weeklyRatePct ?? 0;
@@ -50,10 +56,15 @@ export function calorieTarget(input: {
   let raw = input.tdee;
   let requestedAdjustment = 0;
   let deficitCapped = false;
+  let frequentTrainingCap = false;
 
   if (input.goalType === 'lose_weight') {
     const desired = weeklyKcal / 7;
-    const deficit = Math.min(desired, MAX_DEFICIT_KCAL, MAX_DEFICIT_FRACTION * input.tdee);
+    const frequent = (input.hardSessionsPerWeek ?? 0) >= FREQUENT_TRAINING.hardSessionsPerWeek;
+    const maxKcal = frequent ? FREQUENT_TRAINING.maxDeficitKcal : MAX_DEFICIT_KCAL;
+    const deficit = Math.min(desired, maxKcal, MAX_DEFICIT_FRACTION * input.tdee);
+    frequentTrainingCap =
+      frequent && desired > FREQUENT_TRAINING.maxDeficitKcal && deficit === maxKcal;
     deficitCapped = deficit < desired;
     requestedAdjustment = deficit;
     raw = input.tdee - deficit;
@@ -72,6 +83,7 @@ export function calorieTarget(input: {
     requestedAdjustment,
     deficitCapped,
     projectedRateKgPerWeek: ((input.tdee - kcal) * 7) / KCAL_PER_KG,
+    frequentTrainingCap,
   };
 }
 
@@ -224,5 +236,26 @@ export function projectGoal(input: {
     expectedRateKgPerWeek: rate,
     weeks,
     dates: { earliest: at(weeks.fast), mid: at(weeks.mid), latest: at(weeks.slow) },
+  };
+}
+
+/**
+ * Carbohydrate guidance for people who play a sport and train 3+ times a week (8.6). Information
+ * only; the macro split is not changed. Team/court sport guidance starts around 3 g/kg on
+ * training days.
+ */
+export function sportCarbAdvice(input: {
+  carbsG: number;
+  weightKg: number;
+  playsSport: boolean;
+  sessionsPerWeek: number;
+}): { low: boolean; suggestedMinG: number } {
+  const suggestedMinG = Math.round(SPORT_CARBS.minGPerKg * input.weightKg);
+  return {
+    low:
+      input.playsSport &&
+      input.sessionsPerWeek >= SPORT_CARBS.sessionsPerWeek &&
+      input.carbsG < suggestedMinG,
+    suggestedMinG,
   };
 }

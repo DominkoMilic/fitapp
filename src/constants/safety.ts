@@ -2,12 +2,22 @@
  * Safety constants (spec section 8). Configurable for development, not by end users in V1.
  * Changing any value requires bumping CALCULATION_VERSION.
  */
-export const CALCULATION_VERSION = '2.0.0';
+/** 2.1.0: deficit cap for frequent hard training; sport carbohydrate and hydration guidance. */
+export const CALCULATION_VERSION = '2.1.0';
 
 export const KCAL_PER_KG = 7700;
 export const MAX_DEFICIT_KCAL = 750;
 export const MAX_DEFICIT_FRACTION = 0.25;
 export const MAX_SURPLUS_KCAL = 300;
+/**
+ * People with 4+ hard sessions a week (games, hard practices) get a smaller maximum deficit, to
+ * lower the risk of low energy availability (RED-S). Spec 8.4.
+ */
+export const FREQUENT_TRAINING = { hardSessionsPerWeek: 4, maxDeficitKcal: 500 } as const;
+/** Team/court sport players training 3+ times a week: carbohydrate guidance from 3 g/kg. Spec 8.6. */
+export const SPORT_CARBS = { minGPerKg: 3, sessionsPerWeek: 3 } as const;
+/** Display guidance only (the water target itself is unchanged): extra per hour of training. */
+export const HYDRATION_ML_PER_TRAINING_HOUR = 500;
 
 /** Minimum calorie target by metabolic equation. */
 export const SEX_FLOOR_KCAL = { male: 1500, female: 1200 } as const;

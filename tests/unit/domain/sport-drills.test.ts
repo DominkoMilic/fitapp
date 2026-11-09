@@ -106,3 +106,57 @@ describe('weekly sport-skills session', () => {
     ).toHaveLength(0);
   });
 });
+
+describe('training science pass (spec 25.3)', () => {
+  const sportPacks = TEMPLATES.filter((t) => t.category === 'sport_skills');
+  it('every sport pack starts with the dynamic warm-up', () => {
+    for (const t of sportPacks) {
+      const warm = t.exercises.filter((x) => x.phase === 'warmup').map((x) => x.slug);
+      expect([t.slug, warm[0]]).toEqual([t.slug, 'march-in-place']);
+      expect(warm).toContain('leg-swings');
+      if (!['swim-skills', 'cycle-skills'].includes(t.slug))
+        expect(warm).toContain('build-up-runs');
+    }
+  });
+  it('sprint and change-of-direction work gets at least 90 s rest', () => {
+    for (const t of sportPacks)
+      for (const x of t.exercises) {
+        const e = EXERCISE_BY_SLUG[x.slug]!;
+        if (x.phase === 'main' && e.tracking !== 'time' && e.contraindications.includes('sprint'))
+          expect([t.slug, x.slug, x.restS >= 90]).toEqual([t.slug, x.slug, true]);
+      }
+  });
+  it('jumping volume stays at or under 30 contacts per pack', () => {
+    for (const t of sportPacks) {
+      const contacts = t.exercises
+        .filter((x) => x.phase === 'main')
+        .map((x) => ({ x, e: EXERCISE_BY_SLUG[x.slug]! }))
+        .filter(({ e }) => e.tracking !== 'time' && e.contraindications.includes('jumping'))
+        .reduce((n, { x, e }) => n + x.sets * (x.repsMax ?? 0) * (e.unilateral ? 2 : 1), 0);
+      expect([t.slug, contacts <= 30]).toEqual([t.slug, true]);
+    }
+  });
+  it('the sport session avoids two days before a game when another day is free', () => {
+    const p = generateWeeklyPattern({
+      trainingDaysPerWeek: 3,
+      preferredDays: [1, 3, 4],
+      maxSessionMinutes: 45,
+      commitments: [
+        {
+          title: 'League',
+          category: 'basketball_match',
+          weekday: 6,
+          localTime: '18:00',
+          durationMinutes: 60,
+          intensity: 'hard',
+        },
+      ],
+      focusTags: ['sport'],
+      injuries: [],
+      sports: ['basketball'],
+    });
+    const sport = p.days.find((d) => d.kind === 'sport_skills');
+    expect(sport).toBeDefined();
+    expect(sport!.weekday).not.toBe(4); // Thursday = two days before Saturday's game
+  });
+});

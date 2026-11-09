@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { Banner, ErrorState, LoadingState } from '@/components/feedback';
 import { Button, Card, NumberField, Screen, SectionHeader, StatTile, Text } from '@/components/ui';
 import { type ActivityLevel, type CalcSex } from '@/domain/calculations/energy';
-import { calculateNutritionPlan } from '@/domain/calculations/plan';
+import { calculateNutritionPlan, trainingSummary } from '@/domain/calculations/plan';
 import {
   checkEditedCalories,
   type GoalType,
@@ -12,11 +12,14 @@ import {
 } from '@/domain/calculations/targets';
 import { formatWeight, type UnitSystem } from '@/domain/calculations/units';
 import { targetFor } from '@/features/dashboard/today';
+import { TrainingNutritionNotes } from '@/features/profile/TrainingNutritionNotes';
 import { useToday } from '@/features/dashboard/useToday';
 import {
   useActiveGoal,
   useProfile,
   useSaveTargets,
+  usePreferences,
+  useRecurringEvents,
   useTargetHistory,
 } from '@/features/profile/api';
 import { SaveState } from '@/features/profile/SaveState';
@@ -27,6 +30,8 @@ export default function TargetsSettings() {
   const profile = useProfile();
   const goal = useActiveGoal();
   const history = useTargetHistory();
+  const prefs = usePreferences();
+  const events = useRecurringEvents();
   const save = useSaveTargets();
   const { current: currentW } = useWeightStats('30D');
   const [editKcal, setEditKcal] = useState<number | null>(null);
@@ -48,8 +53,13 @@ export default function TargetsSettings() {
       targetWeightKg: g.target_weight_kg === null ? null : Number(g.target_weight_kg),
       weeklyRatePct: g.weekly_rate_pct === null ? null : Number(g.weekly_rate_pct),
       asOf: today,
+      training: trainingSummary({
+        commitments: events.data ?? [],
+        trainingDaysPerWeek: prefs.data?.training_days_per_week ?? 3,
+        sports: prefs.data?.sports ?? [],
+      }),
     });
-  }, [profile.data, goal.data, today, currentW]);
+  }, [profile.data, goal.data, today, currentW, events.data, prefs.data]);
 
   if (profile.isPending || goal.isPending || history.isPending)
     return (
@@ -99,6 +109,7 @@ export default function TargetsSettings() {
         calculation_version: recalculated.calculationVersion,
         calculation_inputs: {
           ...recalculated.inputs,
+          training: recalculated.inputs.training ?? null,
           age: recalculated.age,
           activityMultiplier: recalculated.activityMultiplier,
         },
@@ -223,6 +234,7 @@ export default function TargetsSettings() {
               Uses your current weight ({formatWeight(recalculated.inputs.weightKg, unit)}
               {currentW?.basis === 'average' ? ', 7-day average' : ''}).
             </Text>
+            <TrainingNutritionNotes plan={recalculated} carbsG={recalculated.macros.carbsG} />
             <Button
               title="Use these targets"
               loading={save.isPending}

@@ -7,6 +7,7 @@ Guidance for coding agents working in this repository.
 - `docs/PACE_SPEC.md` is the complete product and engineering specification. Read it before any work. Where anything else conflicts with it, the spec wins.
 - `PACE_Specification.pdf` is generated from the spec for human reading. Never edit the PDF; edit the Markdown and run `python3 docs/tools/build_pdf.py`.
 - Record decisions that deviate from or clarify the spec in `docs/decisions.md` (date, decision, reason).
+- Every change or improvement updates `docs/PACE_SPEC.md` in the same branch, and the PDF is rebuilt (`python3 docs/tools/build_pdf.py`, needs reportlab).
 
 ## How to work
 
