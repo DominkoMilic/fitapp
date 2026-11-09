@@ -29,7 +29,7 @@ PACE is no longer football-only. People can play any of 17 sports, several at on
 | `20261115000200_training_seed_sports.sql` | Generated seed: 87 exercises and 20 templates (the original seed migration is unchanged) |
 | `20261115000300_own_recipes.sql` | `nutritional_confidence` allows `user_estimate` (own recipes only) |
 
-**Not yet applied to the hosted project.** These need applying through the SQL editor, the same way as before.
+**Applied to the hosted project on 2026-11-09** through the dashboard SQL editor, in one transaction. Verified read-only afterwards: 21 migrations, the three new versions recorded, `user_preferences.sports` and `exercises.sports` present, 87 system exercises, 20 templates (12 sport packs), football drills tagged `football,futsal`, onboarding saves sports, the legacy focus trigger, `user_estimate` allowed, and any `<sport>_match|practice` event allowed. No hosted goals used the old `futsal` tag, so the backfill changed nothing.
 
 ## 4. Commands run and actual results
 
@@ -52,4 +52,3 @@ PACE is no longer football-only. People can play any of 17 sports, several at on
 - "Make it my own" against live TheMealDB (the local stack doesn't run the recipe proxy; covered by unit tests).
 - Real devices (see `release/device-test-matrix.md`).
 - A coach or physiotherapist should review the drill content before public release (added to `release/checklist.md`).
-- Apply the three migrations to the hosted project.
