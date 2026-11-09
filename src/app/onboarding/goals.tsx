@@ -54,6 +54,7 @@ export default function GoalsStep() {
       rateWarningAccepted: false,
       targetDate: null,
       focusTags: [],
+      sports: [],
     },
   });
 
@@ -196,7 +197,7 @@ export default function GoalsStep() {
           <ChipGroup
             options={[
               { value: 'strength', label: 'Strength' },
-              { value: 'futsal', label: 'Football / futsal' },
+              { value: 'sport', label: 'My sport' },
               { value: 'running', label: 'Running' },
               { value: 'cardio', label: 'Cardio fitness' },
               { value: 'mobility', label: 'Mobility' },

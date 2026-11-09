@@ -1,10 +1,11 @@
 /**
  * Daily coach (spec 15): rule-based recommendations. Pure: the caller gathers the context, `now` is
  * passed in. Each rule returns at most one card. Never diagnoses, never suggests training through
- * pain, never suggests eating less, never recommends a hard session the day before a match.
+ * pain, never suggests eating less, never recommends a hard session the day before a game/match.
  */
 import { addDays, dayNumber, type IsoDate } from '../calculations/dates';
 import { type LoadSession, loadSpike } from './load';
+import { eventNoun, isMatchCategory, sportEventLabel } from '../sports/catalogue';
 
 export type CoachCategory =
   'safety' | 'recovery' | 'training' | 'nutrition' | 'weight' | 'consistency' | 'tips';
@@ -87,7 +88,13 @@ export interface CoachContext {
 
 export const MAX_CARDS = 3;
 
-const isMatch = (category: string) => /_match$/.test(category);
+const isMatch = isMatchCategory;
+/** "Basketball game" / "Futsal match"; "Match" for unknown sports. */
+const eventTitle = (category: string) => sportEventLabel(category) ?? 'Match';
+const eventPhrase = (category: string) => {
+  const t = eventTitle(category);
+  return `${t.charAt(0).toLowerCase()}${t.slice(1)}`;
+};
 const hasInjury = (c: CoachContext) =>
   c.injuries.filter((i) => i.status === 'active' || i.status === 'recovering');
 /** Planned items that are actual sessions (rest days stay 'planned' and never count). */
@@ -165,9 +172,9 @@ export const RULES: Rule[] = [
       const when = planned(c.plan.today).includes(match) ? 'today' : 'tomorrow';
       return {
         category: 'safety',
-        title: `Match ${when}`,
-        body: `You have a match scheduled ${when} but your ${areaList(injured.map((i) => i.area))} is marked as ${injured[0]!.status}. Check with a professional before playing.`,
-        reason: 'A match is on your calendar while an injury is active or recovering.',
+        title: `${eventTitle(match.category)} ${when}`,
+        body: `You have a ${eventPhrase(match.category)} scheduled ${when} but your ${areaList(injured.map((i) => i.area))} is marked as ${injured[0]!.status}. Check with a professional before playing.`,
+        reason: `A ${eventPhrase(match.category)} is on your calendar while an injury is active or recovering.`,
       };
     },
   },
@@ -191,29 +198,34 @@ export const RULES: Rule[] = [
   {
     id: 'R1',
     priority: 2,
-    run: (c) =>
-      planned(c.plan.tomorrow).some((p) => isMatch(p.category))
+    run: (c) => {
+      const m = planned(c.plan.tomorrow).find((p) => isMatch(p.category));
+      return m
         ? {
             category: 'recovery',
-            title: 'Match tomorrow',
-            body: 'Match tomorrow. Keep today light: mobility or an easy walk, hydrate, carbs with meals, good sleep.',
-            reason: 'There is a match on your calendar tomorrow.',
+            title: `${eventTitle(m.category)} tomorrow`,
+            body: `${eventTitle(m.category)} tomorrow. Keep today light: mobility or an easy walk, hydrate, carbs with meals, good sleep.`,
+            reason: `There is a ${eventPhrase(m.category)} on your calendar tomorrow.`,
           }
-        : null,
+        : null;
+    },
   },
   {
     id: 'R2',
     priority: 2,
-    run: (c) =>
-      c.plan.yesterday.some((p) => isMatch(p.category) && p.status !== 'skipped') ||
-      c.sessions.some((s) => s.date === addDays(c.today, -1) && isMatch(s.category))
+    run: (c) => {
+      const m =
+        c.plan.yesterday.find((p) => isMatch(p.category) && p.status !== 'skipped') ??
+        c.sessions.find((s) => s.date === addDays(c.today, -1) && isMatch(s.category));
+      return m
         ? {
             category: 'recovery',
             title: 'Recovery day',
-            body: 'Recovery day after your match. An easy 20–30 min walk and mobility help.',
-            reason: 'You had a match yesterday.',
+            body: `Recovery day after your ${eventNoun(m.category)}. An easy 20–30 min walk and mobility help.`,
+            reason: `You had a ${eventPhrase(m.category)} yesterday.`,
           }
-        : null,
+        : null;
+    },
   },
   {
     id: 'R3',

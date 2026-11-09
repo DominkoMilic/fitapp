@@ -44,7 +44,8 @@ describe('goals step', () => {
     weeklyRatePct: 0.5,
     rateWarningAccepted: false,
     targetDate: null,
-    focusTags: ['futsal' as const],
+    focusTags: ['sport' as const],
+    sports: ['futsal'],
   };
   it('accepts the seed goal', () => expect(goalsSchema(ctx).safeParse(base).success).toBe(true));
   it('target must be below current weight when losing', () => {

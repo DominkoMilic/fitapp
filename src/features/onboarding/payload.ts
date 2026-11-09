@@ -19,6 +19,7 @@ import type {
 } from '@/domain/validation/onboarding';
 
 import type { TargetOverrides } from './draft-store';
+import { SPORT_BY_KEY } from '@/domain/sports/catalogue';
 
 export interface CompleteDraft {
   personal: PersonalValues;
@@ -121,6 +122,7 @@ export function buildOnboardingPayload(input: {
       max_session_minutes: draft.schedule.maxSessionMinutes,
       preferred_training_time: draft.schedule.preferredTime,
       training_environment: draft.equipment.environment,
+      sports: g.sports,
     },
     equipment: draft.equipment.items.map((i) => ({
       equipment_type: i.type,
@@ -178,7 +180,7 @@ export function buildOnboardingPayload(input: {
       },
     },
     plan: {
-      name: planName(g.goalType, g.focusTags),
+      name: planName(g.goalType, g.focusTags, g.sports),
       start_date: asOf,
       generator_version: pattern.version,
       generated_from: {
@@ -212,14 +214,19 @@ export function buildOnboardingPayload(input: {
 
 export type OnboardingPayload = ReturnType<typeof buildOnboardingPayload>;
 
-function planName(goal: GoalsValues['goalType'], focus: readonly string[]): string {
+function planName(
+  goal: GoalsValues['goalType'],
+  focus: readonly string[],
+  sports: readonly string[],
+): string {
   const base = {
     lose_weight: 'Fat loss',
     maintain: 'Maintenance',
     build_muscle: 'Muscle gain',
     general_fitness: 'General fitness',
   }[goal];
-  if (focus.includes('futsal')) return `${base} + futsal`;
+  const sport = sports[0] ? SPORT_BY_KEY[sports[0]] : undefined;
+  if (sport && sport.key !== 'other') return `${base} + ${sport.label.toLowerCase()}`;
   if (focus.includes('running')) return `${base} + running`;
   return base;
 }

@@ -4,6 +4,7 @@
  * daylight-saving changes never shift a 18:00 match (spec 28.5 #5). Pure.
  */
 import { addDays, isoWeekday, type IsoDate } from '@/domain/calculations/dates';
+import { isMatchCategory } from '../sports/catalogue';
 
 export const GENERATION_WEEKS = 8;
 
@@ -128,7 +129,7 @@ export function moveWarnings(
 ): MoveWarning[] {
   const active = others.filter((o) => o.status !== 'skipped' && o.status !== 'cancelled');
   const warnings: MoveWarning[] = [];
-  const isMatch = (o: { category: string }) => o.category.endsWith('_match');
+  const isMatch = (o: { category: string }) => isMatchCategory(o.category);
   if (
     active.some((o) => o.scheduled_date === addDays(date, 1) && isMatch(o)) &&
     movingIntensity !== 'easy'

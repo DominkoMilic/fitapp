@@ -4,6 +4,7 @@
  * day never shifts with the device timezone.
  */
 import type { IsoDate } from '../calculations/dates';
+import { sportEventLabel } from '../sports/catalogue';
 
 const at = (iso: IsoDate) => new Date(`${iso.slice(0, 10)}T12:00:00Z`);
 const fmt = (opts: Intl.DateTimeFormatOptions, locale?: string) =>
@@ -72,7 +73,7 @@ export const difficultyLabel = label({
   advanced: 'Advanced',
 });
 
-export const categoryLabel = label({
+const baseCategoryLabel = label({
   strength: 'Strength',
   core: 'Core',
   mobility: 'Mobility',
@@ -81,12 +82,17 @@ export const categoryLabel = label({
   football: 'Football',
   futsal: 'Futsal',
   recovery: 'Recovery',
-  futsal_match: 'Futsal match',
-  futsal_practice: 'Futsal practice',
-  football_match: 'Football match',
-  football_practice: 'Football practice',
+  sport_skills: 'Sport drills',
+  workout: 'Workout',
+  run: 'Run',
+  walk: 'Walk',
+  cycle: 'Ride',
   rest: 'Rest',
   other: 'Other',
 });
+
+/** Exercise/session categories; sport events read from the sports catalogue ("Basketball game"). */
+export const categoryLabel = (value: string | null | undefined) =>
+  (value && sportEventLabel(value)) || baseCategoryLabel(value);
 
 export const muscleLabel = (m: string) => humanize(m).toLowerCase();

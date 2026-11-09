@@ -11,6 +11,7 @@ import { clearFutureGenerated, ensureSchedule } from '@/features/training/schedu
 import { requireSupabase } from '@/integrations/supabase/client';
 import { fetchAllPages } from '@/integrations/supabase/paging';
 import type { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/database.types';
+import { isValidCommitmentCategory } from '@/domain/sports/catalogue';
 
 export type Profile = Tables<'profiles'>;
 export type Goal = Tables<'user_goals'>;
@@ -272,12 +273,8 @@ export async function regenerateWeeklyPattern(userId: string): Promise<void> {
     .filter((e) => e.category !== 'workout')
     .map((e) => ({
       title: e.title,
-      category: ([
-        'futsal_match',
-        'futsal_practice',
-        'football_match',
-        'football_practice',
-      ].includes(e.category)
+      // Any sport event or activity keeps its own category (run/walk/cycle used to collapse to 'other').
+      category: (isValidCommitmentCategory(e.category)
         ? e.category
         : 'other') as CommitmentCategory,
       weekday: e.weekday,

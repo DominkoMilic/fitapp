@@ -331,6 +331,7 @@ export type Database = {
           name: string;
           owner_id: string | null;
           slug: string | null;
+          sports: string[];
           tracking_type: string;
           updated_at: string;
         };
@@ -358,6 +359,7 @@ export type Database = {
           name: string;
           owner_id?: string | null;
           slug?: string | null;
+          sports?: string[];
           tracking_type: string;
           updated_at?: string;
         };
@@ -384,6 +386,7 @@ export type Database = {
           name?: string;
           owner_id?: string | null;
           slug?: string | null;
+          sports?: string[];
           tracking_type?: string;
           updated_at?: string;
         };
@@ -775,6 +778,25 @@ export type Database = {
           unit_system?: string;
           updated_at?: string;
           week_start?: number;
+        };
+        Relationships: [];
+      };
+      recipe_images: {
+        Row: {
+          created_at: string;
+          external_id: string;
+          path: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          external_id: string;
+          path: string;
+        };
+        Update: {
+          created_at?: string;
+          external_id?: string;
+          path?: string;
         };
         Relationships: [];
       };
@@ -1447,6 +1469,7 @@ export type Database = {
           preferred_cuisines: string[];
           preferred_training_days: number[];
           preferred_training_time: string | null;
+          sports: string[];
           training_days_per_week: number | null;
           training_environment: string | null;
           updated_at: string;
@@ -1468,6 +1491,7 @@ export type Database = {
           preferred_cuisines?: string[];
           preferred_training_days?: number[];
           preferred_training_time?: string | null;
+          sports?: string[];
           training_days_per_week?: number | null;
           training_environment?: string | null;
           updated_at?: string;
@@ -1488,6 +1512,7 @@ export type Database = {
           preferred_cuisines?: string[];
           preferred_training_days?: number[];
           preferred_training_time?: string | null;
+          sports?: string[];
           training_days_per_week?: number | null;
           training_environment?: string | null;
           updated_at?: string;

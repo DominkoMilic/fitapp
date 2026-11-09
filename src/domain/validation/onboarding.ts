@@ -9,6 +9,7 @@ import {
 } from '@/constants/safety';
 import { ageOn, isValidIsoDate, type IsoDate } from '@/domain/calculations/dates';
 import { bmi } from '@/domain/calculations/energy';
+import { isValidCommitmentCategory, SPORT_KEYS } from '@/domain/sports/catalogue';
 
 const isoDate = z.string().refine(isValidIsoDate, 'Enter a valid date');
 const weekday = z.number().int().min(1).max(7);
@@ -54,7 +55,7 @@ export const personalSchema = (asOf: IsoDate) =>
 export type PersonalValues = z.infer<ReturnType<typeof personalSchema>>;
 
 // ------------------------------------------------------------------ step 2
-export const FOCUS_TAGS = ['strength', 'futsal', 'running', 'cardio', 'mobility'] as const;
+export const FOCUS_TAGS = ['strength', 'sport', 'running', 'cardio', 'mobility'] as const;
 export const GOAL_TYPES = ['lose_weight', 'maintain', 'build_muscle', 'general_fitness'] as const;
 
 export const goalsSchema = (ctx: { weightKg: number; heightCm: number }) =>
@@ -75,6 +76,10 @@ export const goalsSchema = (ctx: { weightKg: number; heightCm: number }) =>
       rateWarningAccepted: z.boolean(),
       targetDate: isoDate.nullable(),
       focusTags: z.array(z.enum(FOCUS_TAGS)),
+      /** Sports the user plays (sports catalogue keys); empty = no sport. */
+      sports: z
+        .array(z.string().refine((k) => SPORT_KEYS.includes(k), { message: 'Unknown sport' }))
+        .max(8, 'Choose up to 8 sports'),
     })
     .superRefine((v, issue) => {
       if (v.goalType === 'lose_weight') {
@@ -168,7 +173,10 @@ export const EQUIPMENT_TYPES = [
   'treadmill',
   'exercise_bike',
   'jump_rope',
-  'football',
+  'football', // legacy: shown as "Ball (any sport)"
+  'ball',
+  'racket',
+  'stick',
   'cones',
   'none',
   'custom',
@@ -209,13 +217,8 @@ export type EquipmentValues = z.infer<typeof equipmentSchema>;
 // ------------------------------------------------------------------ step 5
 export const commitmentSchema = z.object({
   title: z.string().trim().min(1, 'Enter a name').max(80),
-  category: z.enum([
-    'futsal_match',
-    'futsal_practice',
-    'football_match',
-    'football_practice',
-    'other',
-  ]),
+  // A sport event `<sport>_<type>` from the sports catalogue, or workout / run / walk / cycle / other.
+  category: z.string().refine(isValidCommitmentCategory, { message: 'Choose what this is' }),
   weekday,
   localTime: hhmm,
   durationMinutes: z.number().int().min(5).max(300),

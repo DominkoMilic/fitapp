@@ -4,6 +4,7 @@
  * Text never includes weight or health details (lock-screen privacy).
  */
 import { addDays, type IsoDate } from '../calculations/dates';
+import { isMatchCategory, sportEventLabel } from '../sports/catalogue';
 
 export interface NotificationPrefs {
   workout: { on: boolean; minutesBefore: number };
@@ -73,7 +74,7 @@ export const hm = (t: string): number => {
   const [h, m] = t.split(':').map(Number);
   return (h ?? 0) * 60 + (m ?? 0);
 };
-const isMatch = (c: string) => /_match$/.test(c);
+const isMatch = isMatchCategory;
 
 /**
  * Applies quiet hours (22:00–07:00): reminders before 07:00 move to 07:00 if still before the event
@@ -115,7 +116,7 @@ export function planNotifications(input: {
             kind: 'match',
             date: eve,
             minute: NOTIFY.matchEveTime,
-            title: 'Match tomorrow',
+            title: `${sportEventLabel(e.category) ?? 'Match'} tomorrow`,
             body: 'Keep today light, hydrate and get a good night’s sleep.',
             href: '/training',
           });

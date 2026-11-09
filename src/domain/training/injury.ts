@@ -1,4 +1,5 @@
 /** Injury and restriction model (spec section 9). Pure data + functions. */
+import { SPORT_BY_KEY } from '../sports/catalogue';
 
 export type BodyArea =
   | 'ankle_foot'
@@ -124,13 +125,34 @@ export function isContraindicated(
   return contraindications.some((t) => restrictions.includes(t));
 }
 
-/** Sport (matches, practices) is not recommended until the user marks cleared_sport. */
-export function sportRestricted(injuries: readonly InjuryLike[]): boolean {
+const NOT_CLEARED_FOR_SPORT: readonly InjuryStatus[] = ['active', 'recovering', 'cleared_training'];
+
+/**
+ * Games and practices are not recommended until the user marks the injury cleared_sport — but only
+ * for injuries in an area the sport loads (a sprained ankle doesn't stop a swimmer from training
+ * their upper body, but it does stop a basketball player). Unknown sports count every area.
+ * Without sports given, the lower-body rule applies (the original football behaviour).
+ */
+export function sportRestrictedFor(injuries: readonly InjuryLike[], sportKey: string): boolean {
+  const areas: readonly string[] =
+    SPORT_BY_KEY[sportKey]?.loadAreas ?? SPORT_BY_KEY.other!.loadAreas;
+  return injuries.some(
+    (i) =>
+      i.bodyArea !== null && areas.includes(i.bodyArea) && NOT_CLEARED_FOR_SPORT.includes(i.status),
+  );
+}
+
+/** True when any of the user's sports is not recommended right now (see sportRestrictedFor). */
+export function sportRestricted(
+  injuries: readonly InjuryLike[],
+  sports: readonly string[] = [],
+): boolean {
+  if (sports.length) return sports.some((k) => sportRestrictedFor(injuries, k));
   return injuries.some(
     (i) =>
       i.bodyArea !== null &&
       LOWER_BODY_AREAS.includes(i.bodyArea) &&
-      (i.status === 'active' || i.status === 'recovering' || i.status === 'cleared_training'),
+      NOT_CLEARED_FOR_SPORT.includes(i.status),
   );
 }
 

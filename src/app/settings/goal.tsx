@@ -23,7 +23,7 @@ const GOALS: { value: GoalsValues['goalType']; title: string }[] = [
 ];
 const FOCUS_LABELS: Record<(typeof FOCUS_TAGS)[number], string> = {
   strength: 'Strength',
-  futsal: 'Football / futsal',
+  sport: 'My sport',
   running: 'Running',
   cardio: 'Cardio fitness',
   mobility: 'Mobility',
@@ -66,6 +66,8 @@ function GoalForm({ goal, currentKg }: { goal: Goal | null; currentKg: number })
     rateWarningAccepted: false,
     targetDate: goal?.target_date ?? null,
     focusTags: (goal?.focus_tags ?? []) as GoalsValues['focusTags'],
+    // Sports are edited in Settings → Sports; kept here so the goal schema validates.
+    sports: [],
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 

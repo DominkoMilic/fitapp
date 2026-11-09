@@ -1,17 +1,18 @@
 import { type BodyArea, type InjuryLike, LOWER_BODY_AREAS, sportRestricted } from './injury';
+import { eventNoun, isMatchCategory, parseSportCategory } from '../sports/catalogue';
 
 /**
  * Weekly training pattern generator (spec 10.2), version 1.
  *
  * Decisions (see docs/decisions.md):
- * - MD-1 / MD+1 rules apply to matches (category *_match). Practices are hard days and the
+ * - MD-1 / MD+1 rules apply to games/matches of any sport (category *_match). Practices are hard days and the
  *   day after any hard commitment prefers recovery, but practices do not create MD-1 rest.
  * - Strength sessions are "moderate"; only commitments are "hard" in V1.
  */
 export const WEEKLY_PATTERN_VERSION = '1.0.0';
 
-export type CommitmentCategory =
-  'futsal_match' | 'futsal_practice' | 'football_match' | 'football_practice' | 'other';
+/** A sport event `<sport>_<type>` (sports catalogue) or a fixed activity (workout, run, walk, cycle, other). */
+export type CommitmentCategory = string;
 
 export interface Commitment {
   title: string;
@@ -68,7 +69,7 @@ export type PatternWarning =
 const WEEK = [1, 2, 3, 4, 5, 6, 7] as const;
 const prev = (d: number) => (d === 1 ? 7 : d - 1);
 const next = (d: number) => (d === 7 ? 1 : d + 1);
-const isMatch = (c: Commitment) => c.category.endsWith('_match');
+const isMatch = (c: Commitment) => isMatchCategory(c.category);
 
 const TITLES: Record<Exclude<SessionKind, 'commitment'>, string> = {
   strength_upper: 'Strength A — Upper & core',
@@ -103,7 +104,17 @@ export function generateWeeklyPattern(input: PatternInputs): WeeklyPattern {
   );
   const lowerBlocked = lowerInjury?.status === 'active';
   const lowerSafe = lowerInjury?.status === 'recovering';
-  const restrictedSport = sportRestricted(input.injuries);
+  // Check injuries against the sports actually on the calendar (a swimmer's ankle sprain doesn't
+  // block swimming; a basketball player's does). No sport events → the original lower-body rule.
+  const sportKeys = [
+    ...new Set(
+      input.commitments.flatMap((c) => {
+        const p = parseSportCategory(c.category);
+        return p ? [p.sport.key] : [];
+      }),
+    ),
+  ];
+  const restrictedSport = sportRestricted(input.injuries, sportKeys);
 
   // 1. Fixed commitments (one per day; extra commitments on the same day are merged into notes).
   for (const c of [...input.commitments].sort((a, b) => a.weekday - b.weekday)) {
@@ -140,6 +151,12 @@ export function generateWeeklyPattern(input: PatternInputs): WeeklyPattern {
   const mdMinus1 = new Set(matchDays.map(prev).filter((d) => !byDay.has(d)));
   const mdPlus1 = new Set(matchDays.map(next).filter((d) => !byDay.has(d) && !mdMinus1.has(d)));
   const afterHard = new Set([...hardDays].map(next).filter((d) => !byDay.has(d)));
+  /** The sport's word for the game next to a rest/recovery day ("game", "match", "race"). */
+  const matchNoun = (day: number, dir: 1 | -1 = 1) => {
+    const target = dir === 1 ? next(day) : prev(day);
+    const m = input.commitments.find((c) => isMatch(c) && c.weekday === target);
+    return m ? eventNoun(m.category) : 'match';
+  };
 
   // 2. Candidate days for strength: not a commitment, not MD-1, not MD+1.
   const candidates = WEEK.filter((d) => !byDay.has(d) && !mdMinus1.has(d) && !mdPlus1.has(d));
@@ -214,11 +231,17 @@ export function generateWeeklyPattern(input: PatternInputs): WeeklyPattern {
   for (const d of WEEK) {
     if (byDay.has(d)) continue;
     if (mdMinus1.has(d)) {
-      byDay.set(d, restDay(d, ['Day before a match: rest, or 15 minutes of easy mobility.']));
+      byDay.set(
+        d,
+        restDay(d, [`Day before your ${matchNoun(d)}: rest, or 15 minutes of easy mobility.`]),
+      );
     } else if (mdPlus1.has(d) || afterHard.has(d)) {
       byDay.set(
         d,
-        recoveryDay(d, mdPlus1.has(d) ? ['Day after a match.'] : ['Day after a hard session.']),
+        recoveryDay(
+          d,
+          mdPlus1.has(d) ? [`Day after your ${matchNoun(d, -1)}.`] : ['Day after a hard session.'],
+        ),
       );
     }
   }

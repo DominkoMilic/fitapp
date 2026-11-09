@@ -1,5 +1,6 @@
 /** Workout session maths (spec 8.10, 8.11, 10.4). Pure. */
 import { KG_PER_LB } from '@/domain/calculations/units';
+import { sportMet } from '../sports/catalogue';
 
 export interface SetLike {
   repetitions: number | null;
@@ -37,15 +38,15 @@ export function activeSeconds(startedAtMs: number, endedAtMs: number, pausedMs: 
 
 export const MAX_REASONABLE_SECONDS = 4 * 3600;
 
-/** MET for a session (spec 25.4). Sport: match 10.0, practice 7.0. */
+/** MET for a session (spec 25.4). Sport events use the sport's own values (sports catalogue). */
 export function sessionMet(input: { category: string; intensity: string }): number {
   const c = input.category;
-  if (c.endsWith('_match')) return 10.0;
-  if (c.endsWith('_practice')) return 7.0;
+  const sport = sportMet(c);
+  if (sport !== null) return sport;
   if (c === 'conditioning') return 8.0;
   if (c === 'mobility') return 2.3;
   if (c === 'recovery') return 3.0;
-  if (c === 'football') return 7.0;
+  if (c === 'football' || c === 'sport_skills') return 7.0;
   return input.intensity === 'hard' ? 6.0 : 3.5;
 }
 

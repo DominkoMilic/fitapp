@@ -20,7 +20,8 @@ export const seedDraft: CompleteDraft = {
     weeklyRatePct: 0.5,
     rateWarningAccepted: false,
     targetDate: null,
-    focusTags: ['futsal', 'strength'],
+    focusTags: ['sport', 'strength'],
+    sports: ['futsal'],
   },
   activity: { activityLevel: 'moderate', averageDailySteps: null },
   equipment: {
