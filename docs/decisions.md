@@ -90,3 +90,16 @@ Clarifications of, and deviations from, `docs/PACE_SPEC.md`. Newest first.
 7. **`goBack(fallback)` replaces `router.back()`** everywhere, enforced by a lint rule. Screens opened from a link, a notification or a reload have no history, and `router.back()` failed there.
 8. **Production config trims what isn't used:** only the `location` background mode (expo-task-manager adds `fetch`), no Face ID or motion usage strings, and no overlay or external-storage permissions on Android. Version 1.0.0. `usesNonExemptEncryption: false`.
 9. **E2E:** Maestro smoke flows navigate with deep links (`pace://…`), so layout changes don't break them. They run locally against a dev or preview build, or on EAS Workflows. GitHub Actions runs the unit, pgTAP and bundle jobs; a phone emulator in CI was left out for cost and flakiness.
+
+## 2026-11-09: Full audit (security, UX, accessibility, privacy, reliability, performance)
+
+1. **Safety rules are enforced in the database for user writes**, through triggers that apply to requests made with a user session: the calorie floor (sex floor, can't be lowered), 18+, goal BMI ≥ 18.5, health data only with consent, recalibration proposals that follow the rules, a server-set decision time, and server-set consent times. Server-side writes stay trusted. `complete_onboarding()` is the only path that sets `onboarding_completed_at`.
+2. **Auth links accept only PKCE `code` and `token_hash`.** Raw session tokens in a link are refused, because they make login CSRF possible. After any link signs someone in, the app shows the account email with "This isn't my account".
+3. **Session tokens live in the OS keychain** (chunked `expo-secure-store`, since sessions exceed the ~2 KB value limit), with a one-time move from AsyncStorage. Web keeps localStorage.
+4. **Sign-out cleans the device** (GPS stopped, reminders cancelled, onboarding draft and export files removed) but keeps the user-bound workout/recording draft and the unsynced outbox, so nothing is lost and nothing is shown to another account.
+5. **Every read that can exceed 1,000 rows is paged** with a stable order (`fetchAllPages`). PostgREST caps responses at 1,000 rows.
+6. **Recipe photos are copied to PACE Storage** (`recipe-images`, public read, service-role write) and referenced as `storage:recipe-images/<path>`, which the app resolves against its own Supabase URL. The app never loads a TheMealDB URL.
+7. **Requests time out** (20 s for API calls, 60 s for Storage and Functions). React Query follows the network state.
+8. **A root error boundary and a not-found route** replace the framework's developer screens.
+9. **Shared UX helpers:** `useSubmit` (one save at a time, error toast), `useGuardedAction`, `LoadErrorBanner`, `announce()` for screen readers, display formatters in `src/domain/format`.
+10. **npm audit:** 21 moderate and 1 low advisories, all in build/CLI/test tooling (`minimatch`/`glob` via the Expo CLI, the jest chain). The suggested fix is a major downgrade, so no change. Re-check when Expo SDK updates.
