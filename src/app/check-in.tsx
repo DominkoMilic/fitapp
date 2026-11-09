@@ -18,6 +18,7 @@ import { BODY_AREAS } from '@/domain/validation/onboarding';
 import { type Checkin, useCheckins, useSaveCheckin } from '@/features/checkin/api';
 import { useToday } from '@/features/dashboard/useToday';
 import { useTheme } from '@/theme';
+import { useSubmit } from '@/hooks/useSubmit';
 
 const SCALE = ['1', '2', '3', '4', '5'] as const;
 
@@ -91,6 +92,7 @@ function CheckinForm({ today, existing }: { today: string; existing: Checkin | u
       showToast('Check-in saved');
     }
   };
+  const submit = useSubmit(onSave);
 
   return (
     <Screen
@@ -99,7 +101,7 @@ function CheckinForm({ today, existing }: { today: string; existing: Checkin | u
         saved ? (
           <Button title="Done" onPress={() => goBack('/home')} />
         ) : (
-          <Button title="Save check-in" onPress={() => void onSave()} />
+          <Button title="Save check-in" loading={submit.busy} onPress={() => void submit.run()} />
         )
       }
     >

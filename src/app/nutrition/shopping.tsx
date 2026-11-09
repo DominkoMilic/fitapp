@@ -21,6 +21,7 @@ import { useMyRecipes, useRecipesByIds, useSavedRecipes } from '@/features/nutri
 import { dayLabel } from '@/features/training/labels';
 import { radius, spacing, TOUCH_TARGET, useTheme } from '@/theme';
 import { addDays } from '@/domain/calculations/dates';
+import { useGuardedAction } from '@/hooks/useSubmit';
 
 const qty = (it: ShoppingItem) => {
   if (it.raw_text) return it.raw_text;
@@ -49,6 +50,7 @@ export default function Shopping() {
   const savedMeals = useSavedMeals();
   const actions = usePlannerActions();
   const showToast = useToast((s) => s.show);
+  const guard = useGuardedAction();
   const { colors } = useTheme();
   const [manual, setManual] = useState('');
   const [confirmNew, setConfirmNew] = useState(false);
@@ -109,7 +111,7 @@ export default function Shopping() {
               accessibilityRole="checkbox"
               accessibilityState={{ checked: it.is_checked }}
               accessibilityLabel={`${it.ingredient_name} ${qty(it)}`}
-              onPress={() => void actions.toggleItem(it)}
+              onPress={() => guard(actions.toggleItem(it))}
               style={[styles.item, { borderColor: colors.border, backgroundColor: colors.surface }]}
             >
               {it.is_checked ? (

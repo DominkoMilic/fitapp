@@ -44,6 +44,7 @@ import { useRecipeFlagger } from '@/features/nutrition/usePreferencesFlags';
 import { usePreferences, useProfile, useTargetHistory } from '@/features/profile/api';
 import { dayLabel } from '@/features/training/labels';
 import { spacing } from '@/theme';
+import { useGuardedAction } from '@/hooks/useSubmit';
 
 export default function Planner() {
   const { today } = useToday();
@@ -63,6 +64,7 @@ export default function Planner() {
   const actions = usePlannerActions();
   const log = useNutritionActions();
   const showToast = useToast((s) => s.show);
+  const guard = useGuardedAction();
   const [adding, setAdding] = useState<MealType | null>(null);
   const [skip, setSkip] = useState<Set<string>>(new Set());
 
@@ -278,19 +280,19 @@ export default function Planner() {
                       <Button
                         title="Mark eaten"
                         fullWidth={false}
-                        onPress={() => void markEaten(e)}
+                        onPress={() => guard(markEaten(e))}
                       />
                       <Button
                         title="Skip"
                         variant="ghost"
                         fullWidth={false}
-                        onPress={() => void actions.setStatus(e, 'skipped')}
+                        onPress={() => guard(actions.setStatus(e, 'skipped'))}
                       />
                       <Button
                         title="Remove"
                         variant="ghost"
                         fullWidth={false}
-                        onPress={() => void actions.remove(e, plan.serverKeys.has(e.id))}
+                        onPress={() => guard(actions.remove(e, plan.serverKeys.has(e.id)))}
                       />
                     </View>
                   ) : null}

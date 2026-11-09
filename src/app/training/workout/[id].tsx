@@ -17,6 +17,7 @@ import {
   useScheduledWorkouts,
 } from '@/features/training/schedule-api';
 import { useBuiltWorkout } from '@/features/training/useBuiltWorkout';
+import { useGuardedAction } from '@/hooks/useSubmit';
 
 const WARNING_TEXT = {
   match_tomorrow: 'There is a match the next day. Keep that day light: rest or mobility is better.',
@@ -30,6 +31,7 @@ export default function WorkoutDetail() {
   const actions = useScheduleActions();
   const restrictions = useRestrictions();
   const showToast = useToast((s) => s.show);
+  const guard = useGuardedAction();
   const built = useBuiltWorkout(w?.template_slug);
   const [moving, setMoving] = useState(false);
   const [moveDate, setMoveDate] = useState<string | null>(null);
@@ -196,19 +198,19 @@ export default function WorkoutDetail() {
             <Button
               title="Skip"
               variant="ghost"
-              onPress={() => void actions.skip(w).then(() => showToast('Skipped. No problem.'))}
+              onPress={() => guard(actions.skip(w).then(() => showToast('Skipped. No problem.')))}
             />
           ) : null}
           {w.occurrence_key === null ? (
             <Button
               title="Remove this workout"
               variant="ghost"
-              onPress={() => void actions.removeOneOff(w).then(() => goBack('/training'))}
+              onPress={() => guard(actions.removeOneOff(w).then(() => goBack('/training')))}
             />
           ) : null}
         </>
       ) : w.status === 'skipped' ? (
-        <Button title="Restore" variant="secondary" onPress={() => void actions.restore(w)} />
+        <Button title="Restore" variant="secondary" onPress={() => guard(actions.restore(w))} />
       ) : null}
       {w.recurring_event_id ? (
         <Button

@@ -8,6 +8,7 @@ import { useToday } from '@/features/dashboard/useToday';
 import { useNutritionActions } from '@/features/nutrition/api';
 import { MealPicker } from '@/features/nutrition/MealPicker';
 import { asDate, asMeal } from '@/features/nutrition/params';
+import { useSubmit } from '@/hooks/useSubmit';
 
 /** Calories (and optional macros) without a food, e.g. a restaurant meal (spec 12.2). */
 export default function QuickAdd() {
@@ -43,9 +44,13 @@ export default function QuickAdd() {
     goBack('/nutrition');
     showToast('Added');
   };
+  const submit = useSubmit(save);
 
   return (
-    <Screen edges={['bottom']} footer={<Button title="Add" onPress={() => void save()} />}>
+    <Screen
+      edges={['bottom']}
+      footer={<Button title="Add" loading={submit.busy} onPress={() => void submit.run()} />}
+    >
       {error ? <Banner tone="danger" message={error} /> : null}
       <MealPicker value={meal} onChange={setMeal} />
       <TextField

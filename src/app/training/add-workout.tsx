@@ -11,6 +11,7 @@ import { OptionCard } from '@/features/onboarding/components/OptionCard';
 import { useRestrictions } from '@/features/training/library';
 import { useScheduleActions } from '@/features/training/schedule-api';
 import { spacing } from '@/theme';
+import { useSubmit } from '@/hooks/useSubmit';
 
 export default function AddWorkout() {
   const { today } = useToday();
@@ -31,11 +32,14 @@ export default function AddWorkout() {
     showToast('Workout added');
     router.replace({ pathname: '/training/workout/[id]', params: { id } });
   };
+  const submit = useSubmit(save);
 
   return (
     <Screen
       edges={['bottom']}
-      footer={<Button title="Add to calendar" onPress={() => void save()} />}
+      footer={
+        <Button title="Add to calendar" loading={submit.busy} onPress={() => void submit.run()} />
+      }
     >
       {error ? <Banner tone="danger" message={error} /> : null}
       <DateField label="Date" value={date} onChange={setDate} />

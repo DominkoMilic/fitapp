@@ -13,6 +13,7 @@ import {
 } from '@/components/ui';
 import type { ExerciseCategory, TrackingType } from '@/domain/training/catalogue';
 import { useCustomExerciseActions } from '@/features/training/library';
+import { useSubmit } from '@/hooks/useSubmit';
 
 const CATEGORIES: { value: ExerciseCategory; label: string }[] = [
   { value: 'strength', label: 'Strength' },
@@ -66,11 +67,14 @@ export default function NewExercise() {
     router.replace({ pathname: '/training/exercise/[slug]', params: { slug } });
     showToast('Exercise added to your library');
   };
+  const submit = useSubmit(save);
 
   return (
     <Screen
       edges={['bottom']}
-      footer={<Button title="Save exercise" onPress={() => void save()} />}
+      footer={
+        <Button title="Save exercise" loading={submit.busy} onPress={() => void submit.run()} />
+      }
     >
       {error ? <Banner tone="danger" message={error} /> : null}
       <TextField label="Name" value={name} onChangeText={setName} maxLength={80} />

@@ -21,6 +21,7 @@ import {
   useRecipeActions,
 } from '@/features/nutrition/recipes-api';
 import { spacing } from '@/theme';
+import { useSubmit } from '@/hooks/useSubmit';
 
 /** Build a recipe from foods + grams; nutrition per serving is calculated (spec 12.5). */
 export default function NewRecipe() {
@@ -63,9 +64,15 @@ export default function NewRecipe() {
     showToast('Recipe created');
     router.replace({ pathname: '/nutrition/recipe/[id]', params: { id } });
   };
+  const submit = useSubmit(save);
 
   return (
-    <Screen edges={['bottom']} footer={<Button title="Save recipe" onPress={() => void save()} />}>
+    <Screen
+      edges={['bottom']}
+      footer={
+        <Button title="Save recipe" loading={submit.busy} onPress={() => void submit.run()} />
+      }
+    >
       {error ? <Banner tone="danger" message={error} /> : null}
       <TextField label="Recipe name" value={name} onChangeText={setName} maxLength={200} />
       <View style={styles.row}>

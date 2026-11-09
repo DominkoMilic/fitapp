@@ -9,6 +9,7 @@ import { useToday } from '@/features/dashboard/useToday';
 import { type MealLogItem, useDayLog, useNutritionActions } from '@/features/nutrition/api';
 import { MealPicker } from '@/features/nutrition/MealPicker';
 import { asDate, asMeal } from '@/features/nutrition/params';
+import { useSubmit } from '@/hooks/useSubmit';
 
 export default function EditItem() {
   const params = useLocalSearchParams<{ id: string; date?: string }>();
@@ -67,9 +68,13 @@ function EditForm({ item, onServer }: { item: MealLogItem; onServer: boolean }) 
     await actions.updateItem(item, changes);
     goBack('/nutrition');
   };
+  const submit = useSubmit(save);
 
   return (
-    <Screen edges={['bottom']} footer={<Button title="Save" onPress={() => void save()} />}>
+    <Screen
+      edges={['bottom']}
+      footer={<Button title="Save" loading={submit.busy} onPress={() => void submit.run()} />}
+    >
       <Text variant="title">{item.name_snapshot}</Text>
       {error ? <Banner tone="danger" message={error} /> : null}
       <MealPicker value={meal} onChange={setMeal} />

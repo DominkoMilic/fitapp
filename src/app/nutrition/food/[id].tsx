@@ -4,12 +4,13 @@ import { StyleSheet, View } from 'react-native';
 
 import { Banner, ConfirmDialog, ErrorState, LoadingState, useToast } from '@/components/feedback';
 import { Button, Card, ChipGroup, NumberField, Screen, StatTile, Text } from '@/components/ui';
-import { checkGrams, nutritionForGrams , MEAL_LABELS } from '@/domain/nutrition/totals';
+import { checkGrams, nutritionForGrams, MEAL_LABELS } from '@/domain/nutrition/totals';
 import { useToday } from '@/features/dashboard/useToday';
 import { portionsOf, useFood, useNutritionActions } from '@/features/nutrition/api';
 import { MealPicker } from '@/features/nutrition/MealPicker';
 import { asDate, asMeal } from '@/features/nutrition/params';
 import { spacing } from '@/theme';
+import { useSubmit } from '@/hooks/useSubmit';
 
 export default function FoodAmount() {
   const params = useLocalSearchParams<{ id: string; date?: string; meal?: string }>();
@@ -23,6 +24,18 @@ export default function FoodAmount() {
   const [error, setError] = useState<string | null>(null);
   const [confirmLarge, setConfirmLarge] = useState(false);
   const date = asDate(params.date, today);
+  const submit = useSubmit(
+    async (
+      f: NonNullable<typeof food>,
+      g: number,
+      portionInfo: { label: string; count: number } | null,
+    ) => {
+      await actions.logFood(date, meal, f, g, portionInfo);
+      // Back to the diary (not the search screen), where the new entry shows up.
+      router.dismissTo('/nutrition');
+      showToast(`Added to ${MEAL_LABELS[meal].toLowerCase()}`);
+    },
+  );
 
   if (isPending)
     return (
@@ -44,18 +57,12 @@ export default function FoodAmount() {
   const grams = chosen ? chosen.grams * value : value;
   const n = nutritionForGrams(food, grams);
 
-  const save = async () => {
-    await actions.logFood(
-      date,
-      meal,
+  const save = () =>
+    submit.run(
       food,
       Math.round(grams * 10) / 10,
       chosen ? { label: chosen.label, count: value } : null,
     );
-    // Back to the diary (not the search screen), where the new entry shows up.
-    router.dismissTo('/nutrition');
-    showToast(`Added to ${MEAL_LABELS[meal].toLowerCase()}`);
-  };
   const onAdd = () => {
     const c = checkGrams(grams);
     if (!c.ok)
@@ -70,7 +77,10 @@ export default function FoodAmount() {
   };
 
   return (
-    <Screen edges={['bottom']} footer={<Button title="Add" onPress={onAdd} />}>
+    <Screen
+      edges={['bottom']}
+      footer={<Button title="Add" loading={submit.busy} onPress={onAdd} />}
+    >
       <Text variant="title">{food.name}</Text>
       <Text variant="small" color="textSecondary">
         {food.source === 'usda'

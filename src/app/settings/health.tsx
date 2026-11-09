@@ -64,6 +64,7 @@ export default function HealthSettings() {
   const recordConsent = useRecordConsent();
   const [editing, setEditing] = useState<Editing | null>(null);
   const [confirmAll, setConfirmAll] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   if (conditions.isPending || consent.isPending)
     return (
@@ -134,7 +135,7 @@ export default function HealthSettings() {
               title="Delete"
               variant="ghost"
               fullWidth={false}
-              onPress={() => remove.mutate(h.id)}
+              onPress={() => setConfirmDelete(h.id)}
             />
           </View>
         </Card>
@@ -243,6 +244,19 @@ export default function HealthSettings() {
           onPress={() => setConfirmAll(true)}
         />
       ) : null}
+      <ConfirmDialog
+        visible={confirmDelete !== null}
+        destructive
+        title="Delete this injury?"
+        message="Your plan will stop adjusting for it. You can add it again at any time."
+        confirmLabel="Delete"
+        loading={remove.isPending}
+        onCancel={() => setConfirmDelete(null)}
+        onConfirm={() => {
+          if (confirmDelete)
+            remove.mutate(confirmDelete, { onSettled: () => setConfirmDelete(null) });
+        }}
+      />
       <ConfirmDialog
         visible={confirmAll}
         destructive

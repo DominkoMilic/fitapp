@@ -5,6 +5,7 @@ import { Banner, useToast } from '@/components/feedback';
 import { Button, NumberField, Screen, SegmentedControl, Text, TextField } from '@/components/ui';
 import { macroKcal } from '@/domain/calculations/targets';
 import { useNutritionActions } from '@/features/nutrition/api';
+import { useSubmit } from '@/hooks/useSubmit';
 
 /** Custom food per 100 g/ml, with an optional named portion (e.g. "1 cup = 170 g"). */
 export default function NewFood() {
@@ -54,10 +55,16 @@ export default function NewFood() {
       params: { id, date: params.date, meal: params.meal },
     });
   };
+  const submit = useSubmit(save);
   const fromMacros = p !== null && c !== null && f !== null ? Math.round(macroKcal(p, c, f)) : null;
 
   return (
-    <Screen edges={['bottom']} footer={<Button title="Create food" onPress={() => void save()} />}>
+    <Screen
+      edges={['bottom']}
+      footer={
+        <Button title="Create food" loading={submit.busy} onPress={() => void submit.run()} />
+      }
+    >
       {error ? <Banner tone="danger" message={error} /> : null}
       <TextField
         label="Name"
