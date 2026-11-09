@@ -114,3 +114,12 @@ Clarifications of, and deviations from, `docs/PACE_SPEC.md`. Newest first.
 2. **Injury checks are per sport.** A sport is restricted only when an injury that isn't cleared for sport affects a body area that sport loads. Unknown sports and "Other" use every area.
 3. **Per-sport drill packs** (11 packs, no contact or sparring drills). Ball drills accept the old "football" equipment value. One weekly session becomes "<Sport> skills" (first sport's pack) when the user plays a sport, has the sport focus, trains at least 3 days and isn't restricted for that sport. The drill content should be reviewed by a coach or physiotherapist before public release.
 4. **The training seed moves to a new migration** (`20261115000200_training_seed_sports.sql`). Applied migrations are never edited, and the original seed runs before the `exercises.sports` column exists. The seed is an idempotent upsert, so the newest seed file brings any database up to date.
+
+## 2026-11-09: Your own recipes and meals
+
+1. **Two kinds of recipe ingredients.** Foods from the database (grams, with a per-100 g snapshot so the recipe can be recalculated offline) and free text (a name plus an optional amount, parsed so it scales and reaches the shopping list). Free text never gets nutrition.
+2. **"Your estimate" is a new nutrition confidence** (`recipes.nutritional_confidence = 'user_estimate'`, migration `20261115000300`). It is allowed only on the user's own recipes; TheMealDB rows still cannot carry nutrition. Estimates are labelled wherever they appear, including logged entries (`confidence_snapshot`).
+3. **Partial calculation is allowed and labelled** ("Calculated from 3 of 5 ingredients") rather than blocked, because many home recipes include salt, spices or water that have no meaningful nutrition.
+4. **Saved meal items are nutrition snapshots** (food, recipe or quick item). Changing an amount scales the snapshot linearly, which is exact. Old rows without a `kind` are read as food (with `food_id`) or quick items.
+5. **Editing never rewrites history.** Recipes, meals and foods are full-row upserts through the outbox; logged entries keep their own snapshot.
+6. **No recipe photos** for user recipes (decided with the product owner).

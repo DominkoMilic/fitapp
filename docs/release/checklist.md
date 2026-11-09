@@ -28,3 +28,4 @@ npx eas-cli@latest submit --profile production --platform android  # internal tr
 ```
 
 Then in App Store Connect / Play Console: screenshots, description, privacy answers, background-location declaration (Android) and review notes with a **test account** for the reviewer (onboarded, in the production project, with sample data; never a real person's account).
+- [ ] Have a coach or physiotherapist review the per-sport drill content (`src/domain/training/catalogue.ts`, sport drills section) before public release.

@@ -47,7 +47,7 @@ The original PRD was strong on vision but mixed V1 and V2 scope, left several te
 | Pantry / "available ingredients" | Removed | High effort, low value for one user. |
 | Budget preference, currency | Removed | No data source has cost information. Nothing would use it. |
 | Occupation question + steps + activity level (overlapping) | Simplified | One activity-level question with clear descriptions, plus optional average steps. |
-| Multiple goals each with priority | Simplified | One primary goal (drives calories) plus optional focus tags (strength, futsal, running, mobility, cardio). |
+| Multiple goals each with priority | Simplified | One primary goal (drives calories) plus optional focus tags (strength, sport, running, mobility, cardio). The sports a user plays (any number, or none) are stored separately (`user_preferences.sports`). |
 | Monthly reports | V1.1 | Weekly report first; monthly reuses the same engine. |
 | Barcode scanning (Open Food Facts) | V1.1 | Moved earlier than "future": it is the fastest way to log packaged food. Ships right after Phase 4. |
 | Progress photos | V1.1 | Highly sensitive data. Schema and storage policy designed now, UI later. |
@@ -76,7 +76,8 @@ The original PRD was strong on vision but mixed V1 and V2 scope, left several te
 - **Injury model** with status stages, restriction tags and exercise contraindication tags (Section 9). Makes the "recent right ankle sprain" requirement actually enforceable.
 - **Workout templates** with a 20-minute short version and injury-safe alternative per exercise, so the app stays useful when time is short.
 - **Progression rules for light equipment** (5 kg dumbbell/kettlebell): reps, tempo, unilateral, pauses before load.
-- **Match-day scheduling rules** (MD-1, MD+1) and logging futsal matches/practices with duration and RPE.
+- **Any sport, or none.** A catalogue of 17 sports (`src/domain/sports/catalogue.ts`: football, futsal, basketball, handball, volleyball, tennis, padel, badminton, table tennis, hockey, rugby, water polo, martial arts/boxing, swimming, running club, cycling club, other). Each sport has its own words for games and practices, METs, the body areas it loads and a drill pack. Users with no sport see no sport wording.
+- **Game-day scheduling rules** (MD-1, MD+1) for games of any sport, and logging games/practices with duration and RPE.
 - **Session training load** = RPE × minutes, used for recovery rules.
 - **Recurring events** model with idempotent generation (no duplicate occurrences).
 - **Reference food catalogue** (USDA FoodData Central subset, public domain) plus food portions. Without it, food search has no reliable data source in V1.
@@ -276,7 +277,7 @@ Rules: progress bar, back navigation, draft saved locally after each step (resum
 | Step | Fields | Validation / notes |
 |---|---|---|
 | 1 Personal | display name (req.), date of birth (req.), sex for metabolic calculation (male/female, req., explained), height (req.), current weight (req.), unit system (metric/imperial), timezone (auto-detected, editable) | Name 1–50 chars. Age 18–100. Height 120–230 cm. Weight 30–350 kg. Imperial: ft 3–7, in 0–11.9, lb 66–770. |
-| 2 Goals | primary goal: lose weight / maintain / build muscle / general fitness; target weight (req. for lose/build); desired weekly rate; optional target date; focus tags (strength, futsal/football, running, cardio, mobility) | Lose: target < current, target BMI ≥ 18.5. Rate default 0.5%/week; range 0.25–1.0%; > 0.75% needs warning confirmation. Build: target > current; rate 0.1–0.25%/week. Optional secondary target weight (e.g. 87 kg) creates an extra milestone only. |
+| 2 Goals | primary goal: lose weight / maintain / build muscle / general fitness; target weight (req. for lose/build); desired weekly rate; optional target date; focus tags (strength, sport, running, cardio, mobility); sports played (multi-select from the catalogue, max 8, or "I don't play a sport") | Lose: target < current, target BMI ≥ 18.5. Rate default 0.5%/week; range 0.25–1.0%; > 0.75% needs warning confirmation. Build: target > current; rate 0.1–0.25%/week. Optional secondary target weight (e.g. 87 kg) creates an extra milestone only. |
 | 3 Activity | activity level (5 options, each with plain-language description that includes exercise), optional average daily steps | Show multiplier and explain it already includes exercise. |
 | 4 Equipment | environment (home/gym/outdoors/mixed); equipment multi-select; per-item max weight (e.g. dumbbells 5 kg); custom entries | "No equipment" is exclusive. Max weight 0.5–200 kg. |
 | 5 Schedule | training days/week (0–7), preferred days, max session duration (15–120 min, default 45), preferred time, recurring sport commitments (title, type match/practice, weekday, time, duration), rest-day preferences | Commitments become `recurring_events`. Training days + commitments may overlap; scheduler resolves. |
@@ -406,7 +407,7 @@ Recalibration check runs when the app opens if ≥ 14 days since the last check 
 | Status | Meaning (shown to user) | Effect |
 |---|---|---|
 | active | Painful now; walking or daily activities affected | Exclude all exercises with the area's restriction tags; no sport; recommend rest and professional assessment if severe, not improving or swelling persists |
-| recovering | Walking is comfortable; not yet back to sport | Exclude impact, jumping, lateral, sprint for that area; allow upper body, core, non-weight-bearing work if pain-free; futsal events show a caution banner |
+| recovering | Walking is comfortable; not yet back to sport | Exclude impact, jumping, lateral, sprint for that area; allow upper body, core, non-weight-bearing work if pain-free; events of a sport that loads that area show a caution banner (e.g. an ankle blocks basketball, not swimming) |
 | cleared_training | A professional (or the user's judgement) allows gym-type training | Allow controlled strength incl. that area; still exclude jumping, lateral and sprint |
 | cleared_sport | Cleared for sport | No restriction; suggest thorough warm-up |
 | resolved | History only | No effect; kept as previous injury |
@@ -446,7 +447,7 @@ Check-in pain ≥ 4/10 (any area) → today's sessions loading that area become 
 
 - **Exercise**: library item (system or user-owned).
 - **Workout template**: ordered list of exercises with sets/reps/rest, intensity, estimated minutes, short version, alternatives.
-- **Recurring event**: weekly repeating commitment (futsal match, practice, a template on Mondays).
+- **Recurring event**: weekly repeating commitment: a game or practice of one of the user's sports (`<sport>_match` / `<sport>_practice`, e.g. `basketball_match`), a run, walk, ride, workout or other fixed activity. Added in onboarding or later under Settings → Your sports.
 - **Scheduled workout**: one dated occurrence (from plan, recurrence, or user). Holds a snapshot of the template's exercises at scheduling time.
 - **Workout session**: what actually happened (started/ended, sets, RPE, feeling). Can exist without a scheduled workout.
 
@@ -565,6 +566,7 @@ USDA FDC data is public domain (CC0); still show "Food data: USDA FoodData Centr
 - Search (catalogue + custom, recent and favourites first), select portion or enter grams/ml, choose meal type and date (default: now's local date and meal by time of day — before 10:30 breakfast, 10:30–15:00 lunch, 15:00–17:00 snack, 17:00–21:30 dinner, after that snack).
 - Quick add: name + kcal (+ optional macros).
 - Copy meal from another day, copy yesterday's meal, save meal as "saved meal", log saved meal.
+- **Saved meals** ("my usual breakfast") can be built from scratch, edited, duplicated and removed. Items are foods (grams), the user's recipes (servings) or quick items (name + own numbers); each keeps a nutrition snapshot that scales exactly with its amount. "Save as a meal" opens the editor pre-filled with that meal's entries. "Log it" logs all items or only the ticked ones.
 - Every item stores a snapshot: name, quantity, unit, grams, kcal, protein, carbs, fat, fibre, source, confidence.
 - Items with unknown macros show a "Partial data" badge; day totals show "Some items lack full nutrition data".
 - "Mark day complete" toggle (used for calibration and reports). Auto-suggested in the evening if ≥ 2 meals logged, never auto-set.
@@ -588,7 +590,15 @@ USDA FDC data is public domain (CC0); still show "Food data: USDA FoodData Centr
 
 ### 12.5 User recipes
 
-Built from catalogue/custom foods with grams; nutrition = Σ food per-100 g × grams / 100; cooked weight optional. Confidence = `calculated`. These are the recipes the meal planner uses for macro-aware suggestions.
+Created, edited and duplicated in the recipe editor (`recipe-edit`). A copy of a TheMealDB recipe ("Make it my own") keeps its ingredients as text, its method and its link, and has no nutrition until the user adds it.
+
+- **Ingredients** are either foods (catalogue/custom, grams; a per-100 g snapshot is stored with the ingredient) or free text: a name plus an optional amount ("2 cups", "to taste") parsed with 12.4 so it scales and reaches the shopping list. Free-text ingredients never get nutrition.
+- **Nutrition per serving** is either calculated (Σ food per-100 g × grams / 100 ÷ servings; confidence `calculated`, shown as "Calculated from N of M ingredients" when some are free text) or typed in by the user (confidence `user_estimate`, kcal required, macros optional, shown as "Your estimate"). With neither, confidence is `none` ("Nutrition unavailable").
+- Name, description, servings 1–50, prep/cook minutes, up to 8 tags, up to 40 steps, an optional https source link. Ingredients and steps can be reordered with buttons.
+- Logging: servings in ¼ steps, today or the two days before, any meal. Logged entries are snapshots; editing a recipe never changes history.
+- Your own foods can be edited and removed (archived) the same way.
+
+User recipes with nutrition are the recipes the meal planner uses for macro-aware suggestions.
 
 ### 12.6 Meal planner (V1 simple)
 
@@ -596,7 +606,7 @@ Week grid (days × meal types). Add a saved meal, user recipe, TheMealDB recipe 
 
 ### 12.7 Shopping list
 
-Generate from a date range of planned meals × chosen servings. Merge lines with the same normalised ingredient name **and** same unit; different units stay separate lines; unparsed measures become text lines with recipe name. Check/uncheck works offline. Manual items can be added.
+Generate from a date range of planned meals × chosen servings. A saved meal contributes its food items (grams) and quick items (as text); a recipe inside a saved meal contributes that recipe's ingredients scaled by its servings in the meal × planned servings. Merge lines with the same normalised ingredient name **and** same unit; different units stay separate lines; unparsed measures become text lines with recipe name. Check/uncheck works offline. Manual items can be added.
 
 ### 12.8 Water
 
@@ -675,7 +685,7 @@ Records store the source session/activity; deleting the source recalculates the 
 |---|---|---|---|
 | S1 | 0 | Active/recovering injury and today's plan contains restricted exercises | "Today's workout was adjusted for your ankle. Restricted exercises were swapped." |
 | S2 | 0 | Check-in pain ≥ 4/10 | "You reported pain today. Rest that area and consider professional advice if it persists." |
-| S3 | 0 | Futsal event today/tomorrow while injury status is active/recovering | "You have a match scheduled but your ankle is marked as recovering. Check with a professional before playing." |
+| S3 | 0 | A game or practice today/tomorrow of a sport the injury restricts (status active/recovering/cleared_training) | "Basketball game tomorrow, but your ankle is marked as recovering. Check with a professional before playing." (the sport's own words) |
 | S4 | 1 | Logged intake < floor on 3 of the last 4 complete days | "Your intake has been well below your target. Eating enough supports training and recovery." |
 | R1 | 2 | Match tomorrow | "Match tomorrow. Keep today light: mobility or an easy walk, hydrate, carbs with meals, good sleep." |
 | R2 | 2 | Match yesterday | "Recovery day after your match. An easy 20–30 min walk and mobility help." |
@@ -785,7 +795,7 @@ profiles (
 user_goals (
   id, user_id,
   goal_type text check (goal_type in ('lose_weight','maintain','build_muscle','general_fitness')),
-  focus_tags text[] not null default '{}',     -- strength, futsal, running, cardio, mobility
+  focus_tags text[] not null default '{}',     -- strength, sport, running, cardio, mobility ('futsal' from old apps is stored as 'sport')
   starting_weight_kg numeric(5,2), target_weight_kg numeric(5,2), secondary_target_weight_kg numeric(5,2),
   weekly_rate_pct numeric(4,2) check (weekly_rate_pct between 0 and 1.0),
   target_date date,
@@ -808,6 +818,7 @@ user_preferences (
   preferred_training_time time,
   training_environment text check (training_environment in ('home','gym','outdoors','mixed')),
   notification_preferences jsonb not null default '{}',
+  sports text[] not null default '{}',  -- sports catalogue keys, max 8; empty = no sport
   locale text default 'en', updated_at
 )
 
@@ -863,7 +874,8 @@ progress_photos (V1.1) (id, user_id, pose text check (pose in ('front','side','b
 ```sql
 exercises (id, owner_id uuid null references auth.users on delete cascade,   -- null = system
   slug text unique, name text not null, description text,
-  category text check (category in ('strength','mobility','core','conditioning','football','recovery','cardio')),
+  category text check (category in ('strength','mobility','core','conditioning','football','sport_skills','recovery','cardio')),
+  sports text[] not null default '{}',  -- sports a drill belongs to (catalogue keys); empty = everyone
   muscle_groups text[], equipment text[], difficulty text check (difficulty in ('beginner','intermediate','advanced')),
   tracking_type text check (tracking_type in ('reps','reps_weight','time','distance')),
   is_unilateral boolean default false, instructions text[], caution_notes text,
@@ -882,7 +894,7 @@ training_plans (id, user_id, name, goal_type, start_date, end_date null, status 
 unique index one_active_plan on training_plans(user_id) where status = 'active'
 
 recurring_events (id, user_id, training_plan_id null, title, category text check (category in
-  ('futsal_match','futsal_practice','football_match','football_practice','workout','run','walk','cycle','other')),
+  ('workout','run','walk','cycle','other') or category ~ '^[a-z_]{2,30}_(match|practice)$'),
   template_id null, weekday smallint check (weekday between 1 and 7), local_time time, timezone text,
   duration_minutes smallint, intensity text, starts_on date, ends_on date null, active boolean default true, ...)
 
@@ -941,7 +953,7 @@ favorite_foods (user_id, food_id, created_at, primary key (user_id, food_id))
 recipes (id, owner_id null, source text check (source in ('themealdb','user')), external_id text,
   name, description, image_url, category, cuisine, tags text[], instructions text[],
   preparation_minutes, cooking_minutes, servings_stated smallint null, source_url, video_url,
-  nutritional_confidence text check (nutritional_confidence in ('none','calculated')),
+  nutritional_confidence text check (nutritional_confidence in ('none','calculated','user_estimate')),  -- user_estimate: own recipes only
   kcal_per_serving, protein_per_serving, carbs_per_serving, fat_per_serving,   -- null unless calculated
   fetched_at timestamptz, created_at, updated_at,
   unique (source, external_id))
@@ -1277,7 +1289,8 @@ Every system exercise MUST have instructions (3–6 steps), caution notes, and a
 | Low-impact conditioning | moderate | 30 | bike-intervals 6×1 min or shadow-boxing 6×40 s; kb-swing 4×15; mountain-climber 4×30 s; dead-bug | kb-swing → glute-bridge |
 | Recovery | easy | 30–45 | easy-walk 20–30 min + cat-cow, hip-flexor-stretch, hamstring-stretch, calf-stretch, thoracic-rotation | calf-stretch skipped if ankle active |
 | Mobility 15 | easy | 15 | cat-cow, worlds-greatest-stretch, ninety-ninety, thoracic-rotation, hamstring-stretch | worlds-greatest-stretch → hip-flexor-stretch |
-| Futsal skills (cleared_sport only) | moderate | 30 | ball-mastery, wall-passing, cone-dribbling, acceleration-sprints | not scheduled while restricted |
+| Football & futsal skills (`futsal-skills`) | moderate | 30 | ball-mastery, wall-passing, cone-dribbling, acceleration-sprints | not scheduled while restricted |
+| Per-sport packs (`basketball-skills`, `handball-skills`, `volleyball-skills`, `racket-skills`, `hockey-skills`, `rugby-skills`, `swim-skills`, `combat-skills`, `run-skills`, `cycle-skills`, `athletic-skills`) | moderate | 30 | 4–6 sport drills each (31 drills, no contact or sparring); see `src/domain/training/catalogue.ts` | one weekly session uses the first sport's pack when the user plays a sport, has the sport focus, trains ≥ 3 days and is not restricted for that sport; every pack still works with no equipment |
 
 Every template includes a 5-minute warm-up and a short cool-down.
 
@@ -1302,8 +1315,8 @@ Every template includes a 5-minute warm-up and a short cool-down.
 | Cycling | 19.3–22.5 km/h | 8.0 |
 | Cycling | 22.5–25.7 km/h | 10.0 |
 | Cycling | ≥ 25.7 km/h | 12.0 |
-| Football / futsal | match (competitive) | 10.0 |
-| Football / futsal | practice / casual | 7.0 |
+| Sports (games / practices) | per sport, from the sports catalogue | e.g. football/futsal 10.0 / 7.0; basketball 8.0 / 6.0; tennis 8.0 / 6.0; swimming 9.8 / 5.8 |
+| Sport drills (`sport_skills`) | — | 7.0 |
 | Resistance training | moderate | 3.5 |
 | Resistance training | vigorous | 6.0 |
 | Circuit / kettlebell conditioning | vigorous | 8.0 |

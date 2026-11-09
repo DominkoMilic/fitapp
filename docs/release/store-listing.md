@@ -14,8 +14,8 @@ Answers match what the V1 app actually does (see `src/features/legal/documents.t
 > PACE is a personal fitness coach that is honest about what it knows.
 >
 > • Realistic calorie and protein targets that never go below a safety minimum, reviewed with you every two weeks from your real weight trend.
-> • A weekly training plan built around your schedule, equipment and injuries, with matches and practices on the calendar.
-> • Food logging from 6,800+ reference foods, your own foods and recipes, a meal planner and a shopping list.
+> • A weekly training plan built around your schedule, equipment and injuries. Play basketball, tennis, handball or another sport? Your games and practices go on the calendar, with drills for your sport. No sport? No problem.
+> • Food logging from 6,800+ reference foods. Type in your own recipes and meals (with your own numbers if you like), a meal planner and a shopping list.
 > • Walk, run and ride tracking with GPS, pause, routes and personal records. Routes are private.
 > • A daily coach that explains why it suggests something, milestones, and a weekly report.
 > • Works offline and syncs when you're back online. Export or delete all your data at any time.
