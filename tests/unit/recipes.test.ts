@@ -1,5 +1,5 @@
 import { readIngredients } from '@/domain/nutrition/recipe-ingredients';
-import { recipeNutrition } from '@/features/nutrition/recipes-api';
+import { recipeNutrition } from '@/domain/nutrition/recipe-nutrition';
 
 describe('stored recipe ingredients', () => {
   it('reads valid rows and survives bad data', () => {

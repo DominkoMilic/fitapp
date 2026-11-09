@@ -2,12 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
 import { useCallback } from 'react';
 
-import {
-  type Nutrition,
-  nutritionForGrams,
-  perServing,
-  sumNutrition,
-} from '@/domain/nutrition/totals';
+import { type RecipeIngredientInput, recipeNutrition } from '@/domain/nutrition/recipe-nutrition';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useSyncActions } from '@/features/sync/SyncProvider';
 import { useSyncedRows } from '@/features/sync/useSyncedRows';
@@ -15,10 +10,9 @@ import { type RecipeRow, themealdb } from '@/integrations/recipes/themealdb.prov
 import { requireSupabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/database.types';
 
-import type { Food } from './api';
-
 export type SavedRecipe = Tables<'saved_recipes'>;
 export type { RecipeRow };
+export { type RecipeIngredientInput, recipeNutrition };
 
 const db = () => requireSupabase();
 
@@ -123,28 +117,6 @@ export function useRecipe(ref: { id?: string; externalId?: string }) {
     error: q.error,
     refetch: q.refetch,
   };
-}
-
-export interface RecipeIngredientInput {
-  food: Pick<Food, 'id' | 'name' | 'kcal' | 'protein_g' | 'carbs_g' | 'fat_g' | 'fibre_g'>;
-  grams: number;
-}
-
-/** Nutrition of a user recipe from its foods (spec 12.5): Σ per-100 g × grams / 100. */
-export function recipeNutrition(
-  ingredients: readonly RecipeIngredientInput[],
-  servings: number,
-): { total: Nutrition; perServing: Nutrition; partial: number } {
-  const parts = ingredients.map((i) => nutritionForGrams(i.food, i.grams));
-  const t = sumNutrition(parts);
-  const total: Nutrition = {
-    kcal: t.kcal,
-    protein_g: t.protein_g,
-    carbs_g: t.carbs_g,
-    fat_g: t.fat_g,
-    fibre_g: t.fibre_g,
-  };
-  return { total, perServing: perServing(total, servings), partial: t.partialItems };
 }
 
 export function useRecipeActions() {

@@ -145,8 +145,8 @@ function RecipeView({ recipe }: { recipe: RecipeRow }) {
       {!base ? (
         <Card raised>
           <Text>
-            How many servings does this recipe make? The source doesn&apos;t say, so amounts can&apos;t be
-            scaled until you tell us.
+            How many servings does this recipe make? The source doesn&apos;t say, so amounts
+            can&apos;t be scaled until you tell us.
           </Text>
           <SegmentedControl
             accessibilityLabel="Original servings"
