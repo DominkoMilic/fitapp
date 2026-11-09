@@ -47,6 +47,28 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-secure-store',
     'expo-localization',
     'expo-sqlite',
+    [
+      'expo-location',
+      {
+        // Shown by iOS before the system prompt. Background access is used only while recording.
+        locationWhenInUsePermission:
+          'PACE uses your location to measure the distance and route of walks, runs and rides you record.',
+        locationAlwaysAndWhenInUsePermission:
+          'PACE uses your location in the background only while you are recording a walk, run or ride, so tracking continues when your screen is locked.',
+        isIosBackgroundLocationEnabled: true,
+        isAndroidBackgroundLocationEnabled: true,
+        isAndroidForegroundServiceEnabled: true,
+      },
+    ],
+    'expo-task-manager',
+    [
+      'react-native-maps',
+      // Android map tiles need a Google Maps key (restricted to this app). Without one, PACE draws
+      // the route without map tiles. iOS uses Apple Maps and needs no key.
+      process.env.GOOGLE_MAPS_ANDROID_API_KEY
+        ? { androidGoogleMapsApiKey: process.env.GOOGLE_MAPS_ANDROID_API_KEY }
+        : {},
+    ],
     '@react-native-community/datetimepicker',
     [
       'expo-splash-screen',
@@ -64,5 +86,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   extra: {
     appEnv: APP_ENV,
+    hasAndroidMapsKey: !!process.env.GOOGLE_MAPS_ANDROID_API_KEY,
   },
 });

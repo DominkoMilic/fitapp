@@ -3,6 +3,85 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      activities: {
+        Row: {
+          activity_type: string;
+          average_pace_seconds_per_km: number | null;
+          average_speed_mps: number | null;
+          calories_estimated: number | null;
+          client_updated_at: string | null;
+          created_at: string;
+          distance_meters: number | null;
+          elapsed_seconds: number;
+          ended_at: string;
+          gps_quality: string;
+          id: string;
+          local_date: string;
+          max_speed_mps: number | null;
+          moving_seconds: number;
+          notes: string | null;
+          points_accepted: number;
+          points_total: number;
+          route_deleted_at: string | null;
+          route_storage_path: string | null;
+          source: string;
+          started_at: string;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          activity_type: string;
+          average_pace_seconds_per_km?: number | null;
+          average_speed_mps?: number | null;
+          calories_estimated?: number | null;
+          client_updated_at?: string | null;
+          created_at?: string;
+          distance_meters?: number | null;
+          elapsed_seconds: number;
+          ended_at: string;
+          gps_quality?: string;
+          id?: string;
+          local_date: string;
+          max_speed_mps?: number | null;
+          moving_seconds: number;
+          notes?: string | null;
+          points_accepted?: number;
+          points_total?: number;
+          route_deleted_at?: string | null;
+          route_storage_path?: string | null;
+          source: string;
+          started_at: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          activity_type?: string;
+          average_pace_seconds_per_km?: number | null;
+          average_speed_mps?: number | null;
+          calories_estimated?: number | null;
+          client_updated_at?: string | null;
+          created_at?: string;
+          distance_meters?: number | null;
+          elapsed_seconds?: number;
+          ended_at?: string;
+          gps_quality?: string;
+          id?: string;
+          local_date?: string;
+          max_speed_mps?: number | null;
+          moving_seconds?: number;
+          notes?: string | null;
+          points_accepted?: number;
+          points_total?: number;
+          route_deleted_at?: string | null;
+          route_storage_path?: string | null;
+          source?: string;
+          started_at?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       body_measurements: {
         Row: {
           client_updated_at: string | null;
