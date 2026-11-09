@@ -22,6 +22,8 @@ export interface Recording {
   status: 'recording' | 'paused';
   pausedAt: number | null;
   pausedMs: number;
+  /** Pause intervals; the source of truth when rebuilding from stored points. */
+  pauses: { start: number; end: number | null }[];
   track: Track;
   /** Last time anything was saved; used to offer resume (< 6 h) after a kill. */
   updatedAt: number;
@@ -41,6 +43,7 @@ export function startRecording(input: {
     status: 'recording',
     pausedAt: null,
     pausedMs: 0,
+    pauses: [],
     track: emptyTrack(),
     updatedAt: input.now,
   };
@@ -60,7 +63,14 @@ export function addPoints(r: Recording, points: readonly RawPoint[], now: number
 export function pauseRecording(r: Recording, now: number): Recording {
   return r.status === 'paused'
     ? r
-    : { ...r, status: 'paused', pausedAt: now, track: breakTrack(r.track), updatedAt: now };
+    : {
+        ...r,
+        status: 'paused',
+        pausedAt: now,
+        pauses: [...r.pauses, { start: now, end: null }],
+        track: breakTrack(r.track),
+        updatedAt: now,
+      };
 }
 
 export function resumeRecording(r: Recording, now: number): Recording {
@@ -70,11 +80,12 @@ export function resumeRecording(r: Recording, now: number): Recording {
     status: 'recording',
     pausedMs: r.pausedMs + (now - r.pausedAt),
     pausedAt: null,
+    pauses: r.pauses.map((p) => (p.end === null ? { ...p, end: now } : p)),
     updatedAt: now,
   };
 }
 
-export function canResume(r: Recording, now: number): boolean {
+export function canResume(r: Pick<Recording, 'updatedAt'>, now: number): boolean {
   return now - r.updatedAt < RESUME_WINDOW_MS;
 }
 
@@ -154,3 +165,33 @@ export function finishRecording(
 }
 
 export { formatPace };
+
+/**
+ * Rebuilds the track from every stored raw point and the pause intervals (spec 11.6): points inside
+ * a pause are ignored and the route breaks at each pause. Used live and after an app kill.
+ */
+export function buildTrack(
+  points: readonly RawPoint[],
+  r: Pick<Recording, 'type' | 'startedAt' | 'pauses'>,
+): Track {
+  const pauses = [...r.pauses].sort((a, b) => a.start - b.start);
+  let track = emptyTrack();
+  let next = 0; // index of the first pause that hasn't fully passed
+  for (const p of [...points].sort((a, b) => a.t - b.t)) {
+    if (p.t < r.startedAt) continue;
+    // Pauses that ended before this point: break the route once for each.
+    while (next < pauses.length && pauses[next]!.end !== null && p.t >= pauses[next]!.end!) {
+      track = breakTrack(track);
+      next++;
+    }
+    if (next < pauses.length && p.t >= pauses[next]!.start) continue; // inside a pause
+    track = addPoint(track, p, r.type).track;
+  }
+  return track;
+}
+
+/** The recording with its track rebuilt from stored points. */
+export const withPoints = (r: Recording, points: readonly RawPoint[]): Recording => ({
+  ...r,
+  track: buildTrack(points, r),
+});

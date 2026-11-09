@@ -11,6 +11,7 @@ import { ToastHost } from '@/components/feedback/Toast';
 import { envResult } from '@/config/env';
 import { AuthProvider, useAuth } from '@/features/auth/AuthProvider';
 import { SyncProvider } from '@/features/sync/SyncProvider';
+import '@/services/location/location-task';
 import { createQueryClient } from '@/services/query-client';
 import { ThemeProvider, useTheme } from '@/theme';
 

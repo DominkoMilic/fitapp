@@ -58,10 +58,13 @@ export const ENTITY_CONFIG: Record<SyncEntity, EntityConfig> = {
   meal_plan_entries: { onConflict: 'id', deleteMatch: byId },
   shopping_lists: { onConflict: 'id', deleteMatch: byId },
   shopping_list_items: { onConflict: 'id', deleteMatch: byId },
+  activities: { onConflict: 'id', deleteMatch: byId },
+  activity_routes: { onConflict: 'id', deleteMatch: byId }, // handled by routeTransport
 };
 
 /** Sends one outbox op to Supabase. Payloads are built by typed repositories. */
 export const supabaseTransport: Transport = async (op) => {
+  if (op.entity === 'activity_routes') return routeTransport(op);
   const cfg = ENTITY_CONFIG[op.entity];
   const table = requireSupabase().from(op.entity);
   if (op.kind === 'delete') {
@@ -80,3 +83,31 @@ export const supabaseTransport: Transport = async (op) => {
   });
   return { error: error ? { ...error, status } : null };
 };
+
+/**
+ * Route files live in the private `routes` bucket at `<user>/<activity>.json` (spec 11.5).
+ * Upsert uploads the encoded route; delete removes the file and marks the activity.
+ */
+async function routeTransport(op: OutboxOp) {
+  const sb = requireSupabase();
+  const path = `${op.userId}/${op.recordKey}.json`;
+  if (op.kind === 'delete') {
+    const { error } = await sb.storage.from('routes').remove([path]);
+    if (error) return { error: { message: error.message, status: 500 } };
+    const upd = await sb
+      .from('activities')
+      .update({ route_storage_path: null, route_deleted_at: new Date().toISOString() })
+      .match({ id: op.recordKey, user_id: op.userId });
+    return { error: upd.error ? { ...upd.error, status: upd.status } : null };
+  }
+  const body = JSON.stringify((op.payload as { route: unknown }).route);
+  const { error } = await sb.storage
+    .from('routes')
+    .upload(path, body, { contentType: 'application/json', upsert: true });
+  if (error) return { error: { message: error.message, status: 500 } };
+  const upd = await sb
+    .from('activities')
+    .update({ route_storage_path: path })
+    .match({ id: op.recordKey, user_id: op.userId });
+  return { error: upd.error ? { ...upd.error, status: upd.status } : null };
+}

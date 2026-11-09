@@ -1,3 +1,4 @@
+import { ENTITY_ORDER } from '@/domain/sync/outbox';
 import { activityRecords } from '@/domain/activity/records';
 import { evaluateMilestones } from '@/domain/milestones/evaluate';
 import { localDateInTimezone } from '@/domain/calculations/dates';
@@ -25,6 +26,7 @@ import {
   pauseRecording,
   resumeRecording,
   startRecording,
+  withPoints,
 } from '@/domain/activity/recording';
 import {
   decodePolyline,
@@ -272,5 +274,39 @@ describe('activity milestones and records (spec 14.3, 28.8 #5)', () => {
     expect(by.fastest_run_pace).toMatchObject({ activityId: '1', value: 346 });
     expect(by.longest_walk?.value).toBe(4000);
     expect(by.longest_cycle).toBeUndefined();
+  });
+});
+
+describe('rebuilding from stored points (app killed mid-activity, spec 11.6)', () => {
+  it('replaying points + pauses gives the same result as live recording', () => {
+    const T0 = 5_000_000;
+    let live = startRecording({ id: 'a', userId: 'u', type: 'run', now: T0 });
+    const first = line(20, 3, 2, T0);
+    const during = line(5, 3, 2, T0 + 45_000).map((p) => ({ ...p, lat: p.lat + 0.01 })); // arrives while paused
+    const second = line(20, 3, 2, T0 + 100_000).map((p) => ({ ...p, lat: p.lat + 0.002 }));
+    live = addPoints(live, first, T0 + 40_000);
+    live = pauseRecording(live, T0 + 40_000);
+    live = addPoints(live, during, T0 + 60_000);
+    live = resumeRecording(live, T0 + 100_000);
+    live = addPoints(live, second, T0 + 140_000);
+    const rebuilt = withPoints({ ...live, track: emptyTrack() }, [...second, ...during, ...first]); // unordered storage
+    expect(rebuilt.track.distanceM).toBeCloseTo(live.track.distanceM, 6);
+    expect(rebuilt.track.pieces.filter((p) => p.length)).toHaveLength(2);
+    expect(live.pauses).toEqual([{ start: T0 + 40_000, end: T0 + 100_000 }]);
+  });
+  it('an open pause ignores everything after it', () => {
+    const T0 = 5_000_000;
+    const r = pauseRecording(
+      startRecording({ id: 'a', userId: 'u', type: 'walk', now: T0 }),
+      T0 + 10_000,
+    );
+    const t = withPoints(r, line(30, 1.4, 1, T0)).track;
+    expect(t.pointsTotal).toBe(10);
+  });
+});
+
+describe('outbox order for activities (spec 11.5)', () => {
+  it('uploads the route only after the activity row', () => {
+    expect(ENTITY_ORDER.activity_routes).toBeGreaterThan(ENTITY_ORDER.activities);
   });
 });

@@ -24,6 +24,8 @@ const LABELS: Record<SyncEntity, string> = {
   meal_plan_entries: 'Meal plan',
   shopping_lists: 'Shopping list',
   shopping_list_items: 'Shopping item',
+  activities: 'Activity',
+  activity_routes: 'Activity route',
 };
 
 /** Spec 18.2: every unsynced or rejected change is visible, with Retry and an explicit Discard. */

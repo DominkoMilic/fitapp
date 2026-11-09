@@ -13,6 +13,7 @@ import { useRestrictions } from '@/features/training/library';
 import { OccurrenceRow } from '@/features/training/OccurrenceRow';
 import { useScheduledWorkouts, useScheduleGeneration } from '@/features/training/schedule-api';
 import { ResumeWorkoutCard } from '@/features/training/ResumeWorkoutCard';
+import { ResumeActivityCard } from '@/features/activity/ResumeActivityCard';
 import { spacing } from '@/theme';
 
 export default function Training() {
@@ -45,6 +46,7 @@ export default function Training() {
       ) : null}
 
       <ResumeWorkoutCard />
+      <ResumeActivityCard />
       {offset === 0 ? (
         <>
           <SectionHeader title="Today" />
@@ -101,6 +103,7 @@ export default function Training() {
       )}
 
       <SectionHeader title="More" />
+      <ListItem title="Record a walk, run or ride" onPress={() => router.push('/activity/track')} />
       <ListItem title="Workout history" onPress={() => router.push('/training/history')} />
       <ListItem title="Personal records" onPress={() => router.push('/training/records')} />
       <ListItem title="Month calendar" onPress={() => router.push('/training/calendar')} />
