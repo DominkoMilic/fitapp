@@ -6,6 +6,7 @@ import { useToast } from '@/components/feedback/Toast';
 import { evaluateMilestones, type GoalLike } from '@/domain/milestones/evaluate';
 import { applyPending } from '@/domain/sync/outbox';
 import { dailyValues } from '@/domain/weight/trend';
+import { useActivities } from '@/features/activity/api';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useCheckins } from '@/features/checkin/api';
 import { useMeasurements } from '@/features/measurements/api';
@@ -77,6 +78,7 @@ export function useMilestoneEngine() {
   const checkins = useCheckins();
   const unlocked = useUnlockedMilestones();
   const training = useSessions();
+  const activities = useActivities();
   const { write } = useSyncActions();
   const showToast = useToast((s) => s.show);
   const written = useRef(new Set<string>());
@@ -87,7 +89,8 @@ export function useMilestoneEngine() {
     measurements.isSuccess &&
     checkins.isSuccess &&
     unlocked.isSuccess &&
-    training.isSuccess;
+    training.isSuccess &&
+    activities.isSuccess;
 
   useEffect(() => {
     if (!ready) return;
@@ -107,6 +110,14 @@ export function useMilestoneEngine() {
       sessions: training.sessions
         .filter((t) => t.completion_status !== 'abandoned')
         .map((t) => ({ date: t.local_date, durationS: t.duration_seconds, category: t.category })),
+      activities: activities.rows.map((a) => ({
+        date: a.local_date,
+        type: a.activity_type,
+        distanceM: a.distance_meters,
+        movingS: a.moving_seconds,
+        quality: a.gps_quality,
+        source: a.source,
+      })),
     });
     if (!fresh.length) return;
     for (const m of fresh) {
@@ -140,6 +151,7 @@ export function useMilestoneEngine() {
     measurements.rows,
     checkins.rows,
     training.sessions,
+    activities.rows,
     unlocked.rows,
     write,
     showToast,

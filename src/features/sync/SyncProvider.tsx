@@ -43,7 +43,11 @@ export function SyncProvider({ children }: PropsWithChildren) {
         return !error;
       },
       onSynced: (entities) => {
-        for (const e of entities)
+        // A route upload updates its activity row (route_storage_path), so refresh both.
+        const all = entities.includes('activity_routes')
+          ? [...entities, 'activities' as const]
+          : entities;
+        for (const e of all)
           void queryClient.invalidateQueries({ queryKey: syncKeys.entity(userId, e) });
       },
     });

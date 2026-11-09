@@ -104,6 +104,7 @@ export default function Training() {
 
       <SectionHeader title="More" />
       <ListItem title="Record a walk, run or ride" onPress={() => router.push('/activity/track')} />
+      <ListItem title="Activities" onPress={() => router.push('/activity')} />
       <ListItem title="Workout history" onPress={() => router.push('/training/history')} />
       <ListItem title="Personal records" onPress={() => router.push('/training/records')} />
       <ListItem title="Month calendar" onPress={() => router.push('/training/calendar')} />

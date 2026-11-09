@@ -1,3 +1,4 @@
+import { manualSummary, validateManual } from '@/domain/activity/manual';
 import { ENTITY_ORDER } from '@/domain/sync/outbox';
 import { activityRecords } from '@/domain/activity/records';
 import { evaluateMilestones } from '@/domain/milestones/evaluate';
@@ -308,5 +309,40 @@ describe('rebuilding from stored points (app killed mid-activity, spec 11.6)', (
 describe('outbox order for activities (spec 11.5)', () => {
   it('uploads the route only after the activity row', () => {
     expect(ENTITY_ORDER.activity_routes).toBeGreaterThan(ENTITY_ORDER.activities);
+  });
+});
+
+describe('manual activities (spec 11.8)', () => {
+  it('derives pace, speed and calories from duration and distance', () => {
+    const s = manualSummary({
+      type: 'run',
+      endedAt: 3_600_000,
+      minutes: 30,
+      distanceKm: 5,
+      weightKg: 70,
+    });
+    expect(s.movingS).toBe(1800);
+    expect(s.distanceM).toBe(5000);
+    expect(s.avgPaceSPerKm).toBe(360);
+    // 10 km/h → MET 9.8 → 9.8 × 70 × 0.5 = 343
+    expect(s.kcal).toBe(343);
+    expect(s.startedAt).toBe(1_800_000);
+    expect(s.quality).toBe('none');
+  });
+  it('without distance uses a typical speed for calories and has no pace', () => {
+    const s = manualSummary({
+      type: 'walk',
+      endedAt: 0,
+      minutes: 60,
+      distanceKm: null,
+      weightKg: 80,
+    });
+    expect(s.avgPaceSPerKm).toBeNull();
+    expect(s.kcal).toBe(280); // 5 km/h → MET 3.5 × 80 kg × 1 h
+  });
+  it('validates ranges', () => {
+    expect(validateManual(0, null)).toMatch(/Duration/);
+    expect(validateManual(30, 1200)).toMatch(/Distance/);
+    expect(validateManual(30, null)).toBeNull();
   });
 });
