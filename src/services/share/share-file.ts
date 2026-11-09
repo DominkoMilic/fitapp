@@ -1,3 +1,6 @@
+/** Web: nothing is kept on disk. */
+export async function clearExportFiles(): Promise<void> {}
+
 /** Web: download the file through a temporary link. */
 export async function shareJsonFile(name: string, content: string): Promise<void> {
   const blob = new Blob([content], { type: 'application/json' });

@@ -8,7 +8,7 @@ import { useTheme } from '@/theme';
 export default function LegalDocument() {
   const { doc } = useLocalSearchParams<{ doc: string }>();
   const { colors } = useTheme();
-  const content = doc && doc in LEGAL_DOCS ? LEGAL_DOCS[doc as LegalDocId] : null;
+  const content = doc && Object.hasOwn(LEGAL_DOCS, doc) ? LEGAL_DOCS[doc as LegalDocId] : null;
   return (
     <Screen edges={['bottom']}>
       <Stack.Screen

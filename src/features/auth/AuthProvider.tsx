@@ -7,6 +7,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 
@@ -46,6 +47,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const queryClient = useQueryClient();
   const [session, setSession] = useState<Session | null>(null);
   const [initializing, setInitializing] = useState(supabase !== null);
+  const lastUserId = useRef<string | null>(null);
 
   useEffect(() => {
     if (!supabase) return;
@@ -53,14 +55,27 @@ export function AuthProvider({ children }: PropsWithChildren) {
     supabase.auth
       .getSession()
       .then(({ data }) => {
-        if (mounted) setSession(data.session);
+        if (mounted) {
+          setSession(data.session);
+          lastUserId.current = data.session?.user.id ?? null;
+        }
       })
       .finally(() => {
         if (mounted) setInitializing(false);
       });
     const { data } = supabase.auth.onAuthStateChange((event, next) => {
+      const previousUser = lastUserId.current;
+      lastUserId.current = next?.user.id ?? null;
       setSession(next);
-      if (event === 'SIGNED_OUT') queryClient.clear();
+      if (event === 'SIGNED_OUT') {
+        queryClient.clear();
+        // Stop GPS, cancel reminders, drop drafts (audit: sign-out hygiene). Loaded lazily so the
+        // auth module doesn't depend on every feature at startup.
+        if (previousUser)
+          void import('@/features/account/local-data').then((m) =>
+            m.clearLocalData(previousUser, 'sign-out'),
+          );
+      }
     });
     return () => {
       mounted = false;
@@ -115,13 +130,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
           case 'token_hash':
             return guard(() =>
               client!.auth.verifyOtp({ token_hash: callback.tokenHash, type: callback.type }),
-            );
-          case 'tokens':
-            return guard(() =>
-              client!.auth.setSession({
-                access_token: callback.accessToken,
-                refresh_token: callback.refreshToken,
-              }),
             );
           case 'error':
             return fail({ code: callback.code, message: callback.message });

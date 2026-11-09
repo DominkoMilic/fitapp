@@ -51,7 +51,7 @@ export default function DeleteAccount() {
       setError(ERRORS[res.error === 'wrong_password' ? 'unknown' : res.error]);
       return;
     }
-    await clearLocalData(userId, clearLocal);
+    await clearLocalData(userId, 'delete', clearLocal);
     await requireSupabase()
       .auth.signOut({ scope: 'local' })
       .catch(() => undefined);

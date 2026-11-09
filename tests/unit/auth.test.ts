@@ -50,14 +50,16 @@ describe('auth callback parsing', () => {
       next: null,
     });
   });
-  it('implicit-flow fragment tokens', () => {
+  it('raw session tokens in a link are refused (login CSRF)', () => {
     expect(
-      parseAuthCallback('pace://auth/callback#access_token=a&refresh_token=r&type=recovery'),
-    ).toMatchObject({
-      kind: 'tokens',
-      accessToken: 'a',
-      refreshToken: 'r',
-    });
+      parseAuthCallback('pace://auth/callback#access_token=a&refresh_token=r&type=recovery').kind,
+    ).toBe('none');
+  });
+  it('link error text is never shown verbatim', () => {
+    const r = parseAuthCallback(
+      'pace://auth/callback?error=x&error_description=Call+0800+to+verify+your+account',
+    );
+    expect(r).toMatchObject({ kind: 'error', message: 'This link is invalid or has expired.' });
   });
   it('expired link error in the fragment', () => {
     expect(
@@ -67,7 +69,7 @@ describe('auth callback parsing', () => {
     ).toEqual({
       kind: 'error',
       code: 'otp_expired',
-      message: 'Email link is invalid or has expired',
+      message: 'This link has expired. Request a new one.',
     });
   });
   it('unknown otp types and empty links are rejected', () => {

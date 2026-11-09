@@ -1,24 +1,23 @@
 import 'react-native-url-polyfill/auto';
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { AppState, Platform } from 'react-native';
 
 import { envResult } from '@/config/env';
 
 import type { Database } from './database.types';
+import { sessionStorage } from './session-storage';
 
 export type TypedSupabaseClient = SupabaseClient<Database>;
 
 /**
  * The only Supabase client in the app. Uses the publishable (anon) key; RLS protects data.
- * Session storage: AsyncStorage (SecureStore has a ~2 KB value limit on iOS, and Supabase
- * sessions are larger than that).
+ * Session storage: the OS keychain on phones (chunked, see chunked-storage.ts), localStorage on web.
  */
 export const supabase: TypedSupabaseClient | null = envResult.ok
   ? createClient<Database>(envResult.env.supabaseUrl, envResult.env.supabaseAnonKey, {
       auth: {
-        storage: AsyncStorage,
+        storage: sessionStorage,
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: false,

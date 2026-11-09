@@ -1,8 +1,9 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Image, Linking, StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
 
 import { goBack } from '@/navigation/back';
+import { isSafeExternalUrl, openExternalUrl } from '@/navigation/external-link';
 import { Banner, ErrorState, LoadingState, useToast } from '@/components/feedback';
 import {
   Button,
@@ -257,20 +258,20 @@ function RecipeView({ recipe }: { recipe: RecipeRow }) {
           <Text variant="caption" color="textSecondary">
             Recipe from TheMealDB.
           </Text>
-          {recipe.source_url ? (
+          {isSafeExternalUrl(recipe.source_url) ? (
             <Button
               title="View original recipe"
               variant="ghost"
               fullWidth={false}
-              onPress={() => void Linking.openURL(recipe.source_url as string)}
+              onPress={() => void openExternalUrl(recipe.source_url)}
             />
           ) : null}
-          {recipe.video_url ? (
+          {isSafeExternalUrl(recipe.video_url) ? (
             <Button
               title="Watch video"
               variant="ghost"
               fullWidth={false}
-              onPress={() => void Linking.openURL(recipe.video_url as string)}
+              onPress={() => void openExternalUrl(recipe.video_url)}
             />
           ) : null}
         </>
