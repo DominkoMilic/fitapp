@@ -7,7 +7,7 @@ import { evaluateMilestones, type GoalLike } from '@/domain/milestones/evaluate'
 import { applyPending } from '@/domain/sync/outbox';
 import { dailyValues } from '@/domain/weight/trend';
 import { addDays } from '@/domain/calculations/dates';
-import { weekStartFor } from '@/domain/reports/weekly';
+import { isTrainingItem, weekStartFor } from '@/domain/reports/weekly';
 import { useActivities } from '@/features/activity/api';
 import { useNutritionRange } from '@/features/coach/api';
 import { useToday } from '@/features/dashboard/useToday';
@@ -180,13 +180,13 @@ export function useMilestoneEngine() {
 
 /** Planned vs completed workouts per finished week (spec 25.5 consistent weeks). */
 function finishedWeeks(
-  rows: readonly { scheduled_date: string; status: string }[],
+  rows: readonly { scheduled_date: string; status: string; category: string }[],
   today: string,
   weekStartsOn: 1 | 7,
 ) {
   const weeks = new Map<string, { weekStart: string; planned: number; completed: number }>();
   for (const r of rows) {
-    if (r.status === 'moved') continue;
+    if (r.status === 'moved' || !isTrainingItem(r.category)) continue;
     const ws = weekStartFor(r.scheduled_date, weekStartsOn);
     if (addDays(ws, 6) >= today) continue; // only finished weeks
     const w = weeks.get(ws) ?? { weekStart: ws, planned: 0, completed: 0 };

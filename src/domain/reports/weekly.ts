@@ -63,6 +63,9 @@ export interface WeeklyReport {
   milestones: string[];
 }
 
+/** Rest days are on the calendar but aren't workouts to complete. */
+export const isTrainingItem = (category: string) => category !== 'rest';
+
 const r1 = (n: number) => Math.round(n * 10) / 10;
 const r2 = (n: number) => Math.round(n * 100) / 100;
 const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
@@ -77,7 +80,9 @@ export function weeklyReport(i: WeeklyReportInput): WeeklyReport {
   const endAvg = rollingAverageAt(i.daily, lastDay);
   const trend = trendLast21Days(i.daily, lastDay);
 
-  const sched = i.scheduled.filter((s) => inWeek(s.date) && s.status !== 'moved');
+  const sched = i.scheduled.filter(
+    (s) => inWeek(s.date) && s.status !== 'moved' && isTrainingItem(s.category),
+  );
   const planned = sched.filter((s) => s.status !== 'skipped').length;
   const completed = sched.filter((s) => s.status === 'completed').length;
   const sessions = i.sessions.filter((s) => inWeek(s.date));

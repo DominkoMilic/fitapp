@@ -90,7 +90,9 @@ export const MAX_CARDS = 3;
 const isMatch = (category: string) => /_match$/.test(category);
 const hasInjury = (c: CoachContext) =>
   c.injuries.filter((i) => i.status === 'active' || i.status === 'recovering');
-const planned = (items: PlanItem[]) => items.filter((i) => i.status === 'planned');
+/** Planned items that are actual sessions (rest days stay 'planned' and never count). */
+const planned = (items: PlanItem[]) =>
+  items.filter((i) => i.status === 'planned' && i.category !== 'rest');
 const areaList = (areas: string[]) =>
   areas.length <= 1
     ? (areas[0] ?? 'injury')
@@ -285,7 +287,7 @@ export const RULES: Rule[] = [
     id: 'T2',
     priority: 4,
     run: (c) => {
-      const missed = c.plan.yesterday.find((p) => p.status === 'planned' && !isMatch(p.category));
+      const missed = planned(c.plan.yesterday).find((p) => !isMatch(p.category));
       return missed
         ? {
             category: 'training',
@@ -368,9 +370,9 @@ export const RULES: Rule[] = [
         ? {
             category: 'weight',
             title: 'Your 2-week review is ready',
-            body: 'Your 2-week review is ready.',
+            body: 'PACE compared your intake with your weight trend and has a suggestion for your target.',
             reason:
-              'PACE compared your intake and weight trend and has a suggestion for your target.',
+              'It has been at least two weeks since your last review, with enough weigh-ins and complete food days.',
             action: { label: 'Review', href: '/coach/review' },
           }
         : null,

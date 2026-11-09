@@ -262,7 +262,13 @@ describe('coach rules: each triggers and stays quiet (spec 15.2)', () => {
     [
       'T2',
       { plan: { yesterday: [item()], today: [], tomorrow: [] } },
-      { plan: { yesterday: [item({ status: 'completed' })], today: [], tomorrow: [] } },
+      {
+        plan: {
+          yesterday: [item({ status: 'completed' }), item({ category: 'rest', intensity: 'easy' })],
+          today: [],
+          tomorrow: [],
+        },
+      },
     ],
     [
       'N1',
@@ -445,6 +451,7 @@ describe('weekly report (spec 16)', () => {
         { date: '2026-11-12', status: 'skipped', category: 'strength' },
         { date: '2026-11-14', status: 'planned', category: 'strength' },
         { date: '2026-11-11', status: 'moved', category: 'strength' },
+        { date: '2026-11-13', status: 'planned', category: 'rest' },
       ],
       sessions: [{ date: '2026-11-10', rpe: 6, durationS: 2700, category: 'strength' }],
       activities: [
@@ -495,7 +502,11 @@ describe('notification planner (spec 17)', () => {
 
   it('workout 60 min before its time, 09:00 without a time, never on rest days', () => {
     const out = plan({
-      events: [ev({ id: 'a', time: '18:00' }), ev({ id: 'b', date: addDays(TODAY, 1) })],
+      events: [
+        ev({ id: 'a', time: '18:00' }),
+        ev({ id: 'b', date: addDays(TODAY, 1) }),
+        ev({ id: 'r', date: addDays(TODAY, 2), category: 'rest', title: 'Rest' }),
+      ],
     });
     const workouts = out.filter((n) => n.kind === 'workout');
     expect(workouts.map((n) => [n.date, n.minute])).toEqual([

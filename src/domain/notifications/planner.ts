@@ -104,7 +104,9 @@ export function planNotifications(input: {
     candidates.push({ n: { ...n, id: `${n.kind}:${n.date}:${n.minute}` }, eventMinute });
 
   for (const e of input.events) {
-    if (e.status !== 'planned' || e.date < today || e.date > last) continue;
+    // Rest days get no reminder (spec 17).
+    if (e.status !== 'planned' || e.category === 'rest' || e.date < today || e.date > last)
+      continue;
     if (isMatch(e.category)) {
       if (prefs.match.on) {
         const eve = addDays(e.date, -1);

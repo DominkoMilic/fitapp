@@ -42,7 +42,7 @@ export function WeeklyReportView({ report: r, unit }: { report: WeeklyReport; un
         <StatTile
           label="Change this week"
           value={changeText}
-          caption={`${r.weight.weighIns} weigh-ins`}
+          caption={`${r.weight.weighIns} ${r.weight.weighIns === 1 ? 'weigh-in' : 'weigh-ins'}`}
         />
       </View>
       {r.weight.trendKgPerWeek !== null ? (

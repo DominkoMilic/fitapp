@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 
 import { addDays } from '@/domain/calculations/dates';
 import { type CoachContext, evaluateCoach, type PlanItem } from '@/domain/coach/rules';
-import { weekStartFor } from '@/domain/reports/weekly';
+import { isTrainingItem, weekStartFor } from '@/domain/reports/weekly';
 import { EXERCISE_BY_SLUG, TEMPLATE_BY_SLUG } from '@/domain/training/catalogue';
 import { buildWorkout } from '@/domain/training/workout-builder';
 import { useAuth } from '@/features/auth/AuthProvider';
@@ -111,6 +111,7 @@ export function useCoach() {
         r.scheduled_date >= weekStart &&
         r.scheduled_date <= addDays(weekStart, 6) &&
         r.status !== 'moved' &&
+        isTrainingItem(r.category) &&
         r.status !== 'skipped',
     );
     const t = targetFor(targets.data ?? [], today);
