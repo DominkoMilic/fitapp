@@ -3,7 +3,7 @@ import { ActivityIndicator, type PressableProps, StyleSheet, View } from 'react-
 import { radius, spacing, TOUCH_TARGET, useTheme } from '@/theme';
 
 import { PressableScale } from './PressableScale';
-import { Text } from './Text';
+import { labelProps, Text } from './Text';
 
 /** Decorative glyphs (‹ › ✓ + ✕) are not read aloud: "+ Add set" is spoken as "Add set". */
 export const spokenLabel = (title: string) =>
@@ -69,7 +69,12 @@ export function Button({
       ) : (
         <View style={styles.row}>
           {icon}
-          <Text variant="bodyStrong" style={{ color: fg }}>
+          <Text
+            variant="bodyStrong"
+            align="center"
+            style={[styles.label, { color: fg }]}
+            {...labelProps(title)}
+          >
             {title}
           </Text>
         </View>
@@ -87,5 +92,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, maxWidth: '100%' },
+  label: { flexShrink: 1 },
 });

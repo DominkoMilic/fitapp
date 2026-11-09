@@ -52,3 +52,17 @@ describe('press feedback and haptics', () => {
     expect(Haptics.impactAsync).not.toHaveBeenCalled();
   });
 });
+
+describe('button labels', () => {
+  it('one-word labels stay on one line (shrinking a little if needed); longer ones wrap between words', async () => {
+    await renderWithTheme(
+      <>
+        <Button title="Duplicate" onPress={jest.fn()} />
+        <Button title="Add a game, practice or activity" onPress={jest.fn()} />
+      </>,
+    );
+    const one = screen.getByText('Duplicate');
+    expect(one.props).toMatchObject({ numberOfLines: 1, adjustsFontSizeToFit: true });
+    expect(screen.getByText('Add a game, practice or activity').props.numberOfLines).toBe(2);
+  });
+});

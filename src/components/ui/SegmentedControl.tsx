@@ -1,9 +1,9 @@
 import { StyleSheet, View } from 'react-native';
 
-import { radius, spacing, TOUCH_TARGET, useTheme } from '@/theme';
+import { radius, TOUCH_TARGET, useTheme } from '@/theme';
 
 import { PressableScale } from './PressableScale';
-import { Text } from './Text';
+import { labelProps, Text } from './Text';
 
 export interface SegmentOption<T extends string> {
   value: T;
@@ -42,7 +42,9 @@ export function SegmentedControl<T extends string>({
           >
             <Text
               variant="small"
+              align="center"
               style={{ color: selected ? colors.onAccent : colors.textPrimary, fontWeight: '600' }}
+              {...labelProps(o.label)}
             >
               {o.label}
             </Text>
@@ -56,11 +58,14 @@ export function SegmentedControl<T extends string>({
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', borderRadius: radius.button, borderWidth: 1, padding: 3, gap: 3 },
   segment: {
-    flex: 1,
+    // Share the row by label length, so "Breakfast" gets more room than "Any".
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 'auto',
     minHeight: TOUCH_TARGET,
     borderRadius: radius.button - 3,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: spacing.xs,
+    paddingHorizontal: 6,
   },
 });

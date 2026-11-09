@@ -1131,6 +1131,8 @@ Spacing scale 4, 8, 12, 16, 20, 24, 32, 40. Radius 8 (inputs), 12 (buttons), 16 
 
 Button (primary, secondary, ghost, destructive; loading, disabled), IconButton, TextField, NumberField (unit-aware, locale decimal comma support), Select, SegmentedControl, Chip/ChipGroup, Toggle, Slider (RPE), DatePicker, TimePicker, Card, StatTile, ProgressRing, ProgressBar, ListItem, SectionHeader, BottomSheet, ConfirmDialog, Toast (with Undo), EmptyState, ErrorState, Skeleton, Badge (confidence, sync), Banner (warning/info), Tabs, ChartContainer (range selector + accessible summary).
 
+Labels (buttons, segments, chips) never break inside a word: a one-word label stays on one line and shrinks to at most 85% on native if space is tight; longer labels wrap between words, at most two lines. Segments share their row by label length ("Breakfast" gets more room than "Any"). Checked at 360–384 dp widths.
+
 ### 23.3 Accessibility
 
 All interactive elements have `accessibilityLabel` and role; touch targets ≥ 44 × 44 pt; contrast ≥ 4.5:1 for text (tokens above meet this on their backgrounds); support Dynamic Type / font scaling up to 200% without clipping key numbers; charts have a text summary ("Weight down 2.4 kg in 30 days"); never rely on colour alone (icons + labels for status).

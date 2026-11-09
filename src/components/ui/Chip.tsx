@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { radius, spacing, TOUCH_TARGET, useTheme } from '@/theme';
 
 import { PressableScale } from './PressableScale';
-import { Text } from './Text';
+import { labelProps, Text } from './Text';
 
 export function Chip({
   label,
@@ -40,6 +40,7 @@ export function Chip({
       <Text
         variant="small"
         style={{ color: selected ? colors.onAccent : colors.textPrimary, fontWeight: '500' }}
+        {...labelProps(label)}
       >
         {label}
         {onRemove ? (

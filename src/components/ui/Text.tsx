@@ -32,3 +32,15 @@ export function Text({
     />
   );
 }
+
+/**
+ * Label props for buttons, segments and chips (spec 23.2): a one-word label never breaks inside
+ * the word; it stays on one line and shrinks slightly (to 85%) if the space is tight. Longer
+ * labels may wrap between words, up to two lines.
+ */
+export function labelProps(label: string): Partial<RNTextProps> {
+  const oneWord = !/\s/.test(label.trim());
+  return oneWord
+    ? { numberOfLines: 1, adjustsFontSizeToFit: true, minimumFontScale: 0.85 }
+    : { numberOfLines: 2, android_hyphenationFrequency: 'none', textBreakStrategy: 'simple' };
+}
