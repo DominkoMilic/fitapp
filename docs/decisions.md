@@ -61,3 +61,20 @@ Clarifications of, and deviations from, `docs/PACE_SPEC.md`. Newest first.
 9. **Activities count toward training hours** milestones (moving time), as planned in Phase 3.
 10. **`recipes-proxy` runs with `verify_jwt = false`.** The gateway's check only accepts tokens signed with the legacy JWT secret, while new projects sign sessions with asymmetric keys. The function already verifies the caller with `auth.getUser()` and returns 401 otherwise.
 11. **Hosted deploy without the CLI (2026-11-09):** the Phase 4 and 5 migrations were applied through the SQL editor, each batch in a transaction that also records its version in `supabase_migrations.schema_migrations`, so a later `supabase db push` treats them as applied. The function was deployed through the dashboard editor as a single-file bundle of `recipes-proxy` + `_shared`, type-checked before deploy.
+
+## 2026-11-09: Phase 6
+
+1. **Every recalibration check is recorded**, not only proposals. Outcomes without a change are stored with status `no_change` (a fifth status beyond the spec's four), so the next check knows when the last one ran and whether it was "slow" (spec 8.9: slow on this check *and* the previous one).
+2. **Accepting goes through `accept_target_adjustment()`**, one transaction that creates the new target version from tomorrow and marks the proposal. The database refuses a target that doesn't match the proposal, anything below the floor, and a second accepted change within 14 days. A trigger stops clients from setting `accepted` directly or editing a proposal's inputs. Recalibration needs the server anyway (spec 18.1 doesn't list it for offline), so this is online-only.
+3. **The new target keeps protein and fat; carbs absorb the change**, the same rule as manual calorie edits (`targetsFromEditedCalories`).
+4. **Recalibration runs only for weight-loss goals.** The spec's rules (loss rate vs target rate, +150 / −100) are defined for loss. Other goals get no review.
+5. **Coach dismissals are stored on the device** (until the end of the local day). They're short-lived UI state and don't need syncing.
+6. **Rule suppression:** S1–S3 (safety), R1, R3 and R4 (recovery) hide the training pushes T1 and T2. New users (under 3 days of data) see only onboarding tips and safety cards.
+7. **"Hard day"** for R4 means a completed session with RPE ≥ 7, a match, or one that completed a workout planned as hard.
+8. **Training load counts only sessions with an RPE.** Activities have no RPE, so they don't add load.
+9. **Rest days are calendar entries, not workouts.** They're excluded from planned counts (report, C1, consistent weeks), from "missed yesterday", and from reminders.
+10. **Consistent weeks:** a finished week with nothing planned neither counts nor breaks the run.
+11. **Weekly reports:** the current week is always computed live. A finished week is stored as a snapshot the first time it's opened, so later edits don't rewrite it.
+12. **Logging streak** now also counts food, water, workouts and activities (spec 25.5 "any log"), from the last 90 days.
+13. **Reminders** are planned in the profile timezone and converted with a DST-safe `instantFromLocal`. At most 60 are pending (iOS allows 64; room is kept for the rest timer). When the daily cap of 4 bites, the order is match > workout > weekly report > weigh-in > meal > water. Reminder times can only be set between 07:00 and 21:59.
+14. **Rest timer:** a "Rest over" notification is scheduled while a rest is running and cancelled when it ends or is skipped. It has no separate setting.

@@ -2,7 +2,7 @@
 
 A mobile fitness coach, workout planner, nutrition tracker and activity tracker for iOS and Android, built with Expo (React Native) and Supabase.
 
-**Status:** Phases 1–5 (Foundation, Progress, Training, Nutrition, GPS activities) are implemented. Phase 6 (Personal coach) is next, after review. See the phase reports in [`docs/`](docs/).
+**Status:** Phases 1–6 (Foundation, Progress, Training, Nutrition, GPS activities, Personal coach) are implemented. Phase 7 (Production readiness) is next, after review. See the phase reports in [`docs/`](docs/).
 
 ## Documents
 
@@ -18,6 +18,7 @@ A mobile fitness coach, workout planner, nutrition tracker and activity tracker 
 | [`docs/phase-3-report.md`](docs/phase-3-report.md) | Phase 3: exercise library, calendar, workouts, history, records        |
 | [`docs/phase-4-report.md`](docs/phase-4-report.md) | Phase 4: food logging, USDA catalogue, recipes, planner, shopping list |
 | [`docs/phase-5-report.md`](docs/phase-5-report.md) | Phase 5: GPS walk/run/ride recording, routes, manual activities        |
+| [`docs/phase-6-report.md`](docs/phase-6-report.md) | Phase 6: daily coach, 2-week target review, weekly report, reminders   |
 
 ## Tech stack
 
@@ -198,5 +199,7 @@ Phase 3 branches: `feature/p3-schema`, `feature/p3-domain`, `feature/p3-library`
 Phase 4 branches: `feature/p4-schema`, `feature/p4-domain`, `feature/p4-logging`, `feature/p4-recipes`, `feature/p4-planner-shopping`.
 
 Phase 5 branches: `feature/p5-schema`, `feature/p5-domain`, `feature/p5-tracking`, `feature/p5-activities`.
+
+Phase 6 branches: `feature/p6-schema`, `feature/p6-domain`, `feature/p6-coach`, `feature/p6-reports`, `feature/p6-notifications`.
 
 `claude/pace-spec-review-usad8z` contains all of them.
