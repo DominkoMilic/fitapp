@@ -5,7 +5,6 @@
  */
 import { paceSecondsPerKm, speedMps } from './geo';
 import { addPoint, breakTrack, emptyTrack, gpsQuality, type RawPoint } from './gps-filter';
-import { TYPICAL_KMH } from './manual';
 import { activityCalories, type ActivityType } from './met';
 
 export interface RetypeInput {
@@ -59,13 +58,12 @@ export function retypeActivity(i: RetypeInput): RetypeResult {
   }
   const d = distanceM ?? 0;
   const avg = speedMps(d, i.movingS);
-  const kmh = d > 0 ? avg * 3.6 : TYPICAL_KMH[i.type];
   return {
     distanceM,
     avgSpeedMps: avg,
     maxSpeedMps: maxSpeed,
     avgPaceSPerKm: d > 0 ? paceSecondsPerKm(d, i.movingS) : null,
-    kcal: i.weightKg ? activityCalories(i.type, kmh, i.weightKg, i.movingS) : null,
+    kcal: i.weightKg && d > 0 ? activityCalories(i.type, avg * 3.6, i.weightKg, i.movingS) : null,
     quality: i.source === 'manual' ? 'none' : quality,
     pointsValid,
   };

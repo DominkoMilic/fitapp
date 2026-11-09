@@ -331,7 +331,7 @@ describe('manual activities (spec 11.8)', () => {
     expect(s.startedAt).toBe(1_800_000);
     expect(s.quality).toBe('none');
   });
-  it('without distance uses a typical speed for calories and has no pace', () => {
+  it('without distance has no pace and no calorie estimate (spec 11.8)', () => {
     const s = manualSummary({
       type: 'walk',
       endedAt: 0,
@@ -340,7 +340,7 @@ describe('manual activities (spec 11.8)', () => {
       weightKg: 80,
     });
     expect(s.avgPaceSPerKm).toBeNull();
-    expect(s.kcal).toBe(280); // 5 km/h → MET 3.5 × 80 kg × 1 h
+    expect(s.kcal).toBeNull();
   });
   it('validates ranges', () => {
     expect(validateManual(0, null)).toMatch(/Duration/);
@@ -384,4 +384,3 @@ describe('changing the type after saving (spec 11.6, 28.6 #15)', () => {
     expect(r.kcal).toBe(activityCalories('run', 21.6, 70, 120));
   });
 });
-

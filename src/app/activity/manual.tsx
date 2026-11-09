@@ -100,7 +100,7 @@ export default function ManualActivity() {
         multiline
       />
       <Text variant="caption" color="textSecondary">
-        Calories are an estimate based on your latest weight.
+        Add a distance to get a calorie estimate (based on your speed and latest weight).
       </Text>
       {error ? <Banner tone="danger" message={error} /> : null}
       <Button title="Save activity" loading={saving} onPress={() => void onSave()} />

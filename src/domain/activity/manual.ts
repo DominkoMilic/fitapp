@@ -6,9 +6,6 @@ import { paceSecondsPerKm, speedMps } from './geo';
 import { activityCalories, type ActivityType } from './met';
 import type { ActivitySummary } from './recording';
 
-/** Typical speeds used for the calorie estimate when no distance is given (decision 2026-11-12). */
-export const TYPICAL_KMH: Record<ActivityType, number> = { walk: 5, run: 10, cycle: 18, other: 0 };
-
 export const MANUAL_LIMITS = { maxMinutes: 24 * 60, maxKm: 1000 } as const;
 
 export function manualSummary(input: {
@@ -21,7 +18,6 @@ export function manualSummary(input: {
   const movingS = Math.round(input.minutes * 60);
   const distanceM = input.distanceKm ? Math.round(input.distanceKm * 1000) : 0;
   const avg = speedMps(distanceM, movingS);
-  const kmh = distanceM ? avg * 3.6 : TYPICAL_KMH[input.type];
   return {
     type: input.type,
     startedAt: input.endedAt - movingS * 1000,
@@ -32,7 +28,11 @@ export function manualSummary(input: {
     avgSpeedMps: avg,
     maxSpeedMps: 0,
     avgPaceSPerKm: distanceM ? paceSecondsPerKm(distanceM, movingS) : null,
-    kcal: input.weightKg ? activityCalories(input.type, kmh, input.weightKg, movingS) : null,
+    // Spec 11.8: calories only when a distance is given (the MET depends on speed).
+    kcal:
+      input.weightKg && distanceM
+        ? activityCalories(input.type, avg * 3.6, input.weightKg, movingS)
+        : null,
     quality: 'none',
     pointsTotal: 0,
     pointsValid: 0,
