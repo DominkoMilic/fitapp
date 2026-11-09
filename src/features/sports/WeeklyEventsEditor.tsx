@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { Banner, useToast } from '@/components/feedback';
 import {
+  AnimatedRow,
   Button,
   Card,
   ChipGroup,
@@ -77,12 +78,13 @@ export function WeeklyEventsEditor({ sports }: { sports: readonly string[] }) {
         <Text color="textSecondary">Nothing fixed in your week yet.</Text>
       ) : null}
       {(events.data ?? []).map((e) => (
-        <ListItem
-          key={e.id}
-          title={e.title}
-          subtitle={`${categoryLabel(e.category)} · ${WEEKDAYS[e.weekday - 1]?.label ?? ''} ${e.local_time.slice(0, 5)} · ${e.duration_minutes} min · ${intensityLabel(e.intensity)}`}
-          onPress={() => router.push({ pathname: '/training/series/[id]', params: { id: e.id } })}
-        />
+        <AnimatedRow key={e.id}>
+          <ListItem
+            title={e.title}
+            subtitle={`${categoryLabel(e.category)} · ${WEEKDAYS[e.weekday - 1]?.label ?? ''} ${e.local_time.slice(0, 5)} · ${e.duration_minutes} min · ${intensityLabel(e.intensity)}`}
+            onPress={() => router.push({ pathname: '/training/series/[id]', params: { id: e.id } })}
+          />
+        </AnimatedRow>
       ))}
       {draft ? (
         <Card raised>

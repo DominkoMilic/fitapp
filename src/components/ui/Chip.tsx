@@ -1,7 +1,8 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { radius, spacing, TOUCH_TARGET, useTheme } from '@/theme';
 
+import { PressableScale } from './PressableScale';
 import { Text } from './Text';
 
 export function Chip({
@@ -21,7 +22,8 @@ export function Chip({
   const { colors } = useTheme();
   const press = onRemove ?? onPress;
   return (
-    <Pressable
+    <PressableScale
+      haptic="selection"
       accessibilityRole={onRemove ? 'button' : single ? 'radio' : 'checkbox'}
       accessibilityState={onRemove ? undefined : { checked: !!selected }}
       accessibilityLabel={onRemove ? `Remove ${label}` : label}
@@ -46,7 +48,7 @@ export function Chip({
           </Text>
         ) : null}
       </Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 

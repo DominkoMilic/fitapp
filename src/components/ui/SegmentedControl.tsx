@@ -1,7 +1,8 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { radius, spacing, TOUCH_TARGET, useTheme } from '@/theme';
 
+import { PressableScale } from './PressableScale';
 import { Text } from './Text';
 
 export interface SegmentOption<T extends string> {
@@ -30,8 +31,9 @@ export function SegmentedControl<T extends string>({
       {options.map((o) => {
         const selected = o.value === value;
         return (
-          <Pressable
+          <PressableScale
             key={o.value}
+            haptic={selected ? null : 'selection'}
             accessibilityRole="radio"
             accessibilityState={{ checked: selected }}
             accessibilityLabel={o.label}
@@ -44,7 +46,7 @@ export function SegmentedControl<T extends string>({
             >
               {o.label}
             </Text>
-          </Pressable>
+          </PressableScale>
         );
       })}
     </View>

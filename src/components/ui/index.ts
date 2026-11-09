@@ -12,3 +12,4 @@ export * from './StatTile';
 export * from './Text';
 export * from './TextField';
 export * from './Toggle';
+export * from './AnimatedRow';

@@ -1,7 +1,8 @@
-import { ActivityIndicator, Pressable, type PressableProps, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, type PressableProps, StyleSheet, View } from 'react-native';
 
 import { radius, spacing, TOUCH_TARGET, useTheme } from '@/theme';
 
+import { PressableScale } from './PressableScale';
 import { Text } from './Text';
 
 /** Decorative glyphs (‹ › ✓ + ✕) are not read aloud: "+ Add set" is spoken as "Add set". */
@@ -46,17 +47,18 @@ export function Button({
   }[variant];
 
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={rest.accessibilityLabel ?? spokenLabel(title)}
       accessibilityState={{ disabled: !!isDisabled, busy: loading }}
       disabled={isDisabled}
-      style={({ pressed }) => [
+      dimmed={isDisabled}
+      haptic={variant === 'primary' || variant === 'destructive' ? 'light' : null}
+      style={[
         styles.base,
         {
           backgroundColor: bg,
           borderColor: variant === 'secondary' ? colors.border : 'transparent',
-          opacity: isDisabled ? 0.5 : pressed ? 0.85 : 1,
           alignSelf: fullWidth ? 'stretch' : 'flex-start',
         },
       ]}
@@ -72,7 +74,7 @@ export function Button({
           </Text>
         </View>
       )}
-    </Pressable>
+    </PressableScale>
   );
 }
 

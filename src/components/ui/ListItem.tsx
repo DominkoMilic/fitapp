@@ -1,8 +1,9 @@
 import { ChevronRight } from 'lucide-react-native';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { spacing, TOUCH_TARGET, useTheme } from '@/theme';
 
+import { PressableScale } from './PressableScale';
 import { Text } from './Text';
 
 export function ListItem({
@@ -22,15 +23,13 @@ export function ListItem({
 }) {
   const { colors } = useTheme();
   return (
-    <Pressable
+    <PressableScale
+      feedback="row"
       accessibilityRole={onPress ? 'button' : undefined}
       accessibilityLabel={[title, value, subtitle].filter(Boolean).join(', ')}
       onPress={onPress}
       disabled={!onPress}
-      style={({ pressed }) => [
-        styles.row,
-        { opacity: pressed ? 0.7 : 1, borderBottomColor: colors.border },
-      ]}
+      style={[styles.row, { borderBottomColor: colors.border }]}
     >
       {icon}
       <View style={styles.text}>
@@ -49,7 +48,7 @@ export function ListItem({
         </Text>
       ) : null}
       {onPress ? <ChevronRight size={18} color={colors.textSecondary} /> : null}
-    </Pressable>
+    </PressableScale>
   );
 }
 

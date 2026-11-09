@@ -65,4 +65,30 @@ export type TypographyVariant = keyof typeof typography;
 /** Minimum touch target (spec 23.3). */
 export const TOUCH_TARGET = 44;
 
-export const motion = { fast: 150, normal: 250 } as const;
+/**
+ * Motion (spec 23.4): one place for durations, press feedback and screen transitions.
+ * Everything here is skipped or reduced to an opacity change when the OS "reduce motion" setting
+ * is on (`useTheme().reduceMotion`).
+ */
+export const motion = {
+  /** ms */
+  fast: 140,
+  normal: 200,
+  /** Native stack push/pop (iOS honours it; Android uses its platform timing). */
+  screen: 260,
+  press: {
+    /** Scale while a finger is down. */
+    scaleButton: 0.97,
+    scaleRow: 0.985,
+    pressedOpacity: 0.9,
+    /** Spring for press-in / press-out (no overshoot). */
+    spring: { speed: 40, bounciness: 0 },
+  },
+  /** Native stack animations (react-native-screens names). */
+  transitions: {
+    stack: 'ios_from_right',
+    modal: 'slide_from_bottom',
+    onboarding: 'fade',
+    tabs: 'shift',
+  },
+} as const;

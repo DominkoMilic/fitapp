@@ -14,7 +14,7 @@ import { useRestTimerNotification } from '@/features/notifications/useRestTimerN
 import { SyncProvider } from '@/features/sync/SyncProvider';
 import '@/services/location/location-task';
 import { connectQueryOnlineState, createQueryClient } from '@/services/query-client';
-import { ThemeProvider, useTheme } from '@/theme';
+import { stackAnimation, ThemeProvider, useTheme } from '@/theme';
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 connectQueryOnlineState();
@@ -28,7 +28,7 @@ function RestTimerNotification() {
 }
 
 function RootStack() {
-  const { colors, scheme } = useTheme();
+  const { colors, scheme, reduceMotion } = useTheme();
   const { initializing } = useAuth();
 
   useEffect(() => {
@@ -39,7 +39,11 @@ function RootStack() {
     <>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       <Stack
-        screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.background },
+          ...stackAnimation(reduceMotion),
+        }}
       />
       <ToastHost />
       <RestTimerNotification />

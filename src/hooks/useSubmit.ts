@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 
 import { useToast } from '@/components/feedback/Toast';
+import { haptics } from '@/theme/haptics';
 
 export const SAVE_FAILED = "Couldn't save. Check your connection and try again.";
 
@@ -22,6 +23,7 @@ export function useSubmit<A extends unknown[]>(
       setBusy(true);
       try {
         await fn(...args);
+        haptics.success();
       } catch {
         showToast(errorMessage);
       } finally {

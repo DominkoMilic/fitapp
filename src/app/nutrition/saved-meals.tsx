@@ -9,7 +9,7 @@ import {
   LoadingState,
   useToast,
 } from '@/components/feedback';
-import { Button, Card, ChipGroup, Screen, Text } from '@/components/ui';
+import { AnimatedRow, Button, Card, ChipGroup, Screen, Text } from '@/components/ui';
 import { formatShortDate, plural } from '@/domain/format';
 import { sumNutrition, mealTypeForTime } from '@/domain/nutrition/totals';
 import { useToday } from '@/features/dashboard/useToday';
@@ -79,82 +79,84 @@ export default function SavedMeals() {
         const items = savedMealItems(m);
         const t = sumNutrition(items);
         return (
-          <Card key={m.id}>
-            <Text variant="bodyStrong">{m.name}</Text>
-            <Text variant="small" color="textSecondary">
-              {plural(items.length, 'item')} · {Math.round(t.kcal)} kcal · P{' '}
-              {Math.round(t.protein_g)} g
-            </Text>
-            {logging === m.id ? (
-              <PartialLog
-                items={items}
-                onCancel={() => setLogging(null)}
-                onLog={async (chosen) => {
-                  for (const i of chosen) {
-                    await actions.logItem({
-                      date,
-                      meal: asMeal(meal),
-                      name: i.name,
-                      foodId: i.food_id,
-                      recipeId: i.recipe_id,
-                      quantity: i.quantity,
-                      unit: i.unit,
-                      grams: i.grams,
-                      nutrition: {
-                        kcal: i.kcal,
-                        protein_g: i.protein_g,
-                        carbs_g: i.carbs_g,
-                        fat_g: i.fat_g,
-                        fibre_g: i.fibre_g,
-                      },
-                      source: 'saved_meal',
-                      confidence: i.confidence,
-                    });
-                  }
-                  setLogging(null);
-                  showToast(
-                    chosen.length === items.length
-                      ? `${m.name} logged`
-                      : `${plural(chosen.length, 'item')} from ${m.name} logged`,
-                  );
-                }}
-              />
-            ) : (
-              <>
-                <Text variant="caption" color="textSecondary">
-                  {items.map((i) => i.name).join(', ')}
-                </Text>
-                <Button title="Log it" onPress={() => setLogging(m.id)} />
-                <View style={styles.actions}>
-                  <Button
-                    title="Edit"
-                    variant="ghost"
-                    fullWidth={false}
-                    accessibilityLabel={`Edit ${m.name}`}
-                    onPress={() =>
-                      router.push({ pathname: '/nutrition/meal-edit', params: { id: m.id } })
+          <AnimatedRow key={m.id}>
+            <Card>
+              <Text variant="bodyStrong">{m.name}</Text>
+              <Text variant="small" color="textSecondary">
+                {plural(items.length, 'item')} · {Math.round(t.kcal)} kcal · P{' '}
+                {Math.round(t.protein_g)} g
+              </Text>
+              {logging === m.id ? (
+                <PartialLog
+                  items={items}
+                  onCancel={() => setLogging(null)}
+                  onLog={async (chosen) => {
+                    for (const i of chosen) {
+                      await actions.logItem({
+                        date,
+                        meal: asMeal(meal),
+                        name: i.name,
+                        foodId: i.food_id,
+                        recipeId: i.recipe_id,
+                        quantity: i.quantity,
+                        unit: i.unit,
+                        grams: i.grams,
+                        nutrition: {
+                          kcal: i.kcal,
+                          protein_g: i.protein_g,
+                          carbs_g: i.carbs_g,
+                          fat_g: i.fat_g,
+                          fibre_g: i.fibre_g,
+                        },
+                        source: 'saved_meal',
+                        confidence: i.confidence,
+                      });
                     }
-                  />
-                  <Button
-                    title="Duplicate"
-                    variant="ghost"
-                    fullWidth={false}
-                    accessibilityLabel={`Duplicate ${m.name}`}
-                    onPress={() =>
-                      router.push({ pathname: '/nutrition/meal-edit', params: { from: m.id } })
-                    }
-                  />
-                  <Button
-                    title="Remove"
-                    variant="ghost"
-                    fullWidth={false}
-                    accessibilityLabel={`Remove ${m.name}`}
-                    onPress={() => setToArchive(m)}
-                  />
-                </View>
-              </>
-            )}
-          </Card>
+                    setLogging(null);
+                    showToast(
+                      chosen.length === items.length
+                        ? `${m.name} logged`
+                        : `${plural(chosen.length, 'item')} from ${m.name} logged`,
+                    );
+                  }}
+                />
+              ) : (
+                <>
+                  <Text variant="caption" color="textSecondary">
+                    {items.map((i) => i.name).join(', ')}
+                  </Text>
+                  <Button title="Log it" onPress={() => setLogging(m.id)} />
+                  <View style={styles.actions}>
+                    <Button
+                      title="Edit"
+                      variant="ghost"
+                      fullWidth={false}
+                      accessibilityLabel={`Edit ${m.name}`}
+                      onPress={() =>
+                        router.push({ pathname: '/nutrition/meal-edit', params: { id: m.id } })
+                      }
+                    />
+                    <Button
+                      title="Duplicate"
+                      variant="ghost"
+                      fullWidth={false}
+                      accessibilityLabel={`Duplicate ${m.name}`}
+                      onPress={() =>
+                        router.push({ pathname: '/nutrition/meal-edit', params: { from: m.id } })
+                      }
+                    />
+                    <Button
+                      title="Remove"
+                      variant="ghost"
+                      fullWidth={false}
+                      accessibilityLabel={`Remove ${m.name}`}
+                      onPress={() => setToArchive(m)}
+                    />
+                  </View>
+                </>
+              )}
+            </Card>
+          </AnimatedRow>
         );
       })}
       <ConfirmDialog

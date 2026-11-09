@@ -4,10 +4,12 @@ import { StyleSheet, View } from 'react-native';
 
 import { Banner, ErrorState, LoadingState, useToast } from '@/components/feedback';
 import {
+  AnimatedRow,
   Button,
   Card,
   ListItem,
   NumberField,
+  rowKeys,
   Screen,
   SectionHeader,
   SegmentedControl,
@@ -129,6 +131,7 @@ function Editor({
     setAdding(null);
   };
   const t = mealTotals(d.items);
+  const keys = rowKeys(d.items, (i) => i.name);
 
   const submit = useSubmit(async () => {
     const parsed = mealDraftSchema.safeParse(d);
@@ -193,7 +196,7 @@ function Editor({
             onCancel={() => setEditing(null)}
           />
         ) : (
-          <View key={`${it.name}-${k}`}>
+          <AnimatedRow key={keys[k]}>
             <ListItem
               title={it.name}
               value={
@@ -209,7 +212,7 @@ function Editor({
               onMove={(dir) => set({ items: moveItem(d.items, k, dir) })}
               onRemove={() => set({ items: d.items.filter((_, j) => j !== k) })}
             />
-          </View>
+          </AnimatedRow>
         ),
       )}
 

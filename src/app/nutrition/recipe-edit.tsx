@@ -4,10 +4,12 @@ import { StyleSheet, View } from 'react-native';
 
 import { Banner, ErrorState, LoadingState, useToast } from '@/components/feedback';
 import {
+  AnimatedRow,
   Button,
   Card,
   ListItem,
   NumberField,
+  rowKeys,
   Screen,
   SectionHeader,
   SegmentedControl,
@@ -127,6 +129,7 @@ function Editor({
       .filter(Boolean),
   };
   const n = nutritionForDraft(full);
+  const keys = rowKeys(d.ingredients, (i) => i.name);
   const note = nutritionNote(n);
 
   const save = async () => {
@@ -235,7 +238,7 @@ function Editor({
             onCancel={() => setEditing(null)}
           />
         ) : (
-          <View key={`${it.name}-${k}`}>
+          <AnimatedRow key={keys[k]}>
             <ListItem
               title={it.name}
               value={it.kind === 'food' ? `${it.grams} g` : it.amount || undefined}
@@ -255,7 +258,7 @@ function Editor({
               onMove={(dir) => set({ ingredients: moveItem(d.ingredients, k, dir) })}
               onRemove={() => set({ ingredients: d.ingredients.filter((_, j) => j !== k) })}
             />
-          </View>
+          </AnimatedRow>
         ),
       )}
       {adding === 'food' ? (
@@ -297,7 +300,7 @@ function Editor({
 
       <SectionHeader title="Method" />
       {d.steps.map((step, k) => (
-        <View key={k}>
+        <AnimatedRow key={k}>
           <TextField
             label={`Step ${k + 1}`}
             value={step}
@@ -312,7 +315,7 @@ function Editor({
             onMove={(dir) => set({ steps: moveItem(d.steps, k, dir) })}
             onRemove={() => set({ steps: d.steps.filter((_, j) => j !== k) })}
           />
-        </View>
+        </AnimatedRow>
       ))}
       <Button
         title="Add a step"

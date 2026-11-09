@@ -1,7 +1,8 @@
-import { Pressable, StyleSheet, Switch, View } from 'react-native';
+import { StyleSheet, Switch, View } from 'react-native';
 
-import { spacing, TOUCH_TARGET, useTheme } from '@/theme';
+import { haptics, spacing, TOUCH_TARGET, useTheme } from '@/theme';
 
+import { PressableScale } from './PressableScale';
 import { Text } from './Text';
 
 export function Toggle({
@@ -19,7 +20,9 @@ export function Toggle({
 }) {
   const { colors } = useTheme();
   return (
-    <Pressable
+    <PressableScale
+      feedback="row"
+      haptic="selection"
       accessibilityRole="switch"
       accessibilityState={{ checked: value }}
       accessibilityLabel={label}
@@ -42,13 +45,16 @@ export function Toggle({
       </View>
       <Switch
         value={value}
-        onValueChange={onChange}
+        onValueChange={(v) => {
+          haptics.selection();
+          onChange(v);
+        }}
         trackColor={{ true: colors.accent, false: colors.border }}
         thumbColor="#FFFFFF"
         importantForAccessibility="no-hide-descendants"
         accessibilityElementsHidden
       />
-    </Pressable>
+    </PressableScale>
   );
 }
 

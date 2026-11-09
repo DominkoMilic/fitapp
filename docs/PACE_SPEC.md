@@ -1125,7 +1125,7 @@ External API failure shows cached data or an error with retry. Manual logging al
 | info | #60A5FA | #2563EB |
 | chart series | weight points #A3AAB5, average #34D399, target #60A5FA (dashed), projection band accent at 15% opacity | same hues, light variants |
 
-Spacing scale 4, 8, 12, 16, 20, 24, 32, 40. Radius 8 (inputs), 12 (buttons), 16 (cards), 24 (sheets). Typography: system font; sizes 12/14/16/18/22/28/34; tabular numerals for metrics. Elevation: avoid shadows in dark mode; use surfaceRaised. Motion: 150–250 ms ease-out; respect reduce-motion (disable non-essential animation).
+Spacing scale 4, 8, 12, 16, 20, 24, 32, 40. Radius 8 (inputs), 12 (buttons), 16 (cards), 24 (sheets). Typography: system font; sizes 12/14/16/18/22/28/34; tabular numerals for metrics. Elevation: avoid shadows in dark mode; use surfaceRaised. Motion: see 23.5.
 
 ### 23.2 Components (src/components/ui)
 
@@ -1138,6 +1138,23 @@ All interactive elements have `accessibilityLabel` and role; touch targets ≥ 4
 ### 23.4 Copy tone
 
 Encouraging, neutral, never shaming. "No data yet" instead of "You failed to log". Weight gain is reported neutrally. Use the user's units everywhere.
+
+### 23.5 Touch feedback, transitions and haptics
+
+All values live in `motion` (`src/theme/tokens.ts`); components never hard-code timings.
+
+| What | Behaviour | Reduce motion on |
+|---|---|---|
+| Press (buttons, chips, segments, toggles) | `PressableScale`: spring to 0.97 scale and 0.9 opacity while the finger is down, back on release; no overshoot; native driver | opacity only |
+| Press (cards, list rows) | same, softer scale 0.985 | opacity only |
+| Disabled | 50% opacity, no press, no haptic | same |
+| Screen push / pop | native stack `ios_from_right` on both platforms, 260 ms | 140 ms fade |
+| Modal screens (check-in) | slide up from the bottom | 140 ms fade |
+| Onboarding steps | 200 ms cross-fade | 140 ms fade |
+| Tabs | subtle `shift` | none |
+| List rows in editors, saved meals, weekly events | fade in 200 ms when added, fade out 140 ms when removed, slide 200 ms when others move (`AnimatedRow`, keyed by name so rows keep their animation when reordered) | no animation |
+
+Haptics (`src/theme/haptics.ts`, expo-haptics): a selection tick for chips, new segments and toggles; a light tap for primary and destructive buttons; a success pulse after a save completes (`useSubmit`). Off on web and when reduce motion is on; failures are ignored.
 
 ---
 

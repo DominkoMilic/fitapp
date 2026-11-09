@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { AccessibilityInfo, useColorScheme } from 'react-native';
 
+import { setHapticsEnabled } from './haptics';
 import { type Colors, type ColorScheme, palette } from './tokens';
 
 export type ThemePreference = 'system' | 'light' | 'dark';
@@ -50,6 +51,8 @@ export function ThemeProvider({ children }: PropsWithChildren) {
     const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
     return () => sub.remove();
   }, []);
+
+  useEffect(() => setHapticsEnabled(!reduceMotion), [reduceMotion]);
 
   const value = useMemo<ThemeContextValue>(() => {
     const scheme = resolveScheme(preference, system);

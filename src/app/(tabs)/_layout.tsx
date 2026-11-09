@@ -6,7 +6,7 @@ import { useAuth } from '@/features/auth/AuthProvider';
 import { useRecalibrationEngine } from '@/features/coach/useRecalibrationEngine';
 import { useMilestoneEngine } from '@/features/milestones/api';
 import { useNotificationEngine } from '@/features/notifications/useNotificationEngine';
-import { useTheme } from '@/theme';
+import { motion, useTheme } from '@/theme';
 
 function MilestoneEngine() {
   useMilestoneEngine();
@@ -27,7 +27,7 @@ function RecalibrationEngine() {
 
 export default function TabsLayout() {
   const { session, initializing } = useAuth();
-  const { colors } = useTheme();
+  const { colors, reduceMotion } = useTheme();
   if (!initializing && !session) return <Redirect href="/welcome" />;
 
   return (
@@ -38,6 +38,7 @@ export default function TabsLayout() {
       <Tabs
         screenOptions={{
           headerShown: false,
+          animation: reduceMotion ? 'none' : motion.transitions.tabs,
           tabBarActiveTintColor: colors.accent,
           tabBarInactiveTintColor: colors.textSecondary,
           tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },

@@ -1,7 +1,7 @@
 import { Redirect, Stack } from 'expo-router';
 
 import { useAuth } from '@/features/auth/AuthProvider';
-import { useTheme } from '@/theme';
+import { stackAnimation, useTheme } from '@/theme';
 
 /** Shared stack for signed-in detail screens (weight, measurements, milestones, check-in). */
 export function SignedInStack({
@@ -12,7 +12,7 @@ export function SignedInStack({
   modal?: boolean;
 }) {
   const { session, initializing } = useAuth();
-  const { colors } = useTheme();
+  const { colors, reduceMotion } = useTheme();
   if (!initializing && !session) return <Redirect href="/welcome" />;
   return (
     <Stack
@@ -20,6 +20,7 @@ export function SignedInStack({
         headerShown: true,
         title: titles[route.name] ?? '',
         presentation: modal ? 'modal' : 'card',
+        ...stackAnimation(reduceMotion, modal ? 'modal' : 'stack'),
         headerStyle: { backgroundColor: colors.background },
         headerTintColor: colors.textPrimary,
         headerShadowVisible: false,

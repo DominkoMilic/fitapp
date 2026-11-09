@@ -1,7 +1,7 @@
 import { Redirect, Stack } from 'expo-router';
 
 import { useAuth } from '@/features/auth/AuthProvider';
-import { useTheme } from '@/theme';
+import { stackAnimation, useTheme } from '@/theme';
 
 const TITLES: Record<string, string> = {
   personal: 'Personal information',
@@ -21,7 +21,7 @@ const TITLES: Record<string, string> = {
 
 export default function SettingsLayout() {
   const { session, initializing } = useAuth();
-  const { colors } = useTheme();
+  const { colors, reduceMotion } = useTheme();
   if (!initializing && !session) return <Redirect href="/welcome" />;
   return (
     <Stack
@@ -32,6 +32,7 @@ export default function SettingsLayout() {
         headerTintColor: colors.textPrimary,
         headerShadowVisible: false,
         contentStyle: { backgroundColor: colors.background },
+        ...stackAnimation(reduceMotion),
       })}
     />
   );

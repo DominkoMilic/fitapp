@@ -123,3 +123,10 @@ Clarifications of, and deviations from, `docs/PACE_SPEC.md`. Newest first.
 4. **Saved meal items are nutrition snapshots** (food, recipe or quick item). Changing an amount scales the snapshot linearly, which is exact. Old rows without a `kind` are read as food (with `food_id`) or quick items.
 5. **Editing never rewrites history.** Recipes, meals and foods are full-row upserts through the outbox; logged entries keep their own snapshot.
 6. **No recipe photos** for user recipes (decided with the product owner).
+
+## 2026-11-09: Touch feedback and transitions
+
+1. **Press feedback uses React Native's `Animated` on the native driver**, not Reanimated, so every pressable keeps working in tests and on web without extra setup. Reanimated is used only for list-row enter/exit/layout animations.
+2. **One stack transition everywhere** (`ios_from_right`) so Android and iOS feel the same; modals slide up; onboarding keeps its cross-fade.
+3. **Haptics are subtle and optional by design**: selection ticks, a light tap on primary actions, a success pulse after saving. They follow the reduce-motion setting.
+

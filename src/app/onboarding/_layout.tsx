@@ -4,11 +4,11 @@ import { useEffect } from 'react';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useOnboardingDraft } from '@/features/onboarding/draft-store';
 import { useProfile } from '@/features/profile/api';
-import { useTheme } from '@/theme';
+import { stackAnimation, useTheme } from '@/theme';
 
 export default function OnboardingLayout() {
   const { session, initializing } = useAuth();
-  const { colors } = useTheme();
+  const { colors, reduceMotion } = useTheme();
   const bindUser = useOnboardingDraft((s) => s.bindUser);
   const profile = useProfile();
   const userId = session?.user.id;
@@ -26,7 +26,7 @@ export default function OnboardingLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
-        animation: 'fade',
+        ...stackAnimation(reduceMotion, 'onboarding'),
         contentStyle: { backgroundColor: colors.background },
       }}
     />

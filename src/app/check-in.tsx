@@ -17,7 +17,7 @@ import { BODY_AREA_LABELS, type BodyArea } from '@/domain/training/injury';
 import { BODY_AREAS } from '@/domain/validation/onboarding';
 import { type Checkin, useCheckins, useSaveCheckin } from '@/features/checkin/api';
 import { useToday } from '@/features/dashboard/useToday';
-import { useTheme } from '@/theme';
+import { stackAnimation, useTheme } from '@/theme';
 import { useSubmit } from '@/hooks/useSubmit';
 import { LoadErrorBanner } from '@/components/feedback/LoadErrorBanner';
 
@@ -26,7 +26,7 @@ const SCALE = ['1', '2', '3', '4', '5'] as const;
 export default function CheckinScreen() {
   const { today } = useToday();
   const checkins = useCheckins();
-  const { colors } = useTheme();
+  const { colors, reduceMotion } = useTheme();
   const existing = checkins.rows.find((c) => c.local_date === today);
   return (
     <>
@@ -35,6 +35,7 @@ export default function CheckinScreen() {
           headerShown: true,
           title: 'Daily check-in',
           presentation: 'modal',
+          ...stackAnimation(reduceMotion, 'modal'),
           headerStyle: { backgroundColor: colors.background },
           headerTintColor: colors.textPrimary,
         }}
