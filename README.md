@@ -62,7 +62,7 @@ npx supabase start      # prints the API URL and anon key
 npx supabase db reset   # applies migrations + the dev seed
 ```
 
-The local `supabase/config.toml` already enables email confirmation, 8-character passwords and the `pace://` redirects. Confirmation emails are caught by the local mail viewer at http://127.0.0.1:54324. On a physical phone, use your computer's LAN IP instead of `127.0.0.1`.
+The local `supabase/config.toml` already enables email confirmation, 8-character passwords and the `pace://` redirects. Confirmation emails are caught by the local mail viewer at http://127.0.0.1:55324 (PACE uses the 553xx ports so it can run beside other local Supabase projects). On a physical phone, use your computer's LAN IP instead of `127.0.0.1`.
 
 ### Environment variables
 

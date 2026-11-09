@@ -73,7 +73,8 @@
     "check": "npm run typecheck && npm run lint && npm run db:seed-check && npm run test -- --ci",
     "e2e:web": "bash scripts/e2e-web.sh",
     "db:seed-training": "node --no-warnings scripts/gen-training-seed.mjs",
-    "db:seed-check": "node --no-warnings scripts/gen-training-seed.mjs --check"
+    "db:seed-check": "node --no-warnings scripts/gen-training-seed.mjs --check",
+    "db:seed-usda": "node scripts/gen-usda-seed.mjs"
   },
   "private": true,
   "jest": {
