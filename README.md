@@ -2,7 +2,7 @@
 
 A mobile fitness coach, workout planner, nutrition tracker and activity tracker for iOS and Android, built with Expo (React Native) and Supabase.
 
-**Status:** Phases 1–4 (Foundation, Progress, Training, Nutrition) are implemented. Phase 5 (GPS activity tracking) is next, after review. See the phase reports in [`docs/`](docs/).
+**Status:** Phases 1–5 (Foundation, Progress, Training, Nutrition, GPS activities) are implemented. Phase 6 (Personal coach) is next, after review. See the phase reports in [`docs/`](docs/).
 
 ## Documents
 
@@ -17,6 +17,7 @@ A mobile fitness coach, workout planner, nutrition tracker and activity tracker 
 | [`docs/phase-2-report.md`](docs/phase-2-report.md) | Phase 2: weight, measurements, check-in, milestones, offline sync      |
 | [`docs/phase-3-report.md`](docs/phase-3-report.md) | Phase 3: exercise library, calendar, workouts, history, records        |
 | [`docs/phase-4-report.md`](docs/phase-4-report.md) | Phase 4: food logging, USDA catalogue, recipes, planner, shopping list |
+| [`docs/phase-5-report.md`](docs/phase-5-report.md) | Phase 5: GPS walk/run/ride recording, routes, manual activities        |
 
 ## Tech stack
 
@@ -121,6 +122,8 @@ First run: create an account → open the confirmation email **on the same phone
 npx eas-cli@latest build --profile development --platform ios   # or android
 ```
 
+**GPS recording needs a development build.** Expo Go can't run background location. Install a `development` build on a real phone to record with the screen locked. For maps on Android, set `GOOGLE_MAPS_ANDROID_API_KEY` (see `.env.example`). Without it, Android shows the route as a shape.
+
 Store the Supabase values per environment in EAS (`eas env:create`), or in `.env.local` for local runs. Use separate Supabase projects for development and production.
 
 ## Scripts
@@ -193,5 +196,7 @@ Phase 2 branches, built the same way:
 Phase 3 branches: `feature/p3-schema`, `feature/p3-domain`, `feature/p3-library`, `feature/p3-calendar`, `feature/p3-workout`, `feature/p3-history`.
 
 Phase 4 branches: `feature/p4-schema`, `feature/p4-domain`, `feature/p4-logging`, `feature/p4-recipes`, `feature/p4-planner-shopping`.
+
+Phase 5 branches: `feature/p5-schema`, `feature/p5-domain`, `feature/p5-tracking`, `feature/p5-activities`.
 
 `claude/pace-spec-review-usad8z` contains all of them.
