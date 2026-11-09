@@ -1,40 +1,69 @@
 /**
- * Legal texts shown in the app. The version is stored with every consent (EXPO_PUBLIC_LEGAL_VERSION).
- * These are working drafts written for the V1 data flows; have them reviewed by a qualified person
- * before public store release (tracked in docs/decisions.md and the Phase 7 checklist).
+ * Legal texts shown in the app. The version is stored with every consent (EXPO_PUBLIC_LEGAL_VERSION);
+ * bump it whenever these texts change. Written for the V1 data flows; have them reviewed by a
+ * qualified person before public store release (docs/release/checklist.md).
  */
-export type LegalDocId = 'privacy' | 'terms' | 'disclaimer';
+import { envResult } from '@/config/env';
 
-export const LEGAL_DOCS: Record<
-  LegalDocId,
-  { title: string; sections: { heading: string; body: string }[] }
-> = {
+export type LegalDocId = 'privacy' | 'terms' | 'disclaimer' | 'licences';
+
+export const LEGAL_UPDATED = '9 November 2026';
+
+const supportEmail = envResult.ok ? envResult.env.supportEmail : undefined;
+/** How to reach the operator; the store listings always carry a support contact too. */
+export const CONTACT = supportEmail
+  ? `email ${supportEmail}`
+  : 'use the support contact on PACE’s App Store or Google Play page';
+
+type Doc = { title: string; sections: { heading: string; body: string }[] };
+
+export const LEGAL_DOCS: Record<LegalDocId, Doc> = {
   privacy: {
     title: 'Privacy policy',
     sections: [
       {
-        heading: 'Draft status',
-        body: 'This policy is a draft for testing builds and will be reviewed before public release.',
+        heading: 'Who we are',
+        body: `PACE is a personal fitness app. The developer named on PACE’s App Store and Google Play pages is the controller of your personal data. To contact us about privacy, ${CONTACT}. Last updated ${LEGAL_UPDATED}.`,
       },
       {
         heading: 'What we collect',
-        body: 'Account email; profile details you enter (name, date of birth, sex for metabolic calculations, height, weight, goals, activity level, equipment, schedule, nutrition preferences); optional injury and health information; and, in later versions, workouts, food logs and GPS routes you choose to record.',
+        body: 'Your account email and password (stored hashed by our authentication provider). Profile details you enter: name, date of birth, sex (for the energy formula), height, weight, goal, activity level, schedule, equipment and food preferences. What you log: weights, body measurements, daily check-ins, workouts, walks, runs and rides with their GPS routes, food and water, recipes, meal plans and shopping lists. Optional health information (injuries, conditions, pain). Your reminder settings and timezone. We do not collect contacts, photos, advertising identifiers or your location outside a recording.',
       },
       {
-        heading: 'Why',
-        body: 'Only to provide PACE: calculating your targets, planning your training around your schedule and injuries, and showing your progress. We do not sell your data, show ads, or use third-party tracking.',
+        heading: 'Why we use it, and on what basis',
+        body: 'Only to provide PACE to you: calculating your targets, planning training around your schedule and injuries, recording activities, and showing progress, reviews and reports. Legal bases (GDPR): performing our contract with you; your explicit consent for health information (Art. 9(2)(a)); and your consent, given through your phone’s permission prompt, for location. We do not sell your data, show ads, profile you for marketing, or use analytics or tracking tools.',
       },
       {
-        heading: 'Health data',
-        body: 'Injury and health details are special-category data. They are stored only with your explicit consent, used only to adapt your plan, and can be deleted at any time without deleting your account.',
+        heading: 'Health information',
+        body: 'Injuries, conditions and pain are special-category data. PACE stores them only after you agree, uses them only to adapt your plan and coaching, and you can delete all of it at any time in Profile → Health and injuries without deleting your account.',
       },
       {
-        heading: 'Where it is stored',
-        body: 'In a Supabase (PostgreSQL) database in the EU. Every table is protected by row-level security so only your account can read your data.',
+        heading: 'Location',
+        body: 'PACE reads your location only while you record a walk, run or ride. With your permission it keeps recording while the screen is locked, and your phone shows that it is in use. Routes are stored privately in your account, are never public, and are never sent to analytics or logs. You can delete a route (keeping the distance and time) or the whole activity. To show a route on a map, your phone loads map tiles from Apple Maps or Google Maps, which sees the map area requested.',
+      },
+      {
+        heading: 'Where your data is stored and who processes it',
+        body: 'Your data is stored by Supabase (database, sign-in and file storage) in the European Union, acting as our processor. Recipe searches go through our server to TheMealDB; only the search words are sent, never your identity. Reminders are local notifications created on your phone; no notification service receives your data.',
+      },
+      {
+        heading: 'Security',
+        body: 'Connections are encrypted. Every table is protected so that only your account can read or change your data, and route files are kept in a private folder per account. Notifications never show weight or health details on the lock screen.',
+      },
+      {
+        heading: 'How long we keep it',
+        body: 'Until you delete it or your account. Deleting your account removes your data immediately; copies in our hosting provider’s backups expire according to its backup retention period, after which they are gone.',
       },
       {
         heading: 'Your rights',
-        body: 'You can view and correct your data in the app, export it, withdraw consent, and permanently delete your account and all associated data from Profile. Backups held by our hosting provider expire according to their retention policy.',
+        body: `You can see and correct your data in the app; export all of it (Profile → Your data → Export); delete health information or your whole account (Profile → Your data); and withdraw consent at any time. You can also ask us about your data, object to processing, or complain to your data protection authority. To exercise a right, ${CONTACT}.`,
+      },
+      {
+        heading: 'Age',
+        body: 'PACE is for people aged 18 and over. We do not knowingly collect data from children.',
+      },
+      {
+        heading: 'Changes',
+        body: 'If we change this policy we update the date above and, for significant changes, tell you in the app. The version you agreed to is recorded with your consent.',
       },
     ],
   },
@@ -42,21 +71,45 @@ export const LEGAL_DOCS: Record<
     title: 'Terms of use',
     sections: [
       {
-        heading: 'Draft status',
-        body: 'These terms are a draft for testing builds and will be reviewed before public release.',
+        heading: 'Agreement',
+        body: `By creating an account you agree to these terms. Last updated ${LEGAL_UPDATED}.`,
       },
-      { heading: 'Eligibility', body: 'PACE is for people aged 18 and over.' },
+      { heading: 'Eligibility', body: 'You must be 18 or older to use PACE.' },
       {
         heading: 'Not medical advice',
-        body: 'PACE provides general fitness and nutrition guidance. It is not a medical device and does not diagnose, treat or prevent any condition.',
+        body: 'PACE gives general fitness and nutrition guidance. It is not a medical device and does not diagnose, treat or prevent any condition. Read the health disclaimer before you start.',
       },
       {
         heading: 'Estimates',
-        body: 'Calorie targets, energy expenditure, projections and calories burned are estimates and may be inaccurate for you.',
+        body: 'Calorie targets, energy expenditure, calories burned, projections, training load and GPS distances are estimates and can be inaccurate for you. PACE never changes your calorie target without your confirmation and never sets it below a safety minimum.',
       },
       {
-        heading: 'Your account',
-        body: 'Keep your password secure. You can delete your account at any time.',
+        heading: 'Training and outdoor safety',
+        body: 'You exercise at your own risk. Warm up, stop if you feel pain, and follow any restrictions from a professional. When recording outdoors, stay aware of traffic and your surroundings; do not look at your phone while cycling.',
+      },
+      {
+        heading: 'Your account and content',
+        body: 'Keep your password secure. What you log belongs to you. You allow us to store and process it only to provide PACE to you. You can export it or delete your account at any time.',
+      },
+      {
+        heading: 'Acceptable use',
+        body: 'Do not misuse PACE: no attempts to access other people’s data, overload or interfere with the service, or use it for anything unlawful.',
+      },
+      {
+        heading: 'Third-party content',
+        body: 'Recipes come from TheMealDB and are shown as provided; quantities are not verified and nutrition is not calculated for them. Food data comes from USDA FoodData Central. See Data sources and licences.',
+      },
+      {
+        heading: 'Availability and changes',
+        body: 'We work to keep PACE available and your data safe, but cannot guarantee uninterrupted service. Features may change; we will tell you about significant changes in the app.',
+      },
+      {
+        heading: 'Liability',
+        body: 'To the extent the law allows, PACE is provided “as is” and we are not liable for indirect losses or for injury resulting from exercise or diet choices. Nothing in these terms limits rights you have as a consumer that cannot be limited by law.',
+      },
+      {
+        heading: 'Ending',
+        body: `You can stop using PACE and delete your account at any time. We may suspend accounts that break these terms. Questions: ${CONTACT}.`,
       },
     ],
   },
@@ -65,7 +118,52 @@ export const LEGAL_DOCS: Record<
     sections: [
       {
         heading: 'Please read',
-        body: 'PACE is not a medical device and does not diagnose or treat injuries or medical conditions. Recommendations are general fitness guidance. Stop exercising if you feel pain, dizziness or chest discomfort, and consult a qualified healthcare professional about injuries, medical conditions or before starting a new programme.',
+        body: 'PACE is not a medical device and does not diagnose or treat injuries or medical conditions. Its recommendations are general fitness guidance, not personal medical advice.',
+      },
+      {
+        heading: 'Stop and get help',
+        body: 'Stop exercising and seek medical help if you feel chest pain or pressure, severe shortness of breath, dizziness, fainting, or sharp or worsening pain. PACE will never tell you to train through pain.',
+      },
+      {
+        heading: 'Talk to a professional first if',
+        body: 'you have a heart, lung, metabolic or other medical condition; an injury that has not been assessed; you are pregnant or have recently given birth; you are under medical supervision for your weight; or you have, or have had, an eating disorder. In these cases please don’t follow calorie targets without professional advice.',
+      },
+      {
+        heading: 'Injuries',
+        body: 'Marking an injury makes PACE leave out exercises that load that area. It cannot judge how serious an injury is. Follow your physiotherapist’s or doctor’s restrictions over anything PACE suggests.',
+      },
+      {
+        heading: 'Food and calories',
+        body: 'Nutrition values are estimates from reference data and what you enter. Targets never go below a safety minimum, but they are not tailored medical nutrition therapy.',
+      },
+    ],
+  },
+  licences: {
+    title: 'Data sources and licences',
+    sections: [
+      {
+        heading: 'Food data',
+        body: 'U.S. Department of Agriculture, Agricultural Research Service. FoodData Central, SR Legacy. Public domain (CC0 1.0). fdc.nal.usda.gov',
+      },
+      {
+        heading: 'Recipes',
+        body: 'Recipes and images are provided by TheMealDB (themealdb.com) and belong to their respective owners. PACE shows them with attribution and does not add nutrition to them.',
+      },
+      {
+        heading: 'Exercise energy (MET values)',
+        body: 'Herrmann SD, et al. 2024 Adult Compendium of Physical Activities. Journal of Sport and Health Science, 2024. Used for calorie estimates.',
+      },
+      {
+        heading: 'Formulas',
+        body: 'Basal metabolic rate: Mifflin MD, St Jeor ST, et al. Am J Clin Nutr 1990. Distances: the haversine formula.',
+      },
+      {
+        heading: 'Maps',
+        body: 'Apple Maps on iPhone and Google Maps on Android, under their providers’ terms.',
+      },
+      {
+        heading: 'Open-source software',
+        body: 'PACE is built with open-source software including React Native and Expo (MIT), Supabase client libraries (MIT), TanStack Query (MIT), Zustand (MIT), Zod (MIT), react-native-svg (MIT), react-native-maps (MIT) and Lucide icons (ISC). Full licence texts are included with each package.',
       },
     ],
   },

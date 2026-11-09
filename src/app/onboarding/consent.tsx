@@ -48,6 +48,18 @@ export default function ConsentStep() {
         fullWidth={false}
         onPress={() => router.push('/legal/terms')}
       />
+      <Button
+        title="Read the health disclaimer"
+        variant="ghost"
+        fullWidth={false}
+        onPress={() => router.push('/legal/disclaimer')}
+      />
+      <Button
+        title="Data sources and licences"
+        variant="ghost"
+        fullWidth={false}
+        onPress={() => router.push('/legal/licences')}
+      />
       <Toggle
         label="I accept the terms of use"
         value={values.terms}

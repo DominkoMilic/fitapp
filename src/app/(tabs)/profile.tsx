@@ -62,6 +62,7 @@ export default function ProfileTab() {
       <ListItem title="Privacy policy" onPress={() => router.push('/legal/privacy')} />
       <ListItem title="Terms of use" onPress={() => router.push('/legal/terms')} />
       <ListItem title="Health disclaimer" onPress={() => router.push('/legal/disclaimer')} />
+      <ListItem title="Data sources and licences" onPress={() => router.push('/legal/licences')} />
       <ListItem title="Export my data" subtitle="Available before public release" />
       <ListItem
         title="Your data"
