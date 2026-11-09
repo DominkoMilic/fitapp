@@ -57,7 +57,8 @@ export const ENTITY_ORDER: Record<SyncEntity, number> = {
 };
 
 export type OpKind = 'upsert' | 'delete';
-export type OpStatus = 'pending' | 'failed';
+/** 'synced' only appears in the local overlay, never in the stored queue. */
+export type OpStatus = 'pending' | 'failed' | 'synced';
 export type Row = Record<string, unknown>;
 
 export interface OutboxOp {

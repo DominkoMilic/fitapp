@@ -88,6 +88,19 @@ export function useOutbox(): readonly OutboxOp[] {
   );
 }
 
+/**
+ * What screens apply on top of server rows: the queue plus ops synced in the last few seconds,
+ * so a just-saved change stays visible until the refetched data arrives.
+ */
+export function usePendingOverlay(): readonly OutboxOp[] {
+  const engine = useContext(SyncContext);
+  return useSyncExternalStore(
+    engine?.subscribe ?? noop,
+    engine?.getOverlay ?? (() => EMPTY),
+    () => EMPTY,
+  );
+}
+
 export function useSyncStatus() {
   const queue = useOutbox();
   const engine = useContext(SyncContext);

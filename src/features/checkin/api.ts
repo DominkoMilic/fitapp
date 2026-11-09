@@ -5,7 +5,7 @@ import { useMemo } from 'react';
 import type { CheckinValues } from '@/domain/checkin/checkin';
 import { applyPending } from '@/domain/sync/outbox';
 import { useAuth } from '@/features/auth/AuthProvider';
-import { syncKeys, useOutbox, useSyncActions } from '@/features/sync/SyncProvider';
+import { syncKeys, usePendingOverlay, useSyncActions } from '@/features/sync/SyncProvider';
 import { requireSupabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/database.types';
 
@@ -14,7 +14,7 @@ export type Checkin = Tables<'daily_checkins'> & { _pending?: boolean; _failed?:
 /** Check-ins from the last 60 days (enough for recovery rules and streaks). */
 export function useCheckins() {
   const userId = useAuth().session?.user.id;
-  const queue = useOutbox();
+  const queue = usePendingOverlay();
   const query = useQuery({
     queryKey: syncKeys.entity(userId ?? 'anonymous', 'daily_checkins'),
     enabled: !!userId,

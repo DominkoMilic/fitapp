@@ -149,6 +149,23 @@ describe('SyncEngine', () => {
     expect(synced).toEqual([['weight_entries']]);
   });
 
+  it('just-synced writes stay visible locally until fresh data arrives, then drop off', async () => {
+    jest.useFakeTimers();
+    try {
+      const { engine } = setup(async () => ({ error: null }));
+      await engine.enqueue(op({ recordKey: 'a', payload: { id: 'a', kg: 80 } }));
+      await engine.flush();
+      expect(engine.getSnapshot()).toEqual([]);
+      expect(engine.getOverlay().map((o) => [o.recordKey, o.status])).toEqual([['a', 'synced']]);
+      // Synced ops never count as pending in the sync status.
+      expect(queueSummary(engine.getOverlay())).toEqual({ pending: 0, failed: 0 });
+      jest.advanceTimersByTime(16_000);
+      expect(engine.getOverlay()).toEqual([]);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('offline: keeps everything, stops after the first network error', async () => {
     let calls = 0;
     const { engine, storage } = setup(async () => {

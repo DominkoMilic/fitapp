@@ -9,7 +9,7 @@ import { TEMPLATE_BY_SLUG } from '@/domain/training/catalogue';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useToday } from '@/features/dashboard/useToday';
 import { profileKeys, regenerateWeeklyPattern } from '@/features/profile/api';
-import { syncKeys, useOutbox, useSyncActions } from '@/features/sync/SyncProvider';
+import { syncKeys, usePendingOverlay, useSyncActions } from '@/features/sync/SyncProvider';
 import { requireSupabase } from '@/integrations/supabase/client';
 import { fetchAllPages } from '@/integrations/supabase/paging';
 import type { Tables } from '@/integrations/supabase/database.types';
@@ -60,7 +60,7 @@ export function useScheduleGeneration() {
 
 export function useScheduledWorkouts(from: string, to: string) {
   const userId = useAuth().session?.user.id;
-  const queue = useOutbox();
+  const queue = usePendingOverlay();
   const query = useQuery({
     queryKey: [...syncKeys.entity(userId ?? 'anonymous', 'scheduled_workouts'), from, to],
     enabled: !!userId,

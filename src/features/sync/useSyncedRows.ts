@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { applyPending, type SyncEntity } from '@/domain/sync/outbox';
 import { useAuth } from '@/features/auth/AuthProvider';
 
-import { syncKeys, useOutbox } from './SyncProvider';
+import { syncKeys, usePendingOverlay } from './SyncProvider';
 
 export type Synced<T> = T & { _pending?: boolean; _failed?: boolean };
 
@@ -22,7 +22,7 @@ export function useSyncedRows<T extends Record<string, unknown>>(opts: {
   enabled?: boolean;
 }) {
   const userId = useAuth().session?.user.id;
-  const queue = useOutbox();
+  const queue = usePendingOverlay();
   const query = useQuery({
     queryKey: [...syncKeys.entity(userId ?? 'anonymous', opts.entity), ...(opts.scope ?? [])],
     enabled: !!userId && (opts.enabled ?? true),

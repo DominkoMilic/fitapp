@@ -30,8 +30,18 @@ export interface SyncEngineOptions {
  * Per-user sync engine. All queue mutations are serialised through one promise chain, the
  * queue is persisted after every change, and listeners are notified (useSyncExternalStore).
  */
+/** How long a synced op stays applied locally while the fresh server data loads. */
+const RECENT_MS = 15_000;
+
 export class SyncEngine {
   private queue: OutboxOp[] = [];
+  /**
+   * Ops that reached the server in the last RECENT_MS. Screens keep showing them until the
+   * refetch that onSynced triggers has landed, so a saved edit never flashes the old values.
+   */
+  private recent: { op: OutboxOp; at: number }[] = [];
+  private overlay: readonly OutboxOp[] = [];
+  private pruneTimer: ReturnType<typeof setTimeout> | null = null;
   private chain: Promise<unknown> = Promise.resolve();
   private flushing: Promise<void> | null = null;
   private listeners = new Set<() => void>();
@@ -66,6 +76,19 @@ export class SyncEngine {
   }
 
   private emit() {
+    const cutoff = Date.now() - RECENT_MS;
+    this.recent = this.recent.filter((r) => r.at > cutoff);
+    this.overlay = this.recent.length
+      ? [...this.recent.map((r) => r.op), ...this.queue]
+      : this.queue;
+    if (this.recent.length && !this.pruneTimer) {
+      this.pruneTimer = setTimeout(() => {
+        this.pruneTimer = null;
+        this.emit();
+      }, RECENT_MS + 50);
+      // Never keep a process alive just for this (tests, background).
+      (this.pruneTimer as { unref?: () => void }).unref?.();
+    }
     for (const l of this.listeners) l();
   }
 
@@ -77,6 +100,9 @@ export class SyncEngine {
   };
 
   getSnapshot = (): readonly OutboxOp[] => this.queue;
+
+  /** Queue plus recently synced ops, for showing local data (not for sync status). */
+  getOverlay = (): readonly OutboxOp[] => this.overlay;
 
   ready() {
     return this.loaded;
@@ -120,6 +146,7 @@ export class SyncEngine {
             };
           }
           if (!result.error) {
+            this.recent.push({ op: { ...op, status: 'synced' }, at: Date.now() });
             await this.serial(() => this.commit(markSucceeded(this.queue, op.id)));
             synced.add(op.entity);
             continue;

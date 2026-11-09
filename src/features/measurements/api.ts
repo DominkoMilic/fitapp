@@ -7,7 +7,7 @@ import { applyPending } from '@/domain/sync/outbox';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useProfile } from '@/features/profile/api';
 import { eventTime } from '@/features/sync/local-time';
-import { syncKeys, useOutbox, useSyncActions } from '@/features/sync/SyncProvider';
+import { syncKeys, usePendingOverlay, useSyncActions } from '@/features/sync/SyncProvider';
 import { requireSupabase } from '@/integrations/supabase/client';
 import { fetchAllPages } from '@/integrations/supabase/paging';
 import type { Tables } from '@/integrations/supabase/database.types';
@@ -16,7 +16,7 @@ export type Measurement = Tables<'body_measurements'> & { _pending?: boolean; _f
 
 export function useMeasurements() {
   const userId = useAuth().session?.user.id;
-  const queue = useOutbox();
+  const queue = usePendingOverlay();
   const query = useQuery({
     queryKey: syncKeys.entity(userId ?? 'anonymous', 'body_measurements'),
     enabled: !!userId,

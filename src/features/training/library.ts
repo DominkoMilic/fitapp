@@ -20,7 +20,7 @@ import {
 } from '@/domain/training/injury';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useEquipment, useHealthConditions, usePreferences } from '@/features/profile/api';
-import { syncKeys, useOutbox, useSyncActions } from '@/features/sync/SyncProvider';
+import { syncKeys, usePendingOverlay, useSyncActions } from '@/features/sync/SyncProvider';
 import { requireSupabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/database.types';
 
@@ -91,7 +91,7 @@ const customToCatalogue = (r: CustomExerciseRow): LibraryExercise => ({
 
 export function useCustomExercises() {
   const userId = useAuth().session?.user.id;
-  const queue = useOutbox();
+  const queue = usePendingOverlay();
   const query = useQuery({
     queryKey: syncKeys.entity(userId ?? 'anonymous', 'exercises'),
     enabled: !!userId,
