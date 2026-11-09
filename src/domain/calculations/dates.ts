@@ -34,6 +34,10 @@ export function addDays(date: IsoDate, days: number): IsoDate {
   return t.toISOString().slice(0, 10);
 }
 
+/** Whole days since 1970-01-01 for an ISO date (for day differences). */
+export const dayNumber = (date: IsoDate) =>
+  Date.UTC(+date.slice(0, 4), +date.slice(5, 7) - 1, +date.slice(8, 10)) / 86_400_000;
+
 /** ISO weekday: Monday = 1 … Sunday = 7. */
 export function isoWeekday(date: IsoDate): number {
   const { y, m, d } = parseIsoDate(date);

@@ -1,7 +1,7 @@
 /**
  * Weight trend maths (spec 8.9, 13.2, 13.3). Pure; dates are ISO local dates.
  */
-import { addDays, type IsoDate } from '@/domain/calculations/dates';
+import { addDays, dayNumber, type IsoDate } from '@/domain/calculations/dates';
 import { KCAL_PER_KG } from '@/constants/safety';
 
 export interface WeightEntryLike {
@@ -78,9 +78,6 @@ export function averageChange(daily: readonly DailyValue[], days: number): numbe
   const start = rollingAverageAt(daily, addDays(last.date, -days));
   return end === null || start === null ? null : end - start;
 }
-
-const dayNumber = (date: IsoDate) =>
-  Date.UTC(+date.slice(0, 4), +date.slice(5, 7) - 1, +date.slice(8, 10)) / 86_400_000;
 
 export interface Trend {
   slopeKgPerWeek: number;

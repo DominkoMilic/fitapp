@@ -49,7 +49,31 @@ const CONSISTENCY: MilestoneDefinition[] = [
     category: 'consistency',
     threshold: 30,
   },
+  ...[4, 12].map((n) => ({
+    key: `consistency_weeks_${n}`,
+    title: `${n} consistent weeks`,
+    description: `Completed at least 80% of your planned workouts ${n} weeks in a row`,
+    category: 'consistency' as const,
+    threshold: n,
+  })),
 ];
+
+/**
+ * Longest run of consecutive finished weeks with ≥ 80% of planned workouts completed (spec 25.5).
+ * Weeks with nothing planned neither count nor break the run. Returns the week that reached `n`.
+ */
+export function consistentWeeksReached(
+  weeks: readonly { weekStart: IsoDate; planned: number; completed: number }[],
+  n: number,
+): IsoDate | null {
+  let run = 0;
+  for (const w of [...weeks].sort((a, b) => a.weekStart.localeCompare(b.weekStart))) {
+    if (w.planned === 0) continue;
+    run = w.completed >= 0.8 * w.planned ? run + 1 : 0;
+    if (run >= n) return w.weekStart;
+  }
+  return null;
+}
 
 const count = (n: number, noun: string) => `${n} ${noun}${n === 1 ? '' : 's'}`;
 /** Single-activity distance milestones (spec 25.5). */
@@ -172,6 +196,8 @@ export function evaluateMilestones(input: {
   sessions?: readonly { date: IsoDate; durationS: number; category: string }[];
   /** Walks, runs and rides (GPS or manual). */
   activities?: readonly ActivityLike[];
+  /** Finished weeks with planned and completed workout counts. */
+  weeks?: readonly { weekStart: IsoDate; planned: number; completed: number }[];
 }): MilestoneUnlock[] {
   const out: MilestoneUnlock[] = [];
   const catalogue = milestoneCatalogue(input.goal);
@@ -196,6 +222,14 @@ export function evaluateMilestones(input: {
     ) {
       out.push({ ...def, value: streak.length, achievedOn: streak.endsOn });
     }
+  }
+
+  for (const n of [4, 12]) {
+    const key = `consistency_weeks_${n}`;
+    if (input.unlockedKeys.has(key)) continue;
+    const reached = consistentWeeksReached(input.weeks ?? [], n);
+    const def = catalogue.find((c) => c.key === key)!;
+    if (reached) out.push({ ...def, value: n, achievedOn: addDays(reached, 6) });
   }
 
   if (!input.unlockedKeys.has('weigh_in_30')) {
