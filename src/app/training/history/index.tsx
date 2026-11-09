@@ -1,7 +1,8 @@
 import { router } from 'expo-router';
+import { useMemo } from 'react';
 
 import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
-import { ListItem, Screen } from '@/components/ui';
+import { ListItem, ListScreen, Screen } from '@/components/ui';
 import { formatClock } from '@/hooks/useNow';
 import { useToday } from '@/features/dashboard/useToday';
 import { dayLabel } from '@/features/training/labels';
@@ -10,6 +11,13 @@ import { useSessions } from '@/features/training/session-api';
 export default function History() {
   const { today } = useToday();
   const { sessions, sets, isPending, isError, refetch } = useSessions();
+  // Completed sets per session, counted once (not per row).
+  const doneBySession = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const x of sets)
+      if (x.completed) m.set(x.workout_session_id, (m.get(x.workout_session_id) ?? 0) + 1);
+    return m;
+  }, [sets]);
   if (isPending)
     return (
       <Screen edges={['bottom']}>
@@ -35,12 +43,13 @@ export default function History() {
     );
   }
   return (
-    <Screen edges={['bottom']}>
-      {sessions.map((s) => {
-        const done = sets.filter((x) => x.workout_session_id === s.id && x.completed).length;
+    <ListScreen
+      data={sessions}
+      keyExtractor={(s) => s.id}
+      renderItem={(s) => {
+        const done = doneBySession.get(s.id) ?? 0;
         return (
           <ListItem
-            key={s.id}
             title={s.title}
             subtitle={[
               dayLabel(s.local_date, today),
@@ -58,7 +67,7 @@ export default function History() {
             }
           />
         );
-      })}
-    </Screen>
+      }}
+    />
   );
 }

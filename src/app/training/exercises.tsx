@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 
 import { EmptyState } from '@/components/feedback';
-import { Button, ChipGroup, ListItem, Screen, TextField, Toggle } from '@/components/ui';
+import { Button, ChipGroup, ListItem, ListScreen, TextField, Toggle } from '@/components/ui';
 import type { ExerciseCategory } from '@/domain/training/catalogue';
 import { isContraindicated, type RestrictionTag } from '@/domain/training/injury';
 import { equipmentSatisfied } from '@/domain/training/workout-builder';
@@ -44,8 +44,9 @@ export default function ExerciseLibrary() {
   }, [list, query, categories, safeOnly, mineOnly, restrictions.tags, owned]);
 
   return (
-    <Screen
-      edges={['bottom']}
+    <ListScreen
+      data={filtered}
+      keyExtractor={(e) => e.slug}
       footer={
         <Button
           title="Create custom exercise"
@@ -53,48 +54,49 @@ export default function ExerciseLibrary() {
           onPress={() => router.push('/training/exercise-new')}
         />
       }
-    >
-      <TextField
-        label="Search"
-        placeholder="Name or muscle"
-        value={query}
-        onChangeText={setQuery}
-        autoCorrect={false}
-      />
-      <ChipGroup
-        accessibilityLabel="Categories"
-        options={CATEGORIES}
-        selected={categories}
-        onToggle={(c) =>
-          setCategories(
-            categories.includes(c) ? categories.filter((x) => x !== c) : [...categories, c],
-          )
-        }
-      />
-      {restrictions.tags.length ? (
-        <Toggle label="Safe for my injuries" value={safeOnly} onChange={setSafeOnly} />
-      ) : null}
-      <Toggle label="Only equipment I have" value={mineOnly} onChange={setMineOnly} />
-      {filtered.length === 0 ? (
+      header={
+        <>
+          <TextField
+            label="Search"
+            placeholder="Name or muscle"
+            value={query}
+            onChangeText={setQuery}
+            autoCorrect={false}
+          />
+          <ChipGroup
+            accessibilityLabel="Categories"
+            options={CATEGORIES}
+            selected={categories}
+            onToggle={(c) =>
+              setCategories(
+                categories.includes(c) ? categories.filter((x) => x !== c) : [...categories, c],
+              )
+            }
+          />
+          {restrictions.tags.length ? (
+            <Toggle label="Safe for my injuries" value={safeOnly} onChange={setSafeOnly} />
+          ) : null}
+          <Toggle label="Only equipment I have" value={mineOnly} onChange={setMineOnly} />
+        </>
+      }
+      empty={
         <EmptyState title="No exercises found" message="Try another search or fewer filters." />
-      ) : (
-        filtered.map((e) => {
-          const restricted = isContraindicated(
-            e.contraindications as RestrictionTag[],
-            restrictions.tags,
-          );
-          return (
-            <ListItem
-              key={e.slug}
-              title={e.name}
-              subtitle={`${e.muscleGroups.join(', ')}${e.custom ? ' · custom' : ''}${restricted ? ' · not for your current injury' : ''}`}
-              onPress={() =>
-                router.push({ pathname: '/training/exercise/[slug]', params: { slug: e.slug } })
-              }
-            />
-          );
-        })
-      )}
-    </Screen>
+      }
+      renderItem={(e) => {
+        const restricted = isContraindicated(
+          e.contraindications as RestrictionTag[],
+          restrictions.tags,
+        );
+        return (
+          <ListItem
+            title={e.name}
+            subtitle={`${e.muscleGroups.join(', ')}${e.custom ? ' · custom' : ''}${restricted ? ' · not for your current injury' : ''}`}
+            onPress={() =>
+              router.push({ pathname: '/training/exercise/[slug]', params: { slug: e.slug } })
+            }
+          />
+        );
+      }}
+    />
   );
 }

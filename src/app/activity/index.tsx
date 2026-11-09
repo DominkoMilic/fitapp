@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 
 import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
-import { Button, ListItem, Screen } from '@/components/ui';
+import { Button, ListItem, ListScreen, Screen } from '@/components/ui';
 import { formatDistance } from '@/domain/activity/geo';
 import type { ActivityType } from '@/domain/activity/met';
 import { useActivities } from '@/features/activity/api';
@@ -27,35 +27,39 @@ export default function ActivityHistory() {
       </Screen>
     );
   return (
-    <Screen edges={['bottom']}>
-      <Button title="Record activity" onPress={() => router.push('/activity/track')} />
-      <Button
-        title="Add manually"
-        variant="secondary"
-        onPress={() => router.push('/activity/manual')}
-      />
-      {rows.length === 0 ? (
+    <ListScreen
+      data={rows}
+      keyExtractor={(a) => a.id}
+      header={
+        <>
+          <Button title="Record activity" onPress={() => router.push('/activity/track')} />
+          <Button
+            title="Add manually"
+            variant="secondary"
+            onPress={() => router.push('/activity/manual')}
+          />
+        </>
+      }
+      empty={
         <EmptyState
           title="No activities yet"
           message="Record a walk, run or ride, or add one manually."
         />
-      ) : (
-        rows.map((a) => (
-          <ListItem
-            key={a.id}
-            title={`${ACTIVITY_LABEL[a.activity_type as ActivityType]} · ${a.local_date}`}
-            subtitle={[
-              a.distance_meters ? formatDistance(a.distance_meters, unit) : null,
-              formatClock(a.moving_seconds),
-              a.source === 'manual' ? 'Manual' : null,
-              a._pending ? 'Not synced yet' : null,
-            ]
-              .filter(Boolean)
-              .join(' · ')}
-            onPress={() => router.push({ pathname: '/activity/[id]', params: { id: a.id } })}
-          />
-        ))
+      }
+      renderItem={(a) => (
+        <ListItem
+          title={`${ACTIVITY_LABEL[a.activity_type as ActivityType]} · ${a.local_date}`}
+          subtitle={[
+            a.distance_meters ? formatDistance(a.distance_meters, unit) : null,
+            formatClock(a.moving_seconds),
+            a.source === 'manual' ? 'Manual' : null,
+            a._pending ? 'Not synced yet' : null,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+          onPress={() => router.push({ pathname: '/activity/[id]', params: { id: a.id } })}
+        />
       )}
-    </Screen>
+    />
   );
 }

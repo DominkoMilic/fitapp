@@ -1,4 +1,7 @@
-/** Design tokens (spec section 23.1). Text tokens meet 4.5:1 contrast on their backgrounds. */
+/**
+ * Design tokens (spec section 23.1). Text tokens meet 4.5:1 contrast on every surface and button
+ * labels on their fills, in both themes — checked by tests/unit/a11y-contrast.test.ts.
+ */
 export const palette = {
   dark: {
     background: '#121417',
@@ -10,9 +13,9 @@ export const palette = {
     accent: '#34D399',
     onAccent: '#0B1F17',
     warning: '#F5A524',
-    danger: '#F04438',
+    danger: '#F97066',
     info: '#60A5FA',
-    onDanger: '#FFFFFF',
+    onDanger: '#1A0B0A',
     overlay: 'rgba(0,0,0,0.6)',
   },
   light: {
@@ -22,10 +25,10 @@ export const palette = {
     border: '#E1E4E8',
     textPrimary: '#101318',
     textSecondary: '#5A6270',
-    accent: '#059669',
+    accent: '#047857',
     onAccent: '#FFFFFF',
-    warning: '#B45309',
-    danger: '#D92D20',
+    warning: '#A3480A',
+    danger: '#C4281C',
     info: '#2563EB',
     onDanger: '#FFFFFF',
     overlay: 'rgba(16,19,24,0.45)',

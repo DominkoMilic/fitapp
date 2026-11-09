@@ -173,6 +173,7 @@ function BrowseTab() {
               source={{ uri: `${r.imageUrl}/small` }}
               style={styles.thumb}
               accessibilityIgnoresInvertColors
+              accessible={false}
             />
           ) : (
             <View style={[styles.thumb, { backgroundColor: colors.surfaceRaised }]} />

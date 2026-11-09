@@ -8,6 +8,7 @@ import {
   Button,
   Card,
   ListItem,
+  ListScreen,
   Screen,
   SectionHeader,
   SegmentedControl,
@@ -61,93 +62,96 @@ export default function WeightScreen() {
       }`
     : 'Weight chart, no data';
 
+  const fmtEntry = (e: (typeof s.weights.entries)[number]) => (
+    <ListItem
+      title={`${fmt(Number(e.weight_kg))} ${u}`}
+      subtitle={`${e.local_date}${e.note ? ` · ${e.note}` : ''}${e._failed ? ' · not saved, see Sync status' : e._pending ? ' · not synced yet' : ''}`}
+      onPress={() => router.push({ pathname: '/weight/log', params: { id: e.id } })}
+    />
+  );
+
   return (
-    <Screen
-      edges={['bottom']}
+    <ListScreen
+      data={s.weights.entries}
+      keyExtractor={(e) => e.id}
+      renderItem={fmtEntry}
       footer={<Button title="Log weight" onPress={() => router.push('/weight/log')} />}
-    >
-      {s.weights.isError ? (
-        <Banner tone="warning" message="Showing saved data; couldn't refresh from the server." />
-      ) : null}
-      <SegmentedControl<RangeKey>
-        accessibilityLabel="Date range"
-        options={(Object.keys(RANGE_DAYS) as RangeKey[]).map((k) => ({ value: k, label: k }))}
-        value={range}
-        onChange={setRange}
-      />
-      {s.inRange.length === 0 ? (
-        <EmptyState
-          title="No weigh-ins in this range"
-          message="Log a morning weight to start your trend."
-        />
-      ) : (
-        <Card>
-          <WeightChart
-            daily={s.inRange}
-            allDaily={s.daily}
-            references={refs}
-            toDisplay={toDisplay}
-            unitLabel={u}
-            summary={summary}
-          />
-        </Card>
-      )}
-
-      <View style={styles.row}>
-        <StatTile
-          label={s.current?.basis === 'average' ? '7-day average' : 'Latest'}
-          value={fmt(s.current?.kg ?? null)}
-          unit={u}
-          caption={s.current?.basis === 'single' ? 'Log 3+ days for an average' : undefined}
-        />
-        <StatTile label="Since start" value={fmt(s.changeSinceStart, true)} unit={u} />
-      </View>
-      <View style={styles.row}>
-        <StatTile
-          label="Last 7 days"
-          value={fmt(s.change7, true)}
-          unit={u}
-          caption={s.change7 === null ? 'Not enough data' : undefined}
-        />
-        <StatTile
-          label="Last 30 days"
-          value={fmt(s.change30, true)}
-          unit={u}
-          caption={s.change30 === null ? 'Not enough data' : undefined}
-        />
-      </View>
-      {s.progressPct !== null ? (
-        <Card>
-          <Text variant="small" color="textSecondary">
-            Goal progress
-          </Text>
-          <Text variant="display" numeric>
-            {Math.round(s.progressPct)}%
-          </Text>
-          <Text variant="small" color="textSecondary">
-            {s.estimate
-              ? `At your current trend: around ${monthYear(s.estimate.earliest)} – ${monthYear(s.estimate.latest)}. An estimate, not a promise.`
-              : 'Estimated date: not enough data yet (needs about 2 weeks of regular weigh-ins and a downward trend).'}
-          </Text>
-        </Card>
-      ) : null}
-
-      <SectionHeader title="History" />
-      {s.weights.entries.length === 0 ? (
-        <Text color="textSecondary">No entries yet.</Text>
-      ) : (
-        s.weights.entries
-          .slice(0, 60)
-          .map((e) => (
-            <ListItem
-              key={e.id}
-              title={`${fmt(Number(e.weight_kg))} ${u}`}
-              subtitle={`${e.local_date}${e.note ? ` · ${e.note}` : ''}${e._failed ? ' · not saved, see Sync status' : e._pending ? ' · not synced yet' : ''}`}
-              onPress={() => router.push({ pathname: '/weight/log', params: { id: e.id } })}
+      empty={<Text color="textSecondary">No entries yet.</Text>}
+      header={
+        <>
+          {s.weights.isError ? (
+            <Banner
+              tone="warning"
+              message="Showing saved data; couldn't refresh from the server."
             />
-          ))
-      )}
-    </Screen>
+          ) : null}
+          <SegmentedControl<RangeKey>
+            accessibilityLabel="Date range"
+            options={(Object.keys(RANGE_DAYS) as RangeKey[]).map((k) => ({ value: k, label: k }))}
+            value={range}
+            onChange={setRange}
+          />
+          {s.inRange.length === 0 ? (
+            <EmptyState
+              title="No weigh-ins in this range"
+              message="Log a morning weight to start your trend."
+            />
+          ) : (
+            <Card>
+              <WeightChart
+                daily={s.inRange}
+                allDaily={s.daily}
+                references={refs}
+                toDisplay={toDisplay}
+                unitLabel={u}
+                summary={summary}
+              />
+            </Card>
+          )}
+
+          <View style={styles.row}>
+            <StatTile
+              label={s.current?.basis === 'average' ? '7-day average' : 'Latest'}
+              value={fmt(s.current?.kg ?? null)}
+              unit={u}
+              caption={s.current?.basis === 'single' ? 'Log 3+ days for an average' : undefined}
+            />
+            <StatTile label="Since start" value={fmt(s.changeSinceStart, true)} unit={u} />
+          </View>
+          <View style={styles.row}>
+            <StatTile
+              label="Last 7 days"
+              value={fmt(s.change7, true)}
+              unit={u}
+              caption={s.change7 === null ? 'Not enough data' : undefined}
+            />
+            <StatTile
+              label="Last 30 days"
+              value={fmt(s.change30, true)}
+              unit={u}
+              caption={s.change30 === null ? 'Not enough data' : undefined}
+            />
+          </View>
+          {s.progressPct !== null ? (
+            <Card>
+              <Text variant="small" color="textSecondary">
+                Goal progress
+              </Text>
+              <Text variant="display" numeric>
+                {Math.round(s.progressPct)}%
+              </Text>
+              <Text variant="small" color="textSecondary">
+                {s.estimate
+                  ? `At your current trend: around ${monthYear(s.estimate.earliest)} – ${monthYear(s.estimate.latest)}. An estimate, not a promise.`
+                  : 'Estimated date: not enough data yet (needs about 2 weeks of regular weigh-ins and a downward trend).'}
+              </Text>
+            </Card>
+          ) : null}
+
+          <SectionHeader title="History" />
+        </>
+      }
+    />
   );
 }
 
