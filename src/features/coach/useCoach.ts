@@ -62,7 +62,8 @@ export function useCoach() {
     weights.isSuccess &&
     range.isSuccess;
 
-  const context = useMemo((): CoachContext | null => {
+  // Everything except the time of day: rebuilt only when data changes, not every minute.
+  const base = useMemo((): Omit<CoachContext, 'minuteOfDay'> | null => {
     if (!ready) return null;
     const injuries = (health.data ?? [])
       .filter((h) => h.body_area && (h.status === 'active' || h.status === 'recovering'))
@@ -126,7 +127,6 @@ export function useCoach() {
 
     return {
       today,
-      minuteOfDay: minuteInTimezone(new Date(now), timezone),
       dietType: prefs.data?.diet_type ?? null,
       injuries,
       plan: {
@@ -182,8 +182,6 @@ export function useCoach() {
     checkins.rows,
     weights.entries,
     range.data,
-    now,
-    timezone,
     day,
     goal.data,
     adjustments.data,
@@ -191,7 +189,11 @@ export function useCoach() {
     userId,
   ]);
 
-  const cards = useMemo(() => (context ? evaluateCoach(context) : []), [context]);
+  const minuteOfDay = minuteInTimezone(new Date(now), timezone);
+  const cards = useMemo(
+    () => (base ? evaluateCoach({ ...base, minuteOfDay }) : []),
+    [base, minuteOfDay],
+  );
   return {
     cards,
     isPending: !ready,

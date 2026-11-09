@@ -4,6 +4,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { AppState, Platform } from 'react-native';
 
 import { envResult } from '@/config/env';
+import { createTimeoutFetch } from '@/services/network/timeout-fetch';
 
 import type { Database } from './database.types';
 import { sessionStorage } from './session-storage';
@@ -23,6 +24,8 @@ export const supabase: TypedSupabaseClient | null = envResult.ok
         detectSessionInUrl: false,
         flowType: 'pkce',
       },
+      // Requests can't hang forever on a bad connection (audit fix).
+      global: { fetch: createTimeoutFetch() },
     })
   : null;
 

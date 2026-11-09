@@ -13,10 +13,14 @@ import { AuthProvider, useAuth } from '@/features/auth/AuthProvider';
 import { useRestTimerNotification } from '@/features/notifications/useRestTimerNotification';
 import { SyncProvider } from '@/features/sync/SyncProvider';
 import '@/services/location/location-task';
-import { createQueryClient } from '@/services/query-client';
+import { connectQueryOnlineState, createQueryClient } from '@/services/query-client';
 import { ThemeProvider, useTheme } from '@/theme';
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
+connectQueryOnlineState();
+
+/** A crashing screen shows a friendly retry page instead of a blank/red screen (audit fix). */
+export { AppErrorBoundary as ErrorBoundary } from '@/components/feedback/AppErrorBoundary';
 
 function RestTimerNotification() {
   useRestTimerNotification();

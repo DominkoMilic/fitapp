@@ -15,6 +15,7 @@ export function ListScreen<T>({
   header,
   empty,
   footer,
+  overlay,
   edges = ['bottom'],
 }: {
   data: readonly T[];
@@ -23,6 +24,8 @@ export function ListScreen<T>({
   header?: ReactNode;
   empty?: ReactElement | null;
   footer?: ReactNode;
+  /** Dialogs and other overlays rendered alongside the list. */
+  overlay?: ReactNode;
   edges?: Edge[];
 }) {
   const { colors } = useTheme();
@@ -49,6 +52,7 @@ export function ListScreen<T>({
         {footer ? (
           <View style={[styles.footer, { borderTopColor: colors.border }]}>{footer}</View>
         ) : null}
+        {overlay}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
