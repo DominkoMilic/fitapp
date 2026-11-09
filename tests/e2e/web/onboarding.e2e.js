@@ -432,7 +432,9 @@ const now = new Date().toISOString();
       store.workout_sessions.length === 1 &&
       store.workout_sessions[0].completion_status === 'completed',
     // Full body 20 without equipment: warm-up 1 + box squat 2 + push-up 2 + glute bridge 2 + plank 2 (row removed: needs equipment)
-    'all 9 sets saved with the session': store.exercise_sets.filter((x) => x.completed).length === 9 && store.exercise_sets.every((x) => x.workout_session_id === store.workout_sessions[0]?.id),
+    'all 9 sets saved with the session':
+      store.exercise_sets.filter((x) => x.completed).length === 9 &&
+      store.exercise_sets.every((x) => x.workout_session_id === store.workout_sessions[0]?.id),
     'one-off workout marked completed': store.scheduled_workouts.some(
       (r) => !r.occurrence_key && r.status === 'completed',
     ),
