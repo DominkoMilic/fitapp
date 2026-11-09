@@ -1,5 +1,10 @@
 import { recipeFlags } from '@/domain/nutrition/diet-flags';
-import { formatQuantity, parseMeasure, scaleMeasure } from '@/domain/nutrition/measure-parser';
+import {
+  formatAmount,
+  formatQuantity,
+  parseMeasure,
+  scaleMeasure,
+} from '@/domain/nutrition/measure-parser';
 import { buildShoppingList, normaliseIngredient } from '@/domain/nutrition/shopping';
 import { rankSuggestions } from '@/domain/nutrition/suggestions';
 import {
@@ -86,6 +91,17 @@ describe('nutrition vectors (spec 29.5)', () => {
   it('rounds grams to 5 above 50 g and to 1 below', () => {
     expect(scaleMeasure(parseMeasure('175g'), 1.5).quantityMin).toBe(265); // 262.5 → 265
     expect(scaleMeasure(parseMeasure('30g'), 1.5).quantityMin).toBe(45);
+  });
+  it('kitchen volumes round to eighths and pluralise; unscaled keeps the source wording', () => {
+    expect(scaleMeasure(parseMeasure('3/4 cup'), 0.5).text).toBe('⅜ cup');
+    expect(scaleMeasure(parseMeasure('3 cups'), 0.5).text).toBe('1½ cups');
+    expect(scaleMeasure(parseMeasure('1/4 cup'), 0.5).text).toBe('⅛ cup');
+    expect(scaleMeasure(parseMeasure('3 cups'), 1)).toMatchObject({
+      text: '3 cups',
+      scaled: false,
+    });
+    expect(formatAmount(2, 3, 'clove')).toBe('2–3 cloves');
+    expect(formatAmount(200, 200, 'g')).toBe('200 g');
   });
   it('volumes are never converted to grams', () => {
     expect(scaleMeasure(parseMeasure('1 cup'), 2)).toMatchObject({ quantityMin: 2, unit: 'cup' });

@@ -1,3 +1,4 @@
+import { loggedAmount } from '@/features/nutrition/labels';
 import { shoppingSources } from '@/domain/nutrition/plan-shopping';
 import { buildShoppingList } from '@/domain/nutrition/shopping';
 import { readIngredients } from '@/domain/nutrition/recipe-ingredients';
@@ -121,5 +122,16 @@ describe('plan → shopping sources (spec 12.7, 28.7 #14)', () => {
       savedMeals: new Map(),
     });
     expect(unscaled).toEqual(['Curry']);
+  });
+});
+
+describe('logged amount labels', () => {
+  it('reads naturally', () => {
+    expect(loggedAmount(3, '1 large')).toBe('3 × 1 large');
+    expect(loggedAmount('150.00', 'g')).toBe('150 g');
+    expect(loggedAmount(1, 'serving')).toBe('1 serving');
+    expect(loggedAmount(2, 'servings')).toBe('2 servings');
+    expect(loggedAmount(1, '1 cup')).toBe('1 cup');
+    expect(loggedAmount(null, 'g')).toBeNull();
   });
 });

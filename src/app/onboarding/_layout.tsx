@@ -20,6 +20,8 @@ export default function OnboardingLayout() {
   if (!initializing && !session) return <Redirect href="/welcome" />;
   // Already onboarded (e.g. finished on another device, or a stale route): go to the app.
   if (profile.data?.onboarding_completed_at) return <Redirect href="/home" />;
+  // No profile row means the account is gone; the gate signs out and explains.
+  if (profile.isSuccess && profile.data === null) return <Redirect href="/" />;
   return (
     <Stack
       screenOptions={{

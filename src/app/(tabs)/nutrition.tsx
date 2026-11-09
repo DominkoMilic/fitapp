@@ -24,6 +24,7 @@ import {
 } from '@/domain/nutrition/totals';
 import { useToday } from '@/features/dashboard/useToday';
 import { useDayLog, useNutritionActions } from '@/features/nutrition/api';
+import { loggedAmount } from '@/features/nutrition/labels';
 import { useNutritionDay } from '@/features/nutrition/useNutritionDay';
 import { dayLabel } from '@/features/training/labels';
 import { spacing, useTheme } from '@/theme';
@@ -193,7 +194,7 @@ export default function Nutrition() {
                 key={it.id}
                 title={it.name_snapshot}
                 subtitle={[
-                  it.quantity !== null && it.unit ? `${Number(it.quantity)} ${it.unit}` : null,
+                  loggedAmount(it.quantity, it.unit),
                   it.protein_g !== null ? `P ${fmt(Number(it.protein_g))} g` : null,
                   it.kcal === null || it.protein_g === null ? 'partial data' : null,
                   it._pending ? 'not synced yet' : null,

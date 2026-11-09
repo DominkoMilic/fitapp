@@ -2,20 +2,21 @@
 
 A mobile fitness coach, workout planner, nutrition tracker and activity tracker for iOS and Android, built with Expo (React Native) and Supabase.
 
-**Status:** Phases 1–3 (Foundation, Progress, Training) are implemented. Phase 4 (Nutrition) is next, after review. See the phase reports in [`docs/`](docs/).
+**Status:** Phases 1–4 (Foundation, Progress, Training, Nutrition) are implemented. Phase 5 (GPS activity tracking) is next, after review. See the phase reports in [`docs/`](docs/).
 
 ## Documents
 
-| File                                               | What it is                                                        |
-| -------------------------------------------------- | ----------------------------------------------------------------- |
-| [`PACE_Specification.pdf`](PACE_Specification.pdf) | The full specification as a PDF, for reading                      |
-| [`docs/PACE_SPEC.md`](docs/PACE_SPEC.md)           | The same specification in Markdown: the source of truth           |
-| [`CLAUDE.md`](CLAUDE.md)                           | Working rules for coding agents in this repository                |
-| [`docs/decisions.md`](docs/decisions.md)           | Decisions that clarify or deviate from the spec                   |
-| [`docs/migrations.md`](docs/migrations.md)         | Database migrations, the security model and DB tests              |
-| [`docs/phase-1-report.md`](docs/phase-1-report.md) | What Phase 1 delivered, test results and known limitations        |
-| [`docs/phase-2-report.md`](docs/phase-2-report.md) | Phase 2: weight, measurements, check-in, milestones, offline sync |
-| [`docs/phase-3-report.md`](docs/phase-3-report.md) | Phase 3: exercise library, calendar, workouts, history, records   |
+| File                                               | What it is                                                             |
+| -------------------------------------------------- | ---------------------------------------------------------------------- |
+| [`PACE_Specification.pdf`](PACE_Specification.pdf) | The full specification as a PDF, for reading                           |
+| [`docs/PACE_SPEC.md`](docs/PACE_SPEC.md)           | The same specification in Markdown: the source of truth                |
+| [`CLAUDE.md`](CLAUDE.md)                           | Working rules for coding agents in this repository                     |
+| [`docs/decisions.md`](docs/decisions.md)           | Decisions that clarify or deviate from the spec                        |
+| [`docs/migrations.md`](docs/migrations.md)         | Database migrations, the security model and DB tests                   |
+| [`docs/phase-1-report.md`](docs/phase-1-report.md) | What Phase 1 delivered, test results and known limitations             |
+| [`docs/phase-2-report.md`](docs/phase-2-report.md) | Phase 2: weight, measurements, check-in, milestones, offline sync      |
+| [`docs/phase-3-report.md`](docs/phase-3-report.md) | Phase 3: exercise library, calendar, workouts, history, records        |
+| [`docs/phase-4-report.md`](docs/phase-4-report.md) | Phase 4: food logging, USDA catalogue, recipes, planner, shopping list |
 
 ## Tech stack
 
@@ -63,6 +64,22 @@ npx supabase db reset   # applies migrations + the dev seed
 ```
 
 The local `supabase/config.toml` already enables email confirmation, 8-character passwords and the `pace://` redirects. Confirmation emails are caught by the local mail viewer at http://127.0.0.1:55324 (PACE uses the 553xx ports so it can run beside other local Supabase projects). On a physical phone, use your computer's LAN IP instead of `127.0.0.1`.
+
+### Recipes Edge Function
+
+Recipes come from TheMealDB through the `recipes-proxy` Edge Function, so the API key never ships in the app.
+
+```bash
+npx supabase functions deploy recipes-proxy                 # hosted project (after `supabase link`)
+npx supabase secrets set THEMEALDB_API_KEY=<key>            # optional; defaults to TheMealDB's public test key "1"
+npx supabase functions serve recipes-proxy                  # local stack
+```
+
+Before release, get a TheMealDB supporter key (the test key is for development only).
+
+### Using the local stack from the app
+
+Expo bundles `.env.local` into development builds, and it wins over shell variables. To point a dev build at the local stack, create `.env.development.local` with `EXPO_PUBLIC_SUPABASE_URL=http://127.0.0.1:55321` and the local publishable key from `npx supabase status`. Delete the file to go back to the hosted project.
 
 ### Environment variables
 
@@ -118,6 +135,8 @@ Store the Supabase values per environment in EAS (`eas env:create`), or in `.env
 | `npm run db:reset`                                      | Rebuilds the local database (Docker)                                                                                                 |
 | `npm run db:types`                                      | Regenerates `src/integrations/supabase/database.types.ts`                                                                            |
 | `npm run db:seed-training`                              | Regenerates the exercise/template seed migration from `src/domain/training/catalogue.ts` (`npm run check` verifies it is up to date) |
+| `npm run db:seed-usda -- <csv dir>`                     | Regenerates the USDA food seed migration from the downloaded SR Legacy CSVs                                                          |
+| `npm run functions:sync`                                | Copies the shared parser/normaliser into `supabase/functions/_shared` (`npm run check` verifies it)                                  |
 | `npm run e2e:web`                                       | Builds the web bundle and runs the Playwright onboarding smoke test (mocked backend)                                                 |
 
 Device E2E: `maestro test tests/e2e/maestro/onboarding.yaml -e EMAIL=… -e PASSWORD=…` against a development build.
@@ -172,5 +191,7 @@ Phase 2 branches, built the same way:
 6. `feature/p2-dashboard`: Home dashboard, sync status, E2E
 
 Phase 3 branches: `feature/p3-schema`, `feature/p3-domain`, `feature/p3-library`, `feature/p3-calendar`, `feature/p3-workout`, `feature/p3-history`.
+
+Phase 4 branches: `feature/p4-schema`, `feature/p4-domain`, `feature/p4-logging`, `feature/p4-recipes`, `feature/p4-planner-shopping`.
 
 `claude/pace-spec-review-usad8z` contains all of them.

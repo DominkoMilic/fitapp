@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Banner, ConfirmDialog, EmptyState, LoadingState, useToast } from '@/components/feedback';
 import { Button, Card, Screen, Text, TextField } from '@/components/ui';
-import { formatQuantity } from '@/domain/nutrition/measure-parser';
+import { formatAmount } from '@/domain/nutrition/measure-parser';
 import { useToday } from '@/features/dashboard/useToday';
 import { useSavedMeals } from '@/features/nutrition/api';
 import { asDate } from '@/features/nutrition/params';
@@ -25,12 +25,11 @@ import { addDays } from '@/domain/calculations/dates';
 const qty = (it: ShoppingItem) => {
   if (it.raw_text) return it.raw_text;
   if (it.quantity_min === null) return '';
-  const lo = formatQuantity(Number(it.quantity_min));
-  const hi =
-    it.quantity_max !== null && Number(it.quantity_max) !== Number(it.quantity_min)
-      ? `–${formatQuantity(Number(it.quantity_max))}`
-      : '';
-  return `${lo}${hi}${it.unit ? ` ${it.unit}` : ''}`;
+  return formatAmount(
+    Number(it.quantity_min),
+    it.quantity_max === null ? null : Number(it.quantity_max),
+    it.unit,
+  );
 };
 
 export default function Shopping() {

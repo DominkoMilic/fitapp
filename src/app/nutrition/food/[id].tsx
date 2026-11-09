@@ -52,7 +52,8 @@ export default function FoodAmount() {
       Math.round(grams * 10) / 10,
       chosen ? { label: chosen.label, count: value } : null,
     );
-    router.back();
+    // Back to the diary (not the search screen), where the new entry shows up.
+    router.dismissTo('/nutrition');
     showToast(`Added to ${meal}`);
   };
   const onAdd = () => {

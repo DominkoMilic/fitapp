@@ -110,3 +110,18 @@ describe('routing gate (spec 6.1)', () => {
     }));
   it('onboarded → home', () => expect(resolveGate(base)).toEqual({ kind: 'route', href: '/home' }));
 });
+
+describe('deleted account (spec 28.1 #8)', () => {
+  it('signed in without a profile row → account_missing, not onboarding', () => {
+    expect(
+      resolveGate({
+        configOk: true,
+        initializing: false,
+        hasSession: true,
+        profileStatus: 'success',
+        onboarded: false,
+        profileMissing: true,
+      }),
+    ).toEqual({ kind: 'account_missing' });
+  });
+});

@@ -165,12 +165,16 @@ export function parseMeasure(input: string | null | undefined): ParsedMeasure {
 }
 
 const FRACTION_GLYPHS: [number, string][] = [
+  [0.125, '⅛'],
   [0.25, '¼'],
+  [0.375, '⅜'],
   [0.5, '½'],
+  [0.625, '⅝'],
   [0.75, '¾'],
+  [0.875, '⅞'],
 ];
 
-/** Formats a quantity for display: quarters as glyphs ("¾", "1½"), otherwise up to 2 decimals. */
+/** Formats a quantity for display: eighths as glyphs ("⅜", "1½"), otherwise up to 2 decimals. */
 export function formatQuantity(v: number): string {
   const whole = Math.floor(v + 1e-9);
   const frac = v - whole;
@@ -189,20 +193,48 @@ export interface ScaledMeasure {
   scaled: boolean;
 }
 
-const pluralUnit = (u: string) => (u === 'pinch' || u === 'bunch' ? `${u}es` : `${u}s`);
+/** Kitchen volume measures are rounded to the nearest eighth (⅜ cup, not 0.38 cup). */
+const VOLUME_UNITS = new Set(['cup', 'tbsp', 'tsp']);
+const PLURALS: Record<string, string> = {
+  cup: 'cups',
+  clove: 'cloves',
+  can: 'cans',
+  slice: 'slices',
+  piece: 'pieces',
+  pinch: 'pinches',
+  bunch: 'bunches',
+  knob: 'knobs',
+  sprig: 'sprigs',
+};
 
 function roundFor(unit: string | null, v: number): number {
   if (unit === 'g' || unit === 'ml') return v > 50 ? Math.round(v / 5) * 5 : Math.round(v);
+  if (unit && VOLUME_UNITS.has(unit)) return Math.max(0.125, Math.round(v * 8) / 8);
   if (COUNT_UNITS.has(unit)) return Math.round(v * 4) / 4;
   return Math.round(v * 100) / 100;
 }
 
-/**
- * Scales a parsed measure by `factor` (target servings / base servings). Unparsed and "to taste"
- * measures are returned unchanged. Volumes are never converted to grams (density unknown).
- */
+/** "1½ cups", "2–3 cloves", "200 g": amount text with the unit pluralised where natural. */
+export function formatAmount(min: number, max: number | null, unit: string | null): string {
+  const hi = max ?? min;
+  const amount = min === hi ? formatQuantity(min) : `${formatQuantity(min)}–${formatQuantity(hi)}`;
+  const u = unit && hi > 1 && PLURALS[unit] ? PLURALS[unit] : unit;
+  return [amount, u].filter(Boolean).join(' ');
+}
+
 export function scaleMeasure(m: ParsedMeasure, factor: number): ScaledMeasure {
   if (m.status !== 'parsed' || m.quantityMin === null || m.quantityMax === null || !(factor > 0)) {
+    return {
+      text: m.raw,
+      quantityMin: m.quantityMin,
+      quantityMax: m.quantityMax,
+      unit: m.unit,
+      approx: false,
+      scaled: false,
+    };
+  }
+  // Not scaled: keep the source's own wording ("3 cups").
+  if (factor === 1) {
     return {
       text: m.raw,
       quantityMin: m.quantityMin,
@@ -216,13 +248,14 @@ export function scaleMeasure(m: ParsedMeasure, factor: number): ScaledMeasure {
   const hi = roundFor(m.unit, m.quantityMax * factor);
   // A scaled count (eggs, cloves, cans) is approximate when it isn't whole or rounding changed it:
   // ¾ egg is approx., doubling 2–3 cloves to 4–6 is exact.
-  const exact = (v: number, r: number) => Math.abs(v - r) < 1e-9 && Number.isInteger(r);
+  const exactValue = (v: number, r: number) => Math.abs(v - r) < 1e-9;
+  const roundedAway =
+    !exactValue(m.quantityMin * factor, lo) || !exactValue(m.quantityMax * factor, hi);
+  // Approximate when rounding changed the amount, or a count isn't whole (¾ egg). Doubling whole
+  // cloves (2–3 → 4–6) is exact.
   const approx =
-    factor !== 1 &&
-    COUNT_UNITS.has(m.unit) &&
-    !(exact(m.quantityMin * factor, lo) && exact(m.quantityMax * factor, hi));
-  const amount = lo === hi ? formatQuantity(lo) : `${formatQuantity(lo)}–${formatQuantity(hi)}`;
-  const unit = m.unit && COUNT_UNITS.has(m.unit) && hi > 1 ? pluralUnit(m.unit) : m.unit;
-  const text = [amount, unit, m.note].filter(Boolean).join(' ') + (approx ? ' (approx.)' : '');
-  return { text, quantityMin: lo, quantityMax: hi, unit: m.unit, approx, scaled: factor !== 1 };
+    roundedAway || (COUNT_UNITS.has(m.unit) && !(Number.isInteger(lo) && Number.isInteger(hi)));
+  const text =
+    [formatAmount(lo, hi, m.unit), m.note].filter(Boolean).join(' ') + (approx ? ' (approx.)' : '');
+  return { text, quantityMin: lo, quantityMax: hi, unit: m.unit, approx, scaled: true };
 }
