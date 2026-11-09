@@ -1,0 +1,15 @@
+begin;
+select plan(8);
+select tests.create_user('cccccccc-0000-0000-0000-0000000000e1', 'fs@example.com');
+select tests.authenticate_as('cccccccc-0000-0000-0000-0000000000e1');
+select ok((select count(*) from public.search_foods('egg', 30)) between 1 and 30, 'search returns results within the limit');
+select ok((select bool_and(name ilike '%egg%') from public.search_foods('egg', 30)), 'every result matches');
+select ok((select count(*) from public.search_foods('chick breast roast', 10)) >= 1, 'prefix words combine (AND)');
+select is((select count(*) from public.search_foods('   ', 10))::int, 0, 'blank query returns nothing');
+select ok((select name from public.search_foods('egg', 1)) like 'Egg,%', 'generic eggs rank before eggnog');
+select ok((select name from public.search_foods('chicken breast', 1)) like 'Chicken,%breast%', 'chicken breast ranks first');
+select lives_ok($$ select * from public.search_foods($q$'); drop table public.foods; --$q$, 5) $$, 'hostile input is just text');
+select ok(exists(select 1 from public.foods), 'foods still exist');
+select tests.clear_authentication();
+select * from finish();
+rollback;

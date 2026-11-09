@@ -15,9 +15,19 @@ export type SyncEntity =
   | 'exercises'
   | 'scheduled_workouts'
   | 'workout_sessions'
-  | 'exercise_sets';
+  | 'exercise_sets'
+  | 'foods'
+  | 'meal_log_items'
+  | 'water_logs'
+  | 'day_log_status'
+  | 'saved_meals'
+  | 'recipes'
+  | 'saved_recipes'
+  | 'meal_plan_entries'
+  | 'shopping_lists'
+  | 'shopping_list_items';
 
-/** Parents sync before children (none yet in Phase 2; kept for meal_logs → items later). */
+/** Parents sync before children (e.g. sessions → sets, recipes → plan entries, lists → items). */
 export const ENTITY_ORDER: Record<SyncEntity, number> = {
   user_milestones: 0,
   exercises: 0,
@@ -27,6 +37,16 @@ export const ENTITY_ORDER: Record<SyncEntity, number> = {
   daily_checkins: 1,
   workout_sessions: 1,
   exercise_sets: 2,
+  foods: 0,
+  recipes: 0,
+  saved_meals: 0,
+  shopping_lists: 0,
+  meal_log_items: 1,
+  water_logs: 1,
+  day_log_status: 1,
+  saved_recipes: 1,
+  meal_plan_entries: 1,
+  shopping_list_items: 1,
 };
 
 export type OpKind = 'upsert' | 'delete';

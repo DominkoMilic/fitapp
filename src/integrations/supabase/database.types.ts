@@ -1585,6 +1585,38 @@ export type Database = {
     };
     Functions: {
       complete_onboarding: { Args: { payload: Json }; Returns: undefined };
+      search_foods: {
+        Args: { max_results?: number; query: string };
+        Returns: {
+          archived_at: string | null;
+          barcode: string | null;
+          basis: string;
+          brand: string | null;
+          carbs_g: number | null;
+          category: string | null;
+          client_updated_at: string | null;
+          created_at: string;
+          external_id: string | null;
+          fat_g: number | null;
+          fibre_g: number | null;
+          id: string;
+          kcal: number | null;
+          name: string;
+          nutritional_confidence: string;
+          owner_id: string | null;
+          portions: NonNullable<Json>;
+          protein_g: number | null;
+          search: unknown;
+          source: string;
+          updated_at: string;
+        }[];
+        SetofOptions: {
+          from: '*';
+          to: 'foods';
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
     };
     Enums: {
       [_ in never]: never;

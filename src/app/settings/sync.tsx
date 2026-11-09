@@ -14,6 +14,16 @@ const LABELS: Record<SyncEntity, string> = {
   scheduled_workouts: 'Calendar change',
   workout_sessions: 'Workout',
   exercise_sets: 'Workout set',
+  foods: 'Custom food',
+  recipes: 'Recipe',
+  meal_log_items: 'Food log entry',
+  water_logs: 'Water',
+  day_log_status: 'Day status',
+  saved_meals: 'Saved meal',
+  saved_recipes: 'Saved recipe',
+  meal_plan_entries: 'Meal plan',
+  shopping_lists: 'Shopping list',
+  shopping_list_items: 'Shopping item',
 };
 
 /** Spec 18.2: every unsynced or rejected change is visible, with Retry and an explicit Discard. */

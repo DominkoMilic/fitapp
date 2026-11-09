@@ -34,6 +34,30 @@ export const ENTITY_CONFIG: Record<SyncEntity, EntityConfig> = {
   scheduled_workouts: { onConflict: 'id', deleteMatch: byId },
   workout_sessions: { onConflict: 'id', deleteMatch: byId },
   exercise_sets: { onConflict: 'id', deleteMatch: byId },
+  foods: {
+    onConflict: 'id',
+    ownerColumn: 'owner_id',
+    deleteMatch: (op) => ({ id: op.recordKey, owner_id: op.userId }),
+  },
+  recipes: {
+    onConflict: 'id',
+    ownerColumn: 'owner_id',
+    deleteMatch: (op) => ({ id: op.recordKey, owner_id: op.userId }),
+  },
+  meal_log_items: { onConflict: 'id', deleteMatch: byId },
+  water_logs: { onConflict: 'id', deleteMatch: byId },
+  day_log_status: {
+    onConflict: 'user_id,local_date',
+    deleteMatch: (op) => ({ user_id: op.userId, local_date: op.recordKey }),
+  },
+  saved_meals: { onConflict: 'id', deleteMatch: byId },
+  saved_recipes: {
+    onConflict: 'user_id,recipe_id',
+    deleteMatch: (op) => ({ user_id: op.userId, recipe_id: op.recordKey }),
+  },
+  meal_plan_entries: { onConflict: 'id', deleteMatch: byId },
+  shopping_lists: { onConflict: 'id', deleteMatch: byId },
+  shopping_list_items: { onConflict: 'id', deleteMatch: byId },
 };
 
 /** Sends one outbox op to Supabase. Payloads are built by typed repositories. */
