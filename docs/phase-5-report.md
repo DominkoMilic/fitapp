@@ -82,13 +82,13 @@ Not tested: real GPS recording. A browser can't record in the background, and Ex
 ## 7. Known limitations
 
 - **Real-device exit test not done yet** (spec: a walk and a run of at least 2 km with the screen locked on iOS and Android, distance within about 5% of a known route, pause excludes distance, killing the app recovers). It needs a development build on your phone (§8).
-- **Not yet on your hosted project.** The Phase 4 and Phase 5 migrations and the Edge Function still need pushing (§8).
+- **Hosted project is up to date** (done through the dashboard on 2026-11-09): all 15 migrations, 6,862 foods, the private `routes` bucket and `recipes-proxy` (answers 401 without a session). Signed-in recipe search on hosted is part of your final test.
 - Changing a ride to a walk can drop distance. Changing a walk to a ride can't add back points the walk filter rejected (decisions, Phase 5 #6).
 - Android maps need your Google Maps key; until then the route is drawn as a shape.
 
 ## 8. Manual steps
 
-**1. Push the database and function** (once; `supabase login` opens your browser):
+**1. Database and function: already done.** For future CLI use (optional):
 
 ```bash
 cd ~/codes/training/fitapp
