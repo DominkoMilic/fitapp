@@ -17,6 +17,7 @@ import {
 } from '@/features/dashboard/today';
 import { useToday } from '@/features/dashboard/useToday';
 import { useUnlockedMilestones } from '@/features/milestones/api';
+import { CoachCards } from '@/features/coach/CoachCards';
 import { GoalReachedCard } from '@/features/milestones/GoalReachedCard';
 import {
   useActivePlan,
@@ -128,6 +129,7 @@ export default function Home() {
       <ResumeWorkoutCard />
       <SyncBanner />
       <GoalReachedCard />
+      <CoachCards />
 
       <View style={styles.row}>
         <QuickAction

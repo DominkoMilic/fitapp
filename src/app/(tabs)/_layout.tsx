@@ -3,11 +3,18 @@ import { Tabs } from 'expo-router/js-tabs';
 import { ChartLine, Dumbbell, House, User, Utensils } from 'lucide-react-native';
 
 import { useAuth } from '@/features/auth/AuthProvider';
+import { useRecalibrationEngine } from '@/features/coach/useRecalibrationEngine';
 import { useMilestoneEngine } from '@/features/milestones/api';
 import { useTheme } from '@/theme';
 
 function MilestoneEngine() {
   useMilestoneEngine();
+  return null;
+}
+
+/** Two-weekly target review (spec 8.9); runs when the app opens. */
+function RecalibrationEngine() {
+  useRecalibrationEngine();
   return null;
 }
 
@@ -19,6 +26,7 @@ export default function TabsLayout() {
   return (
     <>
       <MilestoneEngine />
+      <RecalibrationEngine />
       <Tabs
         screenOptions={{
           headerShown: false,
