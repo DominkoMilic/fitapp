@@ -1800,6 +1800,9 @@ export type Database = {
         Args: { bucket_name: string; max_hits: number; uid: string; window_seconds: number };
         Returns: boolean;
       };
+      is_own_user_request: { Args: { owner: string }; Returns: boolean };
+      is_user_request: { Args: Record<PropertyKey, never>; Returns: boolean };
+      safety_sex_floor: { Args: { sex: string }; Returns: number };
       search_foods: {
         Args: { max_results?: number; query: string };
         Returns: {

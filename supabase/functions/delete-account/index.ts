@@ -41,13 +41,15 @@ Deno.serve(async (req) => {
     return json({ error: 'reauthentication_required' }, 403);
 
   const admin = createClient(url, env('SUPABASE_SERVICE_ROLE_KEY'), { auth: { persistSession: false } });
-  const { data: allowed } = await admin.rpc('hit_rate_limit', {
+  const { data: allowed, error: rlError } = await admin.rpc('hit_rate_limit', {
     uid: auth.user.id,
     bucket_name: 'delete-account',
     max_hits: 5,
     window_seconds: 60,
   });
-  if (allowed === false) return json({ error: 'rate_limited' }, 429);
+  // Fail closed: if the limiter can't answer, don't run a destructive operation.
+  if (rlError) return json({ error: 'rate_limit_unavailable', retry: true }, 503);
+  if (!allowed) return json({ error: 'rate_limited' }, 429);
 
   try {
     const result = await deleteAccount(
