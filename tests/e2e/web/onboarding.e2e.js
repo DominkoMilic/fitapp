@@ -29,6 +29,10 @@ const store = {
   body_measurements: [],
   daily_checkins: [],
   user_milestones: [],
+  scheduled_workouts: [],
+  workout_sessions: [],
+  exercise_sets: [],
+  exercises: [],
 };
 const writes = [];
 const keyOf = {
@@ -36,7 +40,12 @@ const keyOf = {
   body_measurements: 'id',
   daily_checkins: 'local_date',
   user_milestones: 'milestone_key',
+  scheduled_workouts: 'id',
+  workout_sessions: 'id',
+  exercise_sets: 'id',
+  exercises: 'id',
 };
+let idSeq = 0;
 const now = new Date().toISOString();
 
 (async () => {
@@ -93,8 +102,14 @@ const now = new Date().toISOString();
       const body = JSON.parse(req.postData() || '[]');
       for (const row of Array.isArray(body) ? body : [body]) {
         writes.push({ table, row });
-        const k = keyOf[table];
+        // Calendar generation upserts on (user_id, occurrence_key) and ignores duplicates.
+        const byOccurrence =
+          table === 'scheduled_workouts' &&
+          url.searchParams.get('on_conflict') === 'user_id,occurrence_key';
+        const k = byOccurrence ? 'occurrence_key' : keyOf[table];
+        if (!row.id) row.id = `gen-${++idSeq}`;
         const i = store[table].findIndex((r) => r[k] === row[k]);
+        if (byOccurrence && i >= 0) continue;
         const full = { created_at: now, updated_at: now, unlocked_at: now, ...row };
         if (i >= 0) {
           if (table !== 'user_milestones') store[table][i] = { ...store[table][i], ...full };
@@ -348,6 +363,50 @@ const now = new Date().toISOString();
   await page.waitForTimeout(2500);
   await shot('23-checkin-pain');
   const checkinText = await page.locator('body').innerText();
+  // ---------------------------------------------------------------- Phase 3
+  await page.getByRole('button', { name: 'Done', exact: true }).click(); // close the check-in safety screen
+  await page.waitForTimeout(600);
+  await page.getByRole('tab', { name: /Training/ }).click();
+  await page.waitForTimeout(2500); // calendar generation
+  await shot('30-training-week');
+  const generated = store.scheduled_workouts.filter((r) => r.occurrence_key).length;
+  await page.getByText('Add a workout').click();
+  await page.waitForTimeout(700);
+  await page.getByRole('radio', { name: /^Full body 20/ }).click();
+  await page.getByRole('button', { name: 'Add to calendar' }).click();
+  await page.waitForTimeout(1500);
+  await shot('31-workout-detail');
+  await page.getByRole('button', { name: 'Start workout' }).click();
+  await page.waitForTimeout(1500);
+  await shot('32-session');
+  // Mark every set of every exercise done, moving forward until the last exercise.
+  for (let guard = 0; guard < 12; guard++) {
+    const n = await page.getByRole('button', { name: /mark as done/ }).count();
+    for (let k = 0; k < n; k++) {
+      await page
+        .getByRole('button', { name: /mark as done/ })
+        .first()
+        .click();
+      await page.waitForTimeout(150);
+    }
+    if (await page.getByRole('button', { name: 'Finish workout' }).count()) break;
+    await page.getByRole('button', { name: 'Next exercise ›' }).click();
+    await page.waitForTimeout(300);
+  }
+  await page.getByRole('button', { name: 'Finish workout' }).click();
+  await page.waitForTimeout(1000);
+  await page
+    .getByRole('group', { name: 'Effort (RPE)' })
+    .getByRole('checkbox', { name: '6', exact: true })
+    .click();
+  await shot('33-summary');
+  await page.getByRole('button', { name: 'Save workout' }).click();
+  await page.waitForTimeout(3500);
+  const trainingAfterSave = await page.locator('body').innerText();
+  await page.getByRole('button', { name: 'Workout history' }).click();
+  await page.waitForTimeout(1000);
+  await shot('34-history');
+  const historyText = await page.locator('body').innerText();
   fs.writeFileSync(`${out}/payload.json`, JSON.stringify(payload, null, 2));
   const checks = {
     'plan shows 2720 kcal': planText.includes('2720'),
@@ -368,6 +427,22 @@ const now = new Date().toISOString();
     'home shows the 7-day average (106.2)': homeText.includes('106.2'),
     'check-in synced': store.daily_checkins.length === 1 && store.daily_checkins[0].pain === 5,
     'pain >= 4 shows rest guidance': checkinText.includes('Rest that area'),
+    'calendar generated from the plan': generated >= 40,
+    'workout session saved once':
+      store.workout_sessions.length === 1 &&
+      store.workout_sessions[0].completion_status === 'completed',
+    // Full body 20 without equipment: warm-up 1 + box squat 2 + push-up 2 + glute bridge 2 + plank 2 (row removed: needs equipment)
+    'all 9 sets saved with the session': store.exercise_sets.filter((x) => x.completed).length === 9 && store.exercise_sets.every((x) => x.workout_session_id === store.workout_sessions[0]?.id),
+    'one-off workout marked completed': store.scheduled_workouts.some(
+      (r) => !r.occurrence_key && r.status === 'completed',
+    ),
+    '"First workout" milestone unlocked': store.user_milestones.some(
+      (m) => m.milestone_key === 'workouts_1',
+    ),
+    'history lists the workout': historyText.includes('Full body 20'),
+    'no phantom workout after saving':
+      !historyText.includes('Workout in progress') &&
+      !trainingAfterSave.includes('Workout in progress'),
     'no page errors': errors.length === 0,
   };
   for (const [name, ok] of Object.entries(checks)) console.log(ok ? '✓' : '✗', name);

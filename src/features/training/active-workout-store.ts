@@ -6,7 +6,10 @@ import type { ActiveWorkout } from '@/domain/training/active-workout';
 
 interface ActiveWorkoutState {
   workout: ActiveWorkout | null;
+  /** When the last workout was saved or discarded (epoch ms). */
+  finishedAt: number | null;
   set: (w: ActiveWorkout | null) => void;
+  finish: () => void;
   update: (fn: (w: ActiveWorkout) => ActiveWorkout) => void;
 }
 
@@ -18,8 +21,12 @@ export const useActiveWorkoutStore = create<ActiveWorkoutState>()(
   persist(
     (set) => ({
       workout: null,
+      finishedAt: null,
       set: (workout) => {
         set({ workout });
+      },
+      finish: () => {
+        set({ workout: null, finishedAt: Date.now() });
       },
       update: (fn) => {
         set((s) => (s.workout ? { workout: fn(s.workout) } : s));

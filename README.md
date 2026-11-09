@@ -2,7 +2,7 @@
 
 A mobile fitness coach, workout planner, nutrition tracker and activity tracker for iOS and Android, built with Expo (React Native) and Supabase.
 
-**Status:** Phases 1 (Foundation) and 2 (Dashboard and progress) are implemented. Phase 3 (Training) is next, after review. See [`docs/phase-1-report.md`](docs/phase-1-report.md) and [`docs/phase-2-report.md`](docs/phase-2-report.md).
+**Status:** Phases 1–3 (Foundation, Progress, Training) are implemented. Phase 4 (Nutrition) is next, after review. See the phase reports in [`docs/`](docs/).
 
 ## Documents
 
@@ -15,6 +15,7 @@ A mobile fitness coach, workout planner, nutrition tracker and activity tracker 
 | [`docs/migrations.md`](docs/migrations.md)         | Database migrations, the security model and DB tests              |
 | [`docs/phase-1-report.md`](docs/phase-1-report.md) | What Phase 1 delivered, test results and known limitations        |
 | [`docs/phase-2-report.md`](docs/phase-2-report.md) | Phase 2: weight, measurements, check-in, milestones, offline sync |
+| [`docs/phase-3-report.md`](docs/phase-3-report.md) | Phase 3: exercise library, calendar, workouts, history, records   |
 
 ## Tech stack
 
@@ -107,16 +108,17 @@ Store the Supabase values per environment in EAS (`eas env:create`), or in `.env
 
 ## Scripts
 
-| Command                                                 | What it does                                                                                                           |
-| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `npm run check`                                         | Typecheck + lint (zero warnings) + unit/component tests                                                                |
-| `npm test`                                              | Jest unit and component tests                                                                                          |
-| `npm run typecheck` / `npm run lint` / `npm run format` | Individual checks                                                                                                      |
-| `npm run db:verify`                                     | Applies all migrations to a throwaway PostgreSQL, runs the pgTAP tests and the app↔DB contract test (no Docker needed) |
-| `npm run db:test`                                       | pgTAP tests against the local Supabase stack (`supabase test db`)                                                      |
-| `npm run db:reset`                                      | Rebuilds the local database (Docker)                                                                                   |
-| `npm run db:types`                                      | Regenerates `src/integrations/supabase/database.types.ts`                                                              |
-| `npm run e2e:web`                                       | Builds the web bundle and runs the Playwright onboarding smoke test (mocked backend)                                   |
+| Command                                                 | What it does                                                                                                                         |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `npm run check`                                         | Typecheck + lint (zero warnings) + unit/component tests                                                                              |
+| `npm test`                                              | Jest unit and component tests                                                                                                        |
+| `npm run typecheck` / `npm run lint` / `npm run format` | Individual checks                                                                                                                    |
+| `npm run db:verify`                                     | Applies all migrations to a throwaway PostgreSQL, runs the pgTAP tests and the app↔DB contract test (no Docker needed)               |
+| `npm run db:test`                                       | pgTAP tests against the local Supabase stack (`supabase test db`)                                                                    |
+| `npm run db:reset`                                      | Rebuilds the local database (Docker)                                                                                                 |
+| `npm run db:types`                                      | Regenerates `src/integrations/supabase/database.types.ts`                                                                            |
+| `npm run db:seed-training`                              | Regenerates the exercise/template seed migration from `src/domain/training/catalogue.ts` (`npm run check` verifies it is up to date) |
+| `npm run e2e:web`                                       | Builds the web bundle and runs the Playwright onboarding smoke test (mocked backend)                                                 |
 
 Device E2E: `maestro test tests/e2e/maestro/onboarding.yaml -e EMAIL=… -e PASSWORD=…` against a development build.
 
@@ -168,5 +170,7 @@ Phase 2 branches, built the same way:
 4. `feature/p2-measurements-checkin`: measurements and daily check-in
 5. `feature/p2-milestones-goal`: milestone engine, goal editing and goal-reached flow
 6. `feature/p2-dashboard`: Home dashboard, sync status, E2E
+
+Phase 3 branches: `feature/p3-schema`, `feature/p3-domain`, `feature/p3-library`, `feature/p3-calendar`, `feature/p3-workout`, `feature/p3-history`.
 
 `claude/pace-spec-review-usad8z` contains all of them.

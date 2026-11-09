@@ -24,3 +24,13 @@ Clarifications of, and deviations from, `docs/PACE_SPEC.md`. Newest first.
 6. **Sign-out keeps unsynced changes on the phone.** The spec says to clear local caches after confirmation, but clearing would discard data, which spec 3.2 forbids. The outbox is stored per user, so it's never visible to or synced under another account. It syncs the next time the same user signs in. The sign-out dialog first tries to sync, then says how many changes are still waiting.
 7. **Weight milestones count the onboarding weigh-in.** It's a real weight entry, so on the onboarding day the daily value is the mean of the onboarding weight and any later entry that day.
 8. **Quick actions on Home** only show actions that work in this version (log weight, check-in, measure, progress). Meal, water and workout actions are added with their phases.
+
+## 2026-11-09: Phase 3
+
+1. **One catalogue, two consumers.** System exercises and templates live in `src/domain/training/catalogue.ts`. The app bundles it, so the library works offline. `scripts/gen-training-seed.mjs` generates the database seed migration from it with deterministic UUIDs, and `npm run check` fails if the migration is out of date.
+2. **No `scheduled_workout_exercises` table.** A scheduled workout stores its `template_slug`. The exercise list is built when you open or start the workout, applying your **current** injuries and equipment. A workout planned before an injury is therefore adjusted automatically (spec 28.5 #13). System templates only change through migrations, so the snapshot the spec asked for has no practical benefit.
+3. **Idempotent calendar generation with `occurrence_key`** (`plan:<plan id>:<date>` or `event:<event id>:<date>`) and a full unique constraint `(user_id, occurrence_key)`. PostgREST can't upsert on a partial unique index. Generation runs online once a day with ON CONFLICT DO NOTHING. Changing the plan or a series deletes only future, unmodified, still-planned occurrences, then regenerates.
+4. **Personal records are derived from history, not stored.** Deleting a workout recalculates them automatically (spec 14.3), and there's no table to keep in sync.
+5. **Calendar edits send full rows through the outbox.** Postgres checks NOT NULL columns on the proposed row before ON CONFLICT runs, so a partial upsert payload would fail.
+6. **Equipment is a list of requirements where "a|b" means either.** Floor, mat, wall, chair and step are assumed. "No equipment" means bodyweight only. Exercises that can't be done are swapped for their template alternative or left out, and the workout says which and why.
+7. **Training hours count workouts and logged sport.** GPS activities are added to the total in Phase 5.

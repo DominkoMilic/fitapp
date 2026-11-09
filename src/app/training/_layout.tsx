@@ -11,7 +11,7 @@ export default function TrainingLayout() {
         'workout/[id]': 'Workout',
         session: 'Workout',
         summary: 'Workout summary',
-        history: 'History',
+        'history/index': 'History',
         'history/[id]': 'Workout',
         records: 'Personal records',
         'log-event': 'Log match or practice',

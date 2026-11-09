@@ -41,7 +41,8 @@ export default function CheckinScreen() {
           <LoadingState />
         </Screen>
       ) : (
-        <CheckinForm key={existing ? 'edit' : 'new'} today={today} existing={existing} />
+        // Keyed by date only: saving creates today's check-in, which must not remount the form.
+        <CheckinForm key={today} today={today} existing={existing} />
       )}
     </>
   );

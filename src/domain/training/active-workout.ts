@@ -241,9 +241,8 @@ export function summarize(w: ActiveWorkout, now: number): WorkoutSummary {
       completed: s.completed,
     })),
   );
-  const planned = finished.exercises
-    .filter((e) => e.phase === 'main')
-    .reduce((a, e) => a + e.targetSets, 0);
+  // All phases, so "sets done" and "planned" count the same things (warm-up included).
+  const planned = finished.exercises.reduce((a, e) => a + e.targetSets, 0);
   const durationS = elapsedS(finished, now);
   return {
     durationS,

@@ -29,7 +29,7 @@ import { spacing } from '@/theme';
 export default function WorkoutSummary() {
   const userId = useAuth().session?.user.id;
   const w = useActiveWorkout(userId);
-  const setStore = useActiveWorkoutStore((s) => s.set);
+  const finish = useActiveWorkoutStore((s) => s.finish);
   const { workout: scheduled } = useScheduledWorkout(w?.scheduledId ?? undefined);
   const { data: profile } = useProfile();
   const { current } = useWeightStats('30D');
@@ -96,7 +96,7 @@ export default function WorkoutSummary() {
               : null,
         })),
       });
-      setStore(null);
+      finish();
       router.replace('/training');
       showToast(
         s.status === 'abandoned'
@@ -204,7 +204,7 @@ export default function WorkoutSummary() {
         confirmLabel="Discard"
         onCancel={() => setConfirmDiscard(false)}
         onConfirm={() => {
-          setStore(null);
+          finish();
           setConfirmDiscard(false);
           router.replace('/training');
         }}

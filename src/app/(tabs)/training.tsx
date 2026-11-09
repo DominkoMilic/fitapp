@@ -83,6 +83,8 @@ export default function Training() {
         </Text>
       ) : (
         Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)).map((date) => {
+          // Today is already shown above on the current week.
+          if (offset === 0 && date === today) return null;
           const items = week.rows.filter((r) => r.scheduled_date === date);
           if (!items.length) return null;
           return (
@@ -99,6 +101,8 @@ export default function Training() {
       )}
 
       <SectionHeader title="More" />
+      <ListItem title="Workout history" onPress={() => router.push('/training/history')} />
+      <ListItem title="Personal records" onPress={() => router.push('/training/records')} />
       <ListItem title="Month calendar" onPress={() => router.push('/training/calendar')} />
       <ListItem title="Add a workout" onPress={() => router.push('/training/add-workout')} />
       <ListItem

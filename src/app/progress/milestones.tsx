@@ -78,6 +78,10 @@ export default function MilestonesScreen() {
       {catalogue
         .filter((c) => c.category === 'weight')
         .map((c) => row(c.key, c.title, describe(c.description, c.threshold)))}
+      <SectionHeader title="Training" />
+      {catalogue
+        .filter((c) => c.category === 'training')
+        .map((c) => row(c.key, c.title, c.description))}
       <SectionHeader title="Consistency" />
       {catalogue
         .filter((c) => c.category === 'consistency')

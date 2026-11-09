@@ -10,6 +10,7 @@ import { useAuth } from '@/features/auth/AuthProvider';
 import { useCheckins } from '@/features/checkin/api';
 import { useMeasurements } from '@/features/measurements/api';
 import { useActiveGoal } from '@/features/profile/api';
+import { useSessions } from '@/features/training/session-api';
 import { syncKeys, useOutbox, useSyncActions } from '@/features/sync/SyncProvider';
 import { useWeightEntries } from '@/features/weight/api';
 import { requireSupabase } from '@/integrations/supabase/client';
@@ -75,6 +76,7 @@ export function useMilestoneEngine() {
   const measurements = useMeasurements();
   const checkins = useCheckins();
   const unlocked = useUnlockedMilestones();
+  const training = useSessions();
   const { write } = useSyncActions();
   const showToast = useToast((s) => s.show);
   const written = useRef(new Set<string>());
@@ -84,7 +86,8 @@ export function useMilestoneEngine() {
     weights.isSuccess &&
     measurements.isSuccess &&
     checkins.isSuccess &&
-    unlocked.isSuccess;
+    unlocked.isSuccess &&
+    training.isSuccess;
 
   useEffect(() => {
     if (!ready) return;
@@ -101,6 +104,9 @@ export function useMilestoneEngine() {
         ...checkins.rows.map((c) => c.local_date),
       ],
       unlockedKeys,
+      sessions: training.sessions
+        .filter((t) => t.completion_status !== 'abandoned')
+        .map((t) => ({ date: t.local_date, durationS: t.duration_seconds, category: t.category })),
     });
     if (!fresh.length) return;
     for (const m of fresh) {
@@ -133,6 +139,7 @@ export function useMilestoneEngine() {
     weights.entries,
     measurements.rows,
     checkins.rows,
+    training.sessions,
     unlocked.rows,
     write,
     showToast,

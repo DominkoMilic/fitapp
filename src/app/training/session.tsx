@@ -3,7 +3,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { Banner, ConfirmDialog, ErrorState, LoadingState } from '@/components/feedback';
+import { Banner, ConfirmDialog, EmptyState, ErrorState, LoadingState } from '@/components/feedback';
 import { Button, Card, NumberField, Screen, Text } from '@/components/ui';
 import {
   addSet,
@@ -47,13 +47,18 @@ export default function WorkoutSession() {
   const { lastSets } = useLastSets();
   const setStore = useActiveWorkoutStore((s) => s.set);
   const [resumeAnyway, setResumeAnyway] = useState(false);
+  // After a workout is saved or discarded the store is cleared while this screen may still be
+  // mounted underneath the summary; it must not start another workout (phantom workout bug).
+  const [openedAt] = useState(() => Date.now());
+  const finishedAt = useActiveWorkoutStore((s) => s.finishedAt);
+  const finishedSinceOpened = finishedAt !== null && finishedAt >= openedAt;
   // Opened for a different workout while one is running: ask before replacing anything.
   const conflict = !!active && !!scheduledId && active.scheduledId !== scheduledId && !resumeAnyway;
 
   // Start a new workout unless one is already running.
   useEffect(() => {
     if (!userId || !built || sessions.isPending) return;
-    if (active) return;
+    if (active || finishedSinceOpened) return;
     setStore(
       createActiveWorkout({
         id: randomUUID(),
@@ -66,7 +71,17 @@ export default function WorkoutSession() {
         lastSets,
       }),
     );
-  }, [userId, built, sessions.isPending, active, scheduledId, scheduled, lastSets, setStore]);
+  }, [
+    userId,
+    built,
+    sessions.isPending,
+    active,
+    finishedSinceOpened,
+    scheduledId,
+    scheduled,
+    lastSets,
+    setStore,
+  ]);
 
   if (conflict && active) {
     return (
@@ -86,6 +101,18 @@ export default function WorkoutSession() {
     );
   }
   if (active) return <Runner />;
+  if (finishedSinceOpened) {
+    return (
+      <Screen edges={['bottom']}>
+        <EmptyState
+          title="Workout finished"
+          message="It's saved in your history."
+          actionLabel="Back to Training"
+          onAction={() => router.replace('/training')}
+        />
+      </Screen>
+    );
+  }
   if (isPending || sessions.isPending)
     return (
       <Screen edges={['bottom']}>
