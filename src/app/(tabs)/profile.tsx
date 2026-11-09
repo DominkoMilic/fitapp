@@ -4,12 +4,14 @@ import { useState } from 'react';
 import { Banner, ConfirmDialog } from '@/components/feedback';
 import { Card, ListItem, Screen, SectionHeader, Text } from '@/components/ui';
 import { useAuth } from '@/features/auth/AuthProvider';
+import { useFeatures } from '@/features/profile/features';
 import { useProfile } from '@/features/profile/api';
 import { useSyncActions, useSyncStatus } from '@/features/sync/SyncProvider';
 import { plural } from '@/domain/format';
 
 export default function ProfileTab() {
   const { session, signOut } = useAuth();
+  const features = useFeatures();
   const profile = useProfile();
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -39,11 +41,19 @@ export default function ProfileTab() {
 
       <SectionHeader title="You" />
       <ListItem title="Personal information" onPress={() => router.push('/settings/personal')} />
-      <ListItem
-        title="Goal and targets"
-        subtitle="Calories, macros and how they were calculated"
-        onPress={() => router.push('/settings/targets')}
-      />
+      {features.nutrition ? (
+        <ListItem
+          title="Goal and targets"
+          subtitle="Calories, macros and how they were calculated"
+          onPress={() => router.push('/settings/targets')}
+        />
+      ) : (
+        <ListItem
+          title="Goal"
+          subtitle="Your goal and target weight"
+          onPress={() => router.push('/settings/goal')}
+        />
+      )}
       <ListItem title="Health and injuries" onPress={() => router.push('/settings/health')} />
 
       <SectionHeader title="Preferences" />
@@ -57,10 +67,17 @@ export default function ProfileTab() {
         subtitle="Days, session length"
         onPress={() => router.push('/settings/training')}
       />
+      {features.nutrition ? (
+        <ListItem
+          title="Nutrition"
+          subtitle="Diet, allergies, meals"
+          onPress={() => router.push('/settings/nutrition')}
+        />
+      ) : null}
       <ListItem
-        title="Nutrition"
-        subtitle="Diet, allergies, meals"
-        onPress={() => router.push('/settings/nutrition')}
+        title="App features"
+        subtitle={features.nutrition ? 'Turn parts of PACE on or off' : 'Nutrition is off'}
+        onPress={() => router.push('/settings/features')}
       />
       <ListItem title="Equipment" onPress={() => router.push('/settings/equipment')} />
       <ListItem title="Reminders" onPress={() => router.push('/settings/notifications')} />

@@ -130,3 +130,10 @@ Clarifications of, and deviations from, `docs/PACE_SPEC.md`. Newest first.
 2. **One stack transition everywhere** (`ios_from_right`) so Android and iOS feel the same; modals slide up; onboarding keeps its cross-fade.
 3. **Haptics are subtle and optional by design**: selection ticks, a light tap on primary actions, a success pulse after saving. They follow the reduce-motion setting.
 
+## 2026-11-09: Nutrition can be switched off
+
+1. **A single preference** (`user_preferences.nutrition_enabled`, migration `20261116000100`) rather than per-screen settings. Off hides food, calories and water everywhere; weight and goals stay.
+2. **Targets are still calculated and saved while off**, so turning nutrition back on is instant and the safety rules (floor, BMI) keep applying to stored targets.
+3. **The two-week calorie review doesn't run while off**, because it depends on logged intake (8.9).
+4. **Older app versions keep working**: onboarding treats a missing value as on.
+

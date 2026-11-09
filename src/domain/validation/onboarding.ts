@@ -237,6 +237,8 @@ export type ScheduleValues = z.infer<typeof scheduleSchema>;
 // ------------------------------------------------------------------ step 6
 const chipList = z.array(z.string().trim().min(1).max(40)).max(30);
 export const nutritionSchema = z.object({
+  /** False: the user doesn't want food tracking (spec 6.5). The diet answers keep their defaults. */
+  trackNutrition: z.boolean(),
   dietType: z.enum(['omnivore', 'vegetarian', 'vegan', 'pescatarian', 'other']),
   allergies: chipList,
   intolerances: chipList,

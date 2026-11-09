@@ -14,11 +14,13 @@ import {
   type PlanItem,
   RULES,
   type RuleId,
+  NUTRITION_RULES,
 } from '@/domain/coach/rules';
 import { consistentWeeksReached, evaluateMilestones } from '@/domain/milestones/evaluate';
 import {
   applyQuietHours,
   DEFAULT_PREFS,
+  effectivePrefs,
   NOTIFY,
   planNotifications,
   type PlanEvent,
@@ -637,5 +639,37 @@ describe('stored reminder preferences', () => {
     expect(isAllowedTime('21:59')).toBe(true);
     expect(isAllowedTime('22:00')).toBe(false);
     expect(isAllowedTime('06:59')).toBe(false);
+  });
+});
+
+describe('nutrition switched off (spec 6.5)', () => {
+  it('drops food, calorie and target-review cards but keeps safety and weight', () => {
+    const busy = ctx({
+      minuteOfDay: 14 * 60,
+      intake: { kcal: 600, proteinG: 20, mealsLogged: 0, waterMl: 300 },
+      completeDays: [
+        { date: addDays(TODAY, -1), kcal: 900 },
+        { date: addDays(TODAY, -2), kcal: 900 },
+        { date: addDays(TODAY, -3), kcal: 900 },
+      ],
+      pendingAdjustment: true,
+      weightGoalActive: true,
+      lastWeighIn: addDays(TODAY, -5),
+    });
+    const on = evaluateCoach(busy, 20).map((r) => r.ruleId);
+    const off = evaluateCoach({ ...busy, nutritionEnabled: false }, 20).map((r) => r.ruleId);
+    expect(on.some((id) => NUTRITION_RULES.has(id))).toBe(true);
+    expect(off.filter((id) => NUTRITION_RULES.has(id))).toEqual([]);
+    expect(off).toContain('W1');
+  });
+  it('meal and water reminders are turned off, others stay', () => {
+    const prefs = {
+      ...DEFAULT_PREFS,
+      meals: { on: true, times: ['12:30'] },
+      water: { on: true, times: ['11:00'] },
+    };
+    const off = effectivePrefs(prefs, false);
+    expect([off.meals.on, off.water.on, off.weighIn.on]).toEqual([false, false, prefs.weighIn.on]);
+    expect(effectivePrefs(prefs, true)).toBe(prefs);
   });
 });

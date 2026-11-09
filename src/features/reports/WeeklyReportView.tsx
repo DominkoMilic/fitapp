@@ -11,7 +11,16 @@ const NO_DATA = 'No data';
 const km = (v: number | null, unit: UnitSystem) =>
   v === null ? null : unit === 'metric' ? `${v.toFixed(1)} km` : `${(v / 1.609344).toFixed(1)} mi`;
 
-export function WeeklyReportView({ report: r, unit }: { report: WeeklyReport; unit: UnitSystem }) {
+export function WeeklyReportView({
+  report: r,
+  unit,
+  showNutrition = true,
+}: {
+  report: WeeklyReport;
+  unit: UnitSystem;
+  /** False when the user switched nutrition off. */
+  showNutrition?: boolean;
+}) {
   const change = r.weight.changeKg;
   const changeText =
     change === null
@@ -89,29 +98,37 @@ export function WeeklyReportView({ report: r, unit }: { report: WeeklyReport; un
         </Card>
       )}
 
-      <SectionHeader title="Nutrition" />
-      <View style={styles.grid}>
-        <StatTile
-          label="Average calories"
-          value={r.nutrition.avgKcal === null ? NO_DATA : String(r.nutrition.avgKcal)}
-          unit={r.nutrition.avgKcal === null ? undefined : 'kcal'}
-          caption={r.nutrition.basedOn}
-        />
-        <StatTile
-          label="Average protein"
-          value={
-            r.nutrition.avgProteinG === null ? NO_DATA : String(Math.round(r.nutrition.avgProteinG))
-          }
-          unit={r.nutrition.avgProteinG === null ? undefined : 'g'}
-          caption={r.nutrition.basedOn}
-        />
-        <StatTile
-          label="Water"
-          value={r.water.avgMl === null ? NO_DATA : String(r.water.avgMl)}
-          unit={r.water.avgMl === null ? undefined : 'ml'}
-          caption={r.water.avgMl === null ? undefined : `average on ${r.water.days} logged days`}
-        />
-      </View>
+      {showNutrition ? (
+        <>
+          <SectionHeader title="Nutrition" />
+          <View style={styles.grid}>
+            <StatTile
+              label="Average calories"
+              value={r.nutrition.avgKcal === null ? NO_DATA : String(r.nutrition.avgKcal)}
+              unit={r.nutrition.avgKcal === null ? undefined : 'kcal'}
+              caption={r.nutrition.basedOn}
+            />
+            <StatTile
+              label="Average protein"
+              value={
+                r.nutrition.avgProteinG === null
+                  ? NO_DATA
+                  : String(Math.round(r.nutrition.avgProteinG))
+              }
+              unit={r.nutrition.avgProteinG === null ? undefined : 'g'}
+              caption={r.nutrition.basedOn}
+            />
+            <StatTile
+              label="Water"
+              value={r.water.avgMl === null ? NO_DATA : String(r.water.avgMl)}
+              unit={r.water.avgMl === null ? undefined : 'ml'}
+              caption={
+                r.water.avgMl === null ? undefined : `average on ${r.water.days} logged days`
+              }
+            />
+          </View>
+        </>
+      ) : null}
 
       {r.milestones.length ? (
         <>

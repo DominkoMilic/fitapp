@@ -123,6 +123,7 @@ export function buildOnboardingPayload(input: {
       preferred_training_time: draft.schedule.preferredTime,
       training_environment: draft.equipment.environment,
       sports: g.sports,
+      nutrition_enabled: draft.nutrition.trackNutrition ?? true,
     },
     equipment: draft.equipment.items.map((i) => ({
       equipment_type: i.type,

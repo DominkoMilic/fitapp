@@ -7,6 +7,7 @@ import { useCheckins } from '@/features/checkin/api';
 import { targetFor } from '@/features/dashboard/today';
 import { useToday } from '@/features/dashboard/useToday';
 import { useActiveGoal, useTargetHistory } from '@/features/profile/api';
+import { useFeatures } from '@/features/profile/features';
 import { useWeightEntries } from '@/features/weight/api';
 
 import { useAdjustments, useNutritionRange, useRecordCheck } from './api';
@@ -27,6 +28,7 @@ export function useRecalibrationEngine() {
   const nutrition = useNutritionRange(window.start, window.end);
   const record = useRecordCheck();
   const ran = useRef<string | null>(null);
+  const features = useFeatures();
 
   const ready =
     goal.isSuccess &&
@@ -40,6 +42,8 @@ export function useRecalibrationEngine() {
     if (!ready) return null;
     const g = goal.data;
     const current = targetFor(targets.data ?? [], today);
+    // Calorie target reviews need food logging; none while nutrition is switched off.
+    if (!features.nutrition) return null;
     if (!g || g.goal_type !== 'lose_weight' || !g.weekly_rate_pct || !current) return null;
     const history = adjustments.data ?? [];
     const last = history[0] ?? null;
@@ -83,6 +87,7 @@ export function useRecalibrationEngine() {
     return { input, result: recalibrate(input), complete: complete.length };
   }, [
     ready,
+    features.nutrition,
     goal.data,
     targets.data,
     adjustments.data,

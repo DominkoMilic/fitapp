@@ -167,136 +167,144 @@ export default function PlanStep() {
     >
       {error ? <Banner tone="danger" message={error} /> : null}
 
-      <SectionHeader title="Daily targets" />
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
-        <StatTile
-          label="Calories"
-          value={String(targets.kcal)}
-          unit="kcal"
-          caption={targets.edited ? 'Edited by you' : undefined}
-        />
-        <StatTile label="Protein" value={String(targets.proteinG)} unit="g" />
-        <StatTile label="Carbs" value={String(targets.carbsG)} unit="g" />
-        <StatTile label="Fat" value={String(targets.fatG)} unit="g" />
-        <StatTile
-          label="Water"
-          value={(plan.waterMl / 1000).toFixed(1)}
-          unit="L"
-          caption="General guideline"
-        />
-      </View>
-      {plan.calories.limitedByFloor ? (
-        <Banner
-          tone="info"
-          message={`Your target is limited by the safety minimum of ${plan.calories.floorKcal} kcal.`}
-        />
-      ) : null}
-      {plan.calories.deficitCapped ? (
-        <Banner
-          tone="info"
-          message="Your chosen rate needed a larger deficit than PACE allows, so the daily deficit was capped."
-        />
-      ) : null}
-      {targets.warnings.includes('low_carbs') ? (
-        <Banner
-          tone="warning"
-          message="Carbohydrates are below 50 g. Consider less fat so you have energy for training."
-        />
-      ) : null}
-      {targets.warnings.includes('high_protein') ? (
-        <Banner
-          tone="warning"
-          message="Protein is above 2.5 g per kg of reference weight, more than you need."
-        />
-      ) : null}
-      {!floorCheck.ok ? (
-        <Banner
-          tone="danger"
-          message={`Calories can't go below the safety minimum of ${floorCheck.floorKcal} kcal.`}
-        />
-      ) : null}
-
-      <SegmentedControl
-        accessibilityLabel="Edit targets"
-        options={[
-          { value: 'none', label: 'Suggested' },
-          { value: 'calories', label: 'Edit calories' },
-          { value: 'macros', label: 'Edit macros' },
-        ]}
-        value={editMode}
-        onChange={(m) => {
-          setEditMode(m);
-          if (m === 'none') setOverrides(null);
-        }}
-      />
-      {editMode === 'calories' ? (
-        <NumberField
-          label="Daily calories"
-          suffix="kcal"
-          decimal={false}
-          precision={0}
-          value={overrides.kcal ?? targets.kcal}
-          hint={`Minimum ${plan.calories.floorKcal} kcal. Carbs adjust to match.`}
-          onChangeValue={(kcal) => setOverrides({ kcal, proteinG: null, carbsG: null, fatG: null })}
-        />
-      ) : null}
-      {editMode === 'macros' ? (
+      {/* Without food tracking the targets are still saved, just not shown (spec 6.5). */}
+      {nutrition?.trackNutrition !== false ? (
         <>
-          {(['proteinG', 'carbsG', 'fatG'] as const).map((k) => (
+          <SectionHeader title="Daily targets" />
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
+            <StatTile
+              label="Calories"
+              value={String(targets.kcal)}
+              unit="kcal"
+              caption={targets.edited ? 'Edited by you' : undefined}
+            />
+            <StatTile label="Protein" value={String(targets.proteinG)} unit="g" />
+            <StatTile label="Carbs" value={String(targets.carbsG)} unit="g" />
+            <StatTile label="Fat" value={String(targets.fatG)} unit="g" />
+            <StatTile
+              label="Water"
+              value={(plan.waterMl / 1000).toFixed(1)}
+              unit="L"
+              caption="General guideline"
+            />
+          </View>
+          {plan.calories.limitedByFloor ? (
+            <Banner
+              tone="info"
+              message={`Your target is limited by the safety minimum of ${plan.calories.floorKcal} kcal.`}
+            />
+          ) : null}
+          {plan.calories.deficitCapped ? (
+            <Banner
+              tone="info"
+              message="Your chosen rate needed a larger deficit than PACE allows, so the daily deficit was capped."
+            />
+          ) : null}
+          {targets.warnings.includes('low_carbs') ? (
+            <Banner
+              tone="warning"
+              message="Carbohydrates are below 50 g. Consider less fat so you have energy for training."
+            />
+          ) : null}
+          {targets.warnings.includes('high_protein') ? (
+            <Banner
+              tone="warning"
+              message="Protein is above 2.5 g per kg of reference weight, more than you need."
+            />
+          ) : null}
+          {!floorCheck.ok ? (
+            <Banner
+              tone="danger"
+              message={`Calories can't go below the safety minimum of ${floorCheck.floorKcal} kcal.`}
+            />
+          ) : null}
+
+          <SegmentedControl
+            accessibilityLabel="Edit targets"
+            options={[
+              { value: 'none', label: 'Suggested' },
+              { value: 'calories', label: 'Edit calories' },
+              { value: 'macros', label: 'Edit macros' },
+            ]}
+            value={editMode}
+            onChange={(m) => {
+              setEditMode(m);
+              if (m === 'none') setOverrides(null);
+            }}
+          />
+          {editMode === 'calories' ? (
             <NumberField
-              key={k}
-              label={{ proteinG: 'Protein', carbsG: 'Carbohydrates', fatG: 'Fat' }[k]}
-              suffix="g"
+              label="Daily calories"
+              suffix="kcal"
               decimal={false}
               precision={0}
-              value={overrides[k] ?? targets[k]}
-              onChangeValue={(v) =>
-                setOverrides({
-                  kcal: null,
-                  proteinG: overrides.proteinG ?? targets.proteinG,
-                  carbsG: overrides.carbsG ?? targets.carbsG,
-                  fatG: overrides.fatG ?? targets.fatG,
-                  [k]: v ?? 0,
-                })
+              value={overrides.kcal ?? targets.kcal}
+              hint={`Minimum ${plan.calories.floorKcal} kcal. Carbs adjust to match.`}
+              onChangeValue={(kcal) =>
+                setOverrides({ kcal, proteinG: null, carbsG: null, fatG: null })
               }
             />
-          ))}
-          <Text variant="small" color="textSecondary">
-            Calories from macros: {macroKcal(targets.proteinG, targets.carbsG, targets.fatG)} kcal
-          </Text>
+          ) : null}
+          {editMode === 'macros' ? (
+            <>
+              {(['proteinG', 'carbsG', 'fatG'] as const).map((k) => (
+                <NumberField
+                  key={k}
+                  label={{ proteinG: 'Protein', carbsG: 'Carbohydrates', fatG: 'Fat' }[k]}
+                  suffix="g"
+                  decimal={false}
+                  precision={0}
+                  value={overrides[k] ?? targets[k]}
+                  onChangeValue={(v) =>
+                    setOverrides({
+                      kcal: null,
+                      proteinG: overrides.proteinG ?? targets.proteinG,
+                      carbsG: overrides.carbsG ?? targets.carbsG,
+                      fatG: overrides.fatG ?? targets.fatG,
+                      [k]: v ?? 0,
+                    })
+                  }
+                />
+              ))}
+              <Text variant="small" color="textSecondary">
+                Calories from macros: {macroKcal(targets.proteinG, targets.carbsG, targets.fatG)}{' '}
+                kcal
+              </Text>
+            </>
+          ) : null}
+
+          <SectionHeader title="How we calculated this" />
+          <Card>
+            <Text variant="small">
+              BMR (Mifflin-St Jeor, age {plan.age}): {Math.round(plan.bmr)} kcal
+            </Text>
+            <Text variant="small">
+              × activity {plan.activityMultiplier} = maintenance ≈ {Math.round(plan.tdee)} kcal
+              (estimate)
+            </Text>
+            {goals.goalType === 'lose_weight' ? (
+              <Text variant="small">
+                − deficit {Math.round(plan.calories.requestedAdjustment)} kcal →{' '}
+                {plan.calories.kcal} kcal (rounded to 10)
+              </Text>
+            ) : goals.goalType === 'build_muscle' ? (
+              <Text variant="small">
+                + surplus {Math.round(-plan.calories.requestedAdjustment)} kcal →{' '}
+                {plan.calories.kcal} kcal
+              </Text>
+            ) : null}
+            <Text variant="small">Safety minimum: {plan.calories.floorKcal} kcal</Text>
+            <Text variant="small">
+              Protein 1.8 g × {formatWeight(plan.macros.referenceWeightKg, unit)} reference weight ·
+              fat 25% of calories · carbs the rest
+            </Text>
+            <Text variant="caption" color="textSecondary">
+              The activity multiplier already includes your usual exercise, so exercise calories are
+              not added on top.
+            </Text>
+          </Card>
         </>
       ) : null}
-
-      <SectionHeader title="How we calculated this" />
-      <Card>
-        <Text variant="small">
-          BMR (Mifflin-St Jeor, age {plan.age}): {Math.round(plan.bmr)} kcal
-        </Text>
-        <Text variant="small">
-          × activity {plan.activityMultiplier} = maintenance ≈ {Math.round(plan.tdee)} kcal
-          (estimate)
-        </Text>
-        {goals.goalType === 'lose_weight' ? (
-          <Text variant="small">
-            − deficit {Math.round(plan.calories.requestedAdjustment)} kcal → {plan.calories.kcal}{' '}
-            kcal (rounded to 10)
-          </Text>
-        ) : goals.goalType === 'build_muscle' ? (
-          <Text variant="small">
-            + surplus {Math.round(-plan.calories.requestedAdjustment)} kcal → {plan.calories.kcal}{' '}
-            kcal
-          </Text>
-        ) : null}
-        <Text variant="small">Safety minimum: {plan.calories.floorKcal} kcal</Text>
-        <Text variant="small">
-          Protein 1.8 g × {formatWeight(plan.macros.referenceWeightKg, unit)} reference weight · fat
-          25% of calories · carbs the rest
-        </Text>
-        <Text variant="caption" color="textSecondary">
-          The activity multiplier already includes your usual exercise, so exercise calories are not
-          added on top.
-        </Text>
-      </Card>
 
       {plan.projection ? (
         <>

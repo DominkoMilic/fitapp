@@ -21,6 +21,7 @@ export const WEEKDAY_NAMES = [
 ] as const;
 
 export const DEFAULT_NUTRITION: NutritionValues = {
+  trackNutrition: true,
   dietType: 'omnivore',
   allergies: [],
   intolerances: [],

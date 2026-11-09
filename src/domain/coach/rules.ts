@@ -84,9 +84,14 @@ export interface CoachContext {
   dataDays: number;
   /** Rule ids the user dismissed today. */
   dismissed: ReadonlySet<string>;
+  /** False when the user switched nutrition off: no food, calorie or target-review cards. */
+  nutritionEnabled?: boolean;
 }
 
 export const MAX_CARDS = 3;
+
+/** Rules about food, calories, water or calorie-target reviews (hidden when nutrition is off). */
+export const NUTRITION_RULES: ReadonlySet<string> = new Set(['S4', 'N1', 'N2', 'N3', 'W2']);
 
 const isMatch = isMatchCategory;
 /** "Basketball game" / "Futsal match"; "Match" for unknown sports. */
@@ -437,6 +442,7 @@ export function evaluateCoach(c: CoachContext, limit = MAX_CARDS): Recommendatio
       : null;
   }).filter((x): x is Recommendation => x !== null);
 
+  if (c.nutritionEnabled === false) cards = cards.filter((r) => !NUTRITION_RULES.has(r.ruleId));
   // New users get onboarding tips only (safety always stays; 28.9 #3).
   if (c.dataDays < 3) cards = cards.filter((r) => r.category === 'safety' || r.ruleId === 'C2');
   if (cards.some((r) => SUPPRESSORS.has(r.ruleId)))

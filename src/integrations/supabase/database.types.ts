@@ -1466,6 +1466,7 @@ export type Database = {
           max_session_minutes: number;
           meals_per_day: number;
           notification_preferences: NonNullable<Json>;
+          nutrition_enabled: boolean;
           preferred_cuisines: string[];
           preferred_training_days: number[];
           preferred_training_time: string | null;
@@ -1488,6 +1489,7 @@ export type Database = {
           max_session_minutes?: number;
           meals_per_day?: number;
           notification_preferences?: NonNullable<Json>;
+          nutrition_enabled?: boolean;
           preferred_cuisines?: string[];
           preferred_training_days?: number[];
           preferred_training_time?: string | null;
@@ -1509,6 +1511,7 @@ export type Database = {
           max_session_minutes?: number;
           meals_per_day?: number;
           notification_preferences?: NonNullable<Json>;
+          nutrition_enabled?: boolean;
           preferred_cuisines?: string[];
           preferred_training_days?: number[];
           preferred_training_time?: string | null;

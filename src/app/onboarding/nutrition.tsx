@@ -1,8 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from 'expo-router';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 
-import { SegmentedControl, Text } from '@/components/ui';
+import { SegmentedControl, Text, Toggle } from '@/components/ui';
 import { nutritionSchema, type NutritionValues } from '@/domain/validation/onboarding';
 import { ChipInput } from '@/features/onboarding/components/ChipInput';
 import { OnboardingStep } from '@/features/onboarding/components/OnboardingStep';
@@ -26,8 +26,10 @@ export default function NutritionStep() {
   const save = useOnboardingDraft((s) => s.save);
   const { control, handleSubmit } = useForm<NutritionValues>({
     resolver: zodResolver(nutritionSchema),
-    defaultValues: saved ?? DEFAULT_NUTRITION,
+    // Drafts saved by an older version have no trackNutrition: default it to on.
+    defaultValues: { ...DEFAULT_NUTRITION, ...saved },
   });
+  const track = useWatch({ control, name: 'trackNutrition' });
 
   const onContinue = handleSubmit((values) => {
     save('nutrition', values);
@@ -47,112 +49,132 @@ export default function NutritionStep() {
     >
       <Controller
         control={control}
-        name="dietType"
+        name="trackNutrition"
         render={({ field }) => (
-          <SegmentedControl
-            accessibilityLabel="Diet"
-            options={[
-              { value: 'omnivore', label: 'Omnivore' },
-              { value: 'vegetarian', label: 'Vegetarian' },
-              { value: 'vegan', label: 'Vegan' },
-              { value: 'pescatarian', label: 'Pescatarian' },
-            ]}
-            value={field.value === 'other' ? null : field.value}
+          <Toggle
+            label="Track food in PACE"
+            description="Calorie and protein targets, food and water logging, recipes and meal planning. You can change this later in Settings → App features."
+            value={field.value}
             onChange={field.onChange}
           />
         )}
       />
-      <Controller
-        control={control}
-        name="allergies"
-        render={({ field }) => (
-          <ChipInput
-            label="Allergies"
-            values={field.value}
-            onChange={field.onChange}
-            suggestions={ALLERGEN_SUGGESTIONS}
+      {track ? (
+        <>
+          <Controller
+            control={control}
+            name="dietType"
+            render={({ field }) => (
+              <SegmentedControl
+                accessibilityLabel="Diet"
+                options={[
+                  { value: 'omnivore', label: 'Omnivore' },
+                  { value: 'vegetarian', label: 'Vegetarian' },
+                  { value: 'vegan', label: 'Vegan' },
+                  { value: 'pescatarian', label: 'Pescatarian' },
+                ]}
+                value={field.value === 'other' ? null : field.value}
+                onChange={field.onChange}
+              />
+            )}
           />
-        )}
-      />
-      <Controller
-        control={control}
-        name="intolerances"
-        render={({ field }) => (
-          <ChipInput label="Intolerances" values={field.value} onChange={field.onChange} />
-        )}
-      />
-      <Controller
-        control={control}
-        name="dislikedFoods"
-        render={({ field }) => (
-          <ChipInput label="Foods you dislike" values={field.value} onChange={field.onChange} />
-        )}
-      />
-      <Controller
-        control={control}
-        name="preferredCuisines"
-        render={({ field }) => (
-          <ChipInput
-            label="Cuisines you like"
-            values={field.value}
-            onChange={field.onChange}
-            suggestions={['croatian', 'italian', 'mediterranean', 'mexican', 'asian']}
+          <Controller
+            control={control}
+            name="allergies"
+            render={({ field }) => (
+              <ChipInput
+                label="Allergies"
+                values={field.value}
+                onChange={field.onChange}
+                suggestions={ALLERGEN_SUGGESTIONS}
+              />
+            )}
           />
-        )}
-      />
-      <Text variant="small" color="textSecondary">
-        Meals per day (plus snacks)
-      </Text>
-      <Controller
-        control={control}
-        name="mealsPerDay"
-        render={({ field }) => (
-          <SegmentedControl
-            accessibilityLabel="Meals per day"
-            options={['2', '3', '4', '5', '6'].map((v) => ({ value: v, label: v }))}
-            value={String(field.value)}
-            onChange={(v) => field.onChange(Number(v))}
+          <Controller
+            control={control}
+            name="intolerances"
+            render={({ field }) => (
+              <ChipInput label="Intolerances" values={field.value} onChange={field.onChange} />
+            )}
           />
-        )}
-      />
-      <Text variant="small" color="textSecondary">
-        Cooking time
-      </Text>
-      <Controller
-        control={control}
-        name="cookingTimeMaxMinutes"
-        render={({ field }) => (
-          <SegmentedControl
-            accessibilityLabel="Maximum cooking time"
-            options={[
-              { value: '15', label: '≤15 min' },
-              { value: '30', label: '≤30 min' },
-              { value: '60', label: '≤60 min' },
-              { value: 'any', label: 'Any' },
-            ]}
-            value={field.value === null ? 'any' : String(field.value)}
-            onChange={(v) => field.onChange(v === 'any' ? null : Number(v))}
+          <Controller
+            control={control}
+            name="dislikedFoods"
+            render={({ field }) => (
+              <ChipInput label="Foods you dislike" values={field.value} onChange={field.onChange} />
+            )}
           />
-        )}
-      />
-      <Text variant="small" color="textSecondary">
-        Cooking for
-      </Text>
-      <Controller
-        control={control}
-        name="householdServings"
-        render={({ field }) => (
-          <SegmentedControl
-            accessibilityLabel="People you usually cook for"
-            options={['1', '2', '3', '4'].map((v) => ({
-              value: v,
-              label: v === '1' ? '1 person' : `${v}`,
-            }))}
-            value={String(Math.min(field.value, 4))}
-            onChange={(v) => field.onChange(Number(v))}
+          <Controller
+            control={control}
+            name="preferredCuisines"
+            render={({ field }) => (
+              <ChipInput
+                label="Cuisines you like"
+                values={field.value}
+                onChange={field.onChange}
+                suggestions={['croatian', 'italian', 'mediterranean', 'mexican', 'asian']}
+              />
+            )}
           />
-        )}
-      />
+          <Text variant="small" color="textSecondary">
+            Meals per day (plus snacks)
+          </Text>
+          <Controller
+            control={control}
+            name="mealsPerDay"
+            render={({ field }) => (
+              <SegmentedControl
+                accessibilityLabel="Meals per day"
+                options={['2', '3', '4', '5', '6'].map((v) => ({ value: v, label: v }))}
+                value={String(field.value)}
+                onChange={(v) => field.onChange(Number(v))}
+              />
+            )}
+          />
+          <Text variant="small" color="textSecondary">
+            Cooking time
+          </Text>
+          <Controller
+            control={control}
+            name="cookingTimeMaxMinutes"
+            render={({ field }) => (
+              <SegmentedControl
+                accessibilityLabel="Maximum cooking time"
+                options={[
+                  { value: '15', label: '≤15 min' },
+                  { value: '30', label: '≤30 min' },
+                  { value: '60', label: '≤60 min' },
+                  { value: 'any', label: 'Any' },
+                ]}
+                value={field.value === null ? 'any' : String(field.value)}
+                onChange={(v) => field.onChange(v === 'any' ? null : Number(v))}
+              />
+            )}
+          />
+          <Text variant="small" color="textSecondary">
+            Cooking for
+          </Text>
+          <Controller
+            control={control}
+            name="householdServings"
+            render={({ field }) => (
+              <SegmentedControl
+                accessibilityLabel="People you usually cook for"
+                options={['1', '2', '3', '4'].map((v) => ({
+                  value: v,
+                  label: v === '1' ? '1 person' : `${v}`,
+                }))}
+                value={String(Math.min(field.value, 4))}
+                onChange={(v) => field.onChange(Number(v))}
+              />
+            )}
+          />
+        </>
+      ) : (
+        <Text color="textSecondary">
+          No problem: PACE focuses on training and weight. Nothing about food will show up.
+        </Text>
+      )}
     </OnboardingStep>
   );
 }

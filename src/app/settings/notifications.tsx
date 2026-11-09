@@ -13,6 +13,7 @@ import {
 } from '@/components/ui';
 import type { NotificationPrefs } from '@/domain/notifications/planner';
 import { useSaveNotificationPrefs } from '@/features/notifications/api';
+import { useFeatures } from '@/features/profile/features';
 import { isAllowedTime, readPrefs } from '@/features/notifications/prefs';
 import { usePreferences } from '@/features/profile/api';
 import { notifier } from '@/services/notifications/notifier';
@@ -54,6 +55,7 @@ function Form({ initial }: { initial: NotificationPrefs }) {
   const [weighIn, setWeighIn] = useState(initial.weighIn.time);
   const [meals, setMeals] = useState(initial.meals.times.join(', '));
   const [water, setWater] = useState(initial.water.times.join(', '));
+  const nutrition = useFeatures().nutrition;
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -147,23 +149,31 @@ function Form({ initial }: { initial: NotificationPrefs }) {
       {prefs.weighIn.on ? (
         <TextField label="Time" value={weighIn} onChangeText={setWeighIn} placeholder="07:30" />
       ) : null}
-      <Toggle label="Meal logging reminders" value={prefs.meals.on} onChange={toggle('meals')} />
-      {prefs.meals.on ? (
-        <TextField
-          label="Times (up to 3)"
-          value={meals}
-          onChangeText={setMeals}
-          placeholder="12:30, 19:00"
-        />
-      ) : null}
-      <Toggle label="Water reminders" value={prefs.water.on} onChange={toggle('water')} />
-      {prefs.water.on ? (
-        <TextField
-          label="Times (up to 3)"
-          value={water}
-          onChangeText={setWater}
-          placeholder="11:00, 16:00"
-        />
+      {nutrition ? (
+        <>
+          <Toggle
+            label="Meal logging reminders"
+            value={prefs.meals.on}
+            onChange={toggle('meals')}
+          />
+          {prefs.meals.on ? (
+            <TextField
+              label="Times (up to 3)"
+              value={meals}
+              onChangeText={setMeals}
+              placeholder="12:30, 19:00"
+            />
+          ) : null}
+          <Toggle label="Water reminders" value={prefs.water.on} onChange={toggle('water')} />
+          {prefs.water.on ? (
+            <TextField
+              label="Times (up to 3)"
+              value={water}
+              onChangeText={setWater}
+              placeholder="11:00, 16:00"
+            />
+          ) : null}
+        </>
       ) : null}
 
       <SectionHeader title="Reports" />

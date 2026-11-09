@@ -6,6 +6,7 @@ import { useAuth } from '@/features/auth/AuthProvider';
 import { useRecalibrationEngine } from '@/features/coach/useRecalibrationEngine';
 import { useMilestoneEngine } from '@/features/milestones/api';
 import { useNotificationEngine } from '@/features/notifications/useNotificationEngine';
+import { useFeatures } from '@/features/profile/features';
 import { motion, useTheme } from '@/theme';
 
 function MilestoneEngine() {
@@ -28,6 +29,7 @@ function RecalibrationEngine() {
 export default function TabsLayout() {
   const { session, initializing } = useAuth();
   const { colors, reduceMotion } = useTheme();
+  const features = useFeatures();
   if (!initializing && !session) return <Redirect href="/welcome" />;
 
   return (
@@ -62,6 +64,8 @@ export default function TabsLayout() {
         <Tabs.Screen
           name="nutrition"
           options={{
+            // Hidden when the user switched nutrition off (Settings → App features).
+            href: features.nutrition ? undefined : null,
             title: 'Nutrition',
             tabBarIcon: ({ color, size }) => <Utensils color={color} size={size} />,
           }}

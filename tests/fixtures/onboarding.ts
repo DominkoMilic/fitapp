@@ -57,6 +57,7 @@ export const seedDraft: CompleteDraft = {
     ],
   },
   nutrition: {
+    trackNutrition: true,
     dietType: 'omnivore',
     allergies: [],
     intolerances: [],

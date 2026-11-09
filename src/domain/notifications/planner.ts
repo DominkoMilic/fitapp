@@ -24,6 +24,15 @@ export const DEFAULT_PREFS: NotificationPrefs = {
   weeklyReport: { on: true },
 };
 
+/** Meal and water reminders are part of nutrition: off while the user has nutrition switched off. */
+export const effectivePrefs = (
+  p: NotificationPrefs,
+  nutritionEnabled: boolean,
+): NotificationPrefs =>
+  nutritionEnabled
+    ? p
+    : { ...p, meals: { ...p.meals, on: false }, water: { ...p.water, on: false } };
+
 export const NOTIFY = {
   horizonDays: 14,
   dailyCap: 4,

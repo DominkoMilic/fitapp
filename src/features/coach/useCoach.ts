@@ -128,6 +128,7 @@ export function useCoach() {
     return {
       today,
       dietType: prefs.data?.diet_type ?? null,
+      nutritionEnabled: prefs.data?.nutrition_enabled ?? true,
       injuries,
       plan: {
         yesterday: on(addDays(today, -1)),

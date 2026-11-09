@@ -268,6 +268,17 @@ Progress: Weight, Measurements, Milestones, Personal records, Weekly report.
 Profile: all settings screens listed in 6.2.
 Other: Daily check-in, Sync status, Legal (privacy policy, terms, disclaimer, data sources and licences).
 
+### 6.5 Optional features (Settings → App features)
+
+**Nutrition tracking** can be switched off (`user_preferences.nutrition_enabled`, default on; also asked in onboarding step 6). When off:
+
+- the Nutrition tab, Home's "Today's nutrition" card, Profile's nutrition settings and the weekly report's nutrition section are hidden; "Goal and targets" becomes "Goal" (goal and target weight);
+- coach rules S4, N1–N3 and W2 are not shown (15.2); the two-week calorie review (8.9) does not run;
+- meal and water reminders are not scheduled (17); the reminder settings hide them;
+- links or old notifications that open a nutrition screen show "Nutrition is turned off" with a button to turn it on.
+
+Nothing is deleted. Calorie targets are still calculated and saved, so turning nutrition back on shows exactly the same targets. Weight tracking, the goal and training are unaffected.
+
 ---
 
 ## 7. Onboarding
@@ -281,7 +292,7 @@ Rules: progress bar, back navigation, draft saved locally after each step (resum
 | 3 Activity | activity level (5 options, each with plain-language description that includes exercise), optional average daily steps | Show multiplier and explain it already includes exercise. |
 | 4 Equipment | environment (home/gym/outdoors/mixed); equipment multi-select; per-item max weight (e.g. dumbbells 5 kg); custom entries | "No equipment" is exclusive. Max weight 0.5–200 kg. |
 | 5 Schedule | training days/week (0–7), preferred days, max session duration (15–120 min, default 45), preferred time, recurring sport commitments (title, type match/practice, weekday, time, duration), rest-day preferences | Commitments become `recurring_events`. Training days + commitments may overlap; scheduler resolves. |
-| 6 Nutrition | diet type (omnivore/vegetarian/vegan/pescatarian/other), allergies, intolerances, disliked foods, preferred cuisines, meals per day (2–6, default 3 + snacks), cooking time preference (≤15/≤30/≤60/any), household servings (1–8, default 1) | Allergies are free-text chips with suggestions (peanut, tree nuts, milk, egg, fish, shellfish, soy, wheat/gluten, sesame). |
+| 6 Nutrition | "Track food in PACE?" (default yes; no → the rest of the step is skipped and nutrition starts switched off, 6.5); diet type (omnivore/vegetarian/vegan/pescatarian/other), allergies, intolerances, disliked foods, preferred cuisines, meals per day (2–6, default 3 + snacks), cooking time preference (≤15/≤30/≤60/any), household servings (1–8, default 1) | Allergies are free-text chips with suggestions (peanut, tree nuts, milk, egg, fish, shellfish, soy, wheat/gluten, sesame). |
 | 7 Health (optional) | current injuries (body area, side, status, onset date, pain 0–10, notes, professional clearance), previous injuries, conditions, professional restrictions | Shown only after health-data consent. Disclaimer visible. Can skip. |
 | 8 Consent | terms + privacy (required), health data processing (required only if health info entered), notifications (optional). Location consent is asked later, at first activity. | Store in `consents` with document version. |
 | 9 Plan preview | BMR, TDEE, calorie target, macros, water, weekly schedule, rest days, milestones, projection range, calculation breakdown ("How we calculated this") | User can edit targets before confirming. Confirm writes profile completion, goal, `nutrition_targets` v1, `training_plans`, recurring events, first 8 weeks of scheduled workouts. |
@@ -704,6 +715,8 @@ Records store the source session/activity; deleting the source recalculates the 
 
 Never: diagnose, recommend training through pain, suggest cutting calories, override professional restrictions, or recommend a hard session on MD-1.
 
+With nutrition switched off (6.5), S4, N1–N3 and W2 are never shown (`NUTRITION_RULES`).
+
 ---
 
 ## 16. Reports
@@ -725,6 +738,8 @@ Contents: weekly average weight (start of week vs end), trend, sessions complete
 | Water reminder | Off | Max 3 per day |
 | Weekly report | On, Monday 09:00 | |
 | Rest timer | On during workouts | |
+
+Meal and water reminders are never scheduled while nutrition is switched off (6.5).
 
 Rules: quiet hours 22:00–07:00; global cap 4 per day (rest timer excluded); notification permission asked only when the user turns on the first reminder. Reconcile on app start and after any schedule/preference/timezone change: cancel all PACE-scheduled notifications and schedule the next 14 days, staying under iOS's 64 pending notification limit. Notification text never includes weight or health details (lock screen privacy).
 
@@ -819,6 +834,7 @@ user_preferences (
   training_environment text check (training_environment in ('home','gym','outdoors','mixed')),
   notification_preferences jsonb not null default '{}',
   sports text[] not null default '{}',  -- sports catalogue keys, max 8; empty = no sport
+  nutrition_enabled boolean not null default true,  -- 6.5; off hides food, calories and water
   locale text default 'en', updated_at
 )
 
