@@ -98,3 +98,30 @@ export function decodeRoute(file: unknown): { lat: number; lng: number }[][] | n
     return null;
   }
 }
+
+/** Full points (time, accuracy, altitude) for recomputing metrics; null when malformed. */
+export function decodeRoutePoints(file: unknown): RawPoint[][] | null {
+  if (!decodeRoute(file)) return null;
+  try {
+    return (file as RouteFile).pieces.map((p) => {
+      const coords = decodePolyline(p.p);
+      if (!Array.isArray(p.t) || p.t.length !== coords.length || typeof p.t0 !== 'number')
+        throw new Error('bad times');
+      let t = p.t0;
+      return coords.map((c, i) => {
+        t += (p.t[i] ?? 0) * 1000;
+        const acc = p.a?.[i];
+        const alt = p.z?.[i];
+        return {
+          t,
+          lat: c.lat,
+          lng: c.lng,
+          acc: typeof acc === 'number' ? acc : null,
+          alt: typeof alt === 'number' ? alt : null,
+        };
+      });
+    });
+  } catch {
+    return null;
+  }
+}

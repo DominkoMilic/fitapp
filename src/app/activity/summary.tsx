@@ -82,6 +82,9 @@ export default function ActivitySummaryScreen() {
           message="The GPS signal was weak, so this distance won't count towards records or distance milestones."
         />
       ) : null}
+      {meta.mode === 'foreground' ? (
+        <Banner message="Recorded with the app open only. Any time PACE was in the background or the screen was locked is missing from the route and distance." />
+      ) : null}
       <RouteMap pieces={recording.track.pieces} height={240} />
       <View style={styles.grid}>
         <StatTile label="Distance" value={formatDistance(s.distanceM, unit)} />

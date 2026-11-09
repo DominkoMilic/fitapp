@@ -1,3 +1,4 @@
+import { retypeActivity } from '@/domain/activity/retype';
 import { manualSummary, validateManual } from '@/domain/activity/manual';
 import { ENTITY_ORDER } from '@/domain/sync/outbox';
 import { activityRecords } from '@/domain/activity/records';
@@ -32,6 +33,7 @@ import {
 import {
   decodePolyline,
   decodeRoute,
+  decodeRoutePoints,
   encodePolyline,
   encodeRoute,
 } from '@/domain/activity/route-codec';
@@ -346,3 +348,40 @@ describe('manual activities (spec 11.8)', () => {
     expect(validateManual(30, null)).toBeNull();
   });
 });
+
+describe('changing the type after saving (spec 11.6, 28.6 #15)', () => {
+  const ride = line(61, 6); // 6 m/s ≈ 21.6 km/h for 2 min
+  const base = {
+    source: 'gps' as const,
+    movingS: 120,
+    distanceM: 720,
+    maxSpeedMps: 6,
+    quality: 'good' as const,
+    pointsTotal: 61,
+    pointsValid: 61,
+    weightKg: 70,
+  };
+  it('the full route decodes back to points with times and accuracy', () => {
+    const pts = decodeRoutePoints(JSON.parse(JSON.stringify(encodeRoute([ride]))));
+    expect(pts?.[0]).toHaveLength(61);
+    expect(pts?.[0]?.[60]?.t).toBe(ride[60]!.t);
+    expect(pts?.[0]?.[0]?.acc).toBe(5);
+    expect(decodeRoutePoints({ v: 1, pieces: [{ p: '??', t0: 0, t: [] }] })).toBeNull();
+  });
+  it('re-filters with the new cap: a ride relabelled as a walk loses its implausible distance', () => {
+    const pieces = decodeRoutePoints(encodeRoute([ride]));
+    const asRun = retypeActivity({ ...base, type: 'run', pieces });
+    expect(asRun.distanceM).toBeCloseTo(720, -1); // 6 m/s is under the run cap (8)
+    const asWalk = retypeActivity({ ...base, type: 'walk', pieces });
+    expect(asWalk.distanceM!).toBeLessThan(100); // 6 m/s is over the walk cap (3.5)
+    expect(asWalk.quality).toBe('poor');
+  });
+  it('without a route keeps the distance and recomputes pace and calories', () => {
+    const r = retypeActivity({ ...base, type: 'run', pieces: null, source: 'manual' });
+    expect(r.distanceM).toBe(720);
+    expect(r.avgPaceSPerKm).toBeCloseTo(166.7, 0);
+    expect(r.quality).toBe('none');
+    expect(r.kcal).toBe(activityCalories('run', 21.6, 70, 120));
+  });
+});
+

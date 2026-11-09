@@ -1,7 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
 
-import { decodeRoute, encodeRoute, type RouteFile } from '@/domain/activity/route-codec';
+import type { ActivityType } from '@/domain/activity/met';
+import { retypeActivity } from '@/domain/activity/retype';
+import {
+  decodeRoute,
+  decodeRoutePoints,
+  encodeRoute,
+  type RouteFile,
+} from '@/domain/activity/route-codec';
 import type { ActivitySummary } from '@/domain/activity/recording';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useSyncActions } from '@/features/sync/SyncProvider';
@@ -44,7 +51,9 @@ export function useRoute(activity: Pick<Activity, 'id' | 'route_storage_path'> |
         .storage.from('routes')
         .download(path as string);
       if (error) throw error;
-      return decodeRoute(JSON.parse(await data.text()));
+      const file: unknown = JSON.parse(await data.text());
+      const shape = decodeRoute(file);
+      return shape ? { shape, points: decodeRoutePoints(file) } : null;
     },
   });
 }
@@ -103,6 +112,55 @@ export function useActivityActions() {
           payload: { route },
         });
       }
+    },
+    /** New type: metrics and record eligibility are recomputed (spec 11.6). Sends the full row. */
+    changeType: (
+      a: Activity,
+      type: ActivityType,
+      route: { points: ReturnType<typeof decodeRoutePoints> } | null,
+      weightKg: number | null,
+    ) => {
+      const r = retypeActivity({
+        type,
+        source: a.source as 'gps' | 'manual',
+        pieces: route?.points ?? null,
+        movingS: a.moving_seconds,
+        distanceM: a.distance_meters,
+        maxSpeedMps: a.max_speed_mps === null ? null : Number(a.max_speed_mps),
+        quality: a.gps_quality as 'good' | 'fair' | 'poor' | 'none',
+        pointsTotal: a.points_total,
+        pointsValid: a.points_accepted,
+        weightKg,
+      });
+      const {
+        _pending,
+        _failed,
+        created_at,
+        updated_at,
+        client_updated_at,
+        user_id,
+        route_storage_path,
+        route_deleted_at,
+        ...rest
+      } = a as Activity & { _pending?: boolean; _failed?: boolean };
+      return write({
+        id: randomUUID(),
+        entity: 'activities',
+        recordKey: a.id,
+        kind: 'upsert',
+        createdOffline: false,
+        payload: {
+          ...rest,
+          activity_type: type,
+          distance_meters: r.distanceM,
+          average_speed_mps: round3(r.avgSpeedMps),
+          max_speed_mps: r.maxSpeedMps === null ? null : round3(r.maxSpeedMps),
+          average_pace_seconds_per_km: r.avgPaceSPerKm ? Math.round(r.avgPaceSPerKm) : null,
+          calories_estimated: r.kcal === null ? null : Math.round(r.kcal),
+          gps_quality: r.quality,
+          points_accepted: r.pointsValid,
+        },
+      });
     },
     /** Removes the route file but keeps the activity's totals (spec 11.7). */
     deleteRoute: (activityId: string) =>

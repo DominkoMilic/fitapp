@@ -19,3 +19,5 @@ export const QUALITY_LABEL = {
   poor: 'GPS poor — distance may be off',
   none: 'No GPS',
 } as const;
+
+export const QUALITY_SHORT = { good: 'Good', fair: 'Fair', poor: 'Poor', none: '—' } as const;

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { Banner, ConfirmDialog, EmptyState, LoadingState, useToast } from '@/components/feedback';
-import { Button, Screen, StatTile, Text } from '@/components/ui';
+import { Button, Screen, SegmentedControl, StatTile, Text } from '@/components/ui';
 import { formatDistance, formatPace, formatSpeed } from '@/domain/activity/geo';
 import type { ActivityType } from '@/domain/activity/met';
 import { useActivities, useActivityActions, useRoute } from '@/features/activity/api';
@@ -11,6 +11,7 @@ import { ACTIVITY_LABEL, QUALITY_LABEL } from '@/features/activity/labels';
 import { RouteMap } from '@/features/activity/RouteMap';
 import { backToActivities } from '@/features/activity/navigation';
 import { useProfile } from '@/features/profile/api';
+import { useWeightStats } from '@/features/weight/useWeightStats';
 import { formatClock } from '@/hooks/useNow';
 import { spacing } from '@/theme';
 
@@ -20,7 +21,9 @@ export default function ActivityDetail() {
   const a = rows.find((r) => r.id === id) ?? null;
   const route = useRoute(a);
   const { data: profile } = useProfile();
-  const { deleteRoute, remove } = useActivityActions();
+  const { deleteRoute, remove, changeType } = useActivityActions();
+  const { current } = useWeightStats('30D');
+  const [newType, setNewType] = useState<ActivityType | null>(null);
   const showToast = useToast((s) => s.show);
   const [confirm, setConfirm] = useState<'route' | 'activity' | null>(null);
   const unit = (profile?.unit_system ?? 'metric') as 'metric' | 'imperial';
@@ -58,7 +61,7 @@ export default function ActivityDetail() {
         route.isPending ? (
           <LoadingState label="Loading route" />
         ) : route.data ? (
-          <RouteMap pieces={route.data} height={240} />
+          <RouteMap pieces={route.data.shape} height={240} />
         ) : (
           <Banner tone="warning" message="The route could not be loaded." />
         )
@@ -97,7 +100,41 @@ export default function ActivityDetail() {
       {a.route_storage_path ? (
         <Button title="Delete route only" variant="secondary" onPress={() => setConfirm('route')} />
       ) : null}
+      <SegmentedControl
+        options={[
+          { value: 'walk', label: 'Walk' },
+          { value: 'run', label: 'Run' },
+          { value: 'cycle', label: 'Ride' },
+          { value: 'other', label: 'Other' },
+        ]}
+        value={type}
+        onChange={(t) => {
+          // Wait for the route so the distance can be recomputed from it.
+          if (t !== type && !(a.route_storage_path && route.isPending)) setNewType(t);
+        }}
+        accessibilityLabel="Change activity type"
+      />
       <Button title="Delete activity" variant="ghost" onPress={() => setConfirm('activity')} />
+      <ConfirmDialog
+        visible={newType !== null}
+        title={`Change to ${newType ? ACTIVITY_LABEL[newType].toLowerCase() : ''}?`}
+        message={
+          a.route_storage_path && route.data?.points
+            ? 'Distance, pace and calories are recalculated from your route with the new type’s limits, and records update.'
+            : 'Pace and calories are recalculated and records update. The distance stays the same.'
+        }
+        confirmLabel="Change"
+        onCancel={() => setNewType(null)}
+        onConfirm={() => {
+          const t = newType;
+          setNewType(null);
+          if (!t) return;
+          void changeType(a, t, route.data ?? null, current?.kg ?? null).then(
+            () => showToast(`Changed to ${ACTIVITY_LABEL[t].toLowerCase()}`),
+            () => showToast('Could not change the type. Try again.'),
+          );
+        }}
+      />
       <ConfirmDialog
         visible={confirm !== null}
         title={confirm === 'route' ? 'Delete the route?' : 'Delete this activity?'}

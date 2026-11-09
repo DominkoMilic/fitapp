@@ -8,7 +8,7 @@ import { formatDistance, formatPace, formatSpeed } from '@/domain/activity/geo';
 import { gpsQuality } from '@/domain/activity/gps-filter';
 import type { ActivityType } from '@/domain/activity/met';
 import { canResume, liveStats } from '@/domain/activity/recording';
-import { RECORDABLE_TYPES } from '@/features/activity/labels';
+import { QUALITY_SHORT, RECORDABLE_TYPES } from '@/features/activity/labels';
 import { recorder } from '@/features/activity/recorder';
 import { useActiveRecording } from '@/features/activity/recording-store';
 import { RouteMap } from '@/features/activity/RouteMap';
@@ -96,6 +96,13 @@ function Setup({ userId }: { userId: string | undefined }) {
             />
             <Button title="Open Settings" onPress={() => void Linking.openSettings()} />
           </>
+        )}
+        {perm.canAskForeground ? null : (
+          <Button
+            title="Add an activity manually"
+            variant="secondary"
+            onPress={() => router.replace('/activity/manual')}
+          />
         )}
       </Screen>
     );
@@ -257,6 +264,19 @@ function Live() {
           unit="kcal"
           caption="Estimate"
         />
+      </View>
+      <View style={styles.row}>
+        <StatTile label="Total time" value={formatClock(s.elapsedS)} />
+        {meta.type === 'cycle' ? (
+          <StatTile label="Avg speed" value={formatSpeed(s.avgSpeedMps, unit)} />
+        ) : (
+          <StatTile
+            label="Avg pace"
+            value={formatPace(s.avgPaceSPerKm, unit)}
+            unit={unit === 'metric' ? '/km' : '/mi'}
+          />
+        )}
+        <StatTile label="GPS" value={QUALITY_SHORT[quality]} />
       </View>
       <RouteMap pieces={pieces} follow={!paused} height={220} />
       <View style={styles.row}>
