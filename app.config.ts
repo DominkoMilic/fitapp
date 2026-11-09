@@ -85,6 +85,20 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
     '@react-native-community/datetimepicker',
     [
+      'expo-build-properties',
+      {
+        android: {
+          // Release builds are shrunk with R8. WorkManager (used by notifications and background
+          // tasks) creates its Room database by reflection, so R8 must keep those classes or the
+          // app crashes on launch ("Failed to create an instance of WorkDatabase").
+          extraProguardRules: [
+            '-keep class * extends androidx.room.RoomDatabase { <init>(); }',
+            '-keep class androidx.work.impl.WorkDatabase_Impl { *; }',
+          ].join('\n'),
+        },
+      },
+    ],
+    [
       'expo-splash-screen',
       {
         image: './assets/splash-icon.png',
