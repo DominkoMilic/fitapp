@@ -5,6 +5,7 @@ import { formatWeight, type UnitSystem } from '@/domain/calculations/units';
 import type { WeeklyReport } from '@/domain/reports/weekly';
 import { spacing } from '@/theme';
 import { formatDateRange, plural } from '@/domain/format';
+import { MilestoneLine } from '@/features/milestones/MilestoneLine';
 
 const NO_DATA = 'No data';
 const km = (v: number | null, unit: UnitSystem) =>
@@ -116,7 +117,7 @@ export function WeeklyReportView({ report: r, unit }: { report: WeeklyReport; un
         <>
           <SectionHeader title="Milestones" />
           {r.milestones.map((m) => (
-            <Text key={m}>🏅 {m}</Text>
+            <MilestoneLine key={m} title={m} />
           ))}
         </>
       ) : null}

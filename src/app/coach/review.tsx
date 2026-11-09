@@ -6,9 +6,10 @@ import { addDays } from '@/domain/calculations/dates';
 import { type TargetAdjustment, useAdjustments, useDecideAdjustment } from '@/features/coach/api';
 import { targetFor } from '@/features/dashboard/today';
 import { useToday } from '@/features/dashboard/useToday';
-import { useTargetHistory } from '@/features/profile/api';
+import { useProfile, useTargetHistory } from '@/features/profile/api';
 import { useWeightStats } from '@/features/weight/useWeightStats';
 import { formatDateRange } from '@/domain/format';
+import { kgToLb, type UnitSystem } from '@/domain/calculations/units';
 
 const OUTCOME: Record<string, string> = {
   increase_fast_loss: 'Eat a little more',
@@ -32,7 +33,7 @@ const message = (a: TargetAdjustment) =>
   OUTCOME[a.reason_code] ??
   '';
 
-function Details({ a }: { a: TargetAdjustment }) {
+function Details({ a, unit }: { a: TargetAdjustment; unit: UnitSystem }) {
   const inputs = (a.inputs ?? {}) as Record<string, unknown>;
   const complete = num(inputs.completeDays);
   const intake = num(inputs.meanIntakeKcal);
@@ -50,8 +51,11 @@ function Details({ a }: { a: TargetAdjustment }) {
       ) : null}
       {rate !== null ? (
         <Text variant="small">
-          Weight trend: {rate >= 0 ? `losing ${rate.toFixed(2)}` : `gaining ${(-rate).toFixed(2)}`}{' '}
-          kg a week
+          Weight trend: {rate >= 0 ? 'losing' : 'gaining'}{' '}
+          {unit === 'metric'
+            ? `${Math.abs(rate).toFixed(2)} kg`
+            : `${kgToLb(Math.abs(rate)).toFixed(2)} lb`}{' '}
+          a week
         </Text>
       ) : null}
       {a.observed_tdee !== null ? (
@@ -70,6 +74,7 @@ export default function Review() {
   const targets = useTargetHistory();
   const { current: weight } = useWeightStats('30D');
   const { accept, reject } = useDecideAdjustment();
+  const unit = (useProfile().data?.unit_system ?? 'metric') as UnitSystem;
   const showToast = useToast((s) => s.show);
   const [confirm, setConfirm] = useState(false);
 
@@ -110,7 +115,7 @@ export default function Review() {
             {pending.current_kcal} → {pending.proposed_kcal} kcal a day
           </Text>
           <Text>{message(pending)}</Text>
-          <Details a={pending} />
+          <Details a={pending} unit={unit} />
           {pending.current_kcal !== current.kcal ? (
             <Banner
               tone="warning"
@@ -136,7 +141,7 @@ export default function Review() {
             Latest review · {OUTCOME[list[0].reason_code]}
           </Text>
           <Text>{message(list[0])}</Text>
-          <Details a={list[0]} />
+          <Details a={list[0]} unit={unit} />
         </Card>
       ) : (
         <Card>

@@ -6,7 +6,7 @@ import { Banner, ConfirmDialog, LoadingState, useToast } from '@/components/feed
 import { Button, Screen, Text, TextField } from '@/components/ui';
 import { LIMITS } from '@/constants/safety';
 import { isValidIsoDate } from '@/domain/calculations/dates';
-import type { UnitSystem } from '@/domain/calculations/units';
+import { formatWeight, type UnitSystem } from '@/domain/calculations/units';
 import { currentWeight, dailyValues, isSuspiciousWeight } from '@/domain/weight/trend';
 import { useToday } from '@/features/dashboard/useToday';
 import { DateField } from '@/features/onboarding/components/DateField';
@@ -55,7 +55,9 @@ function WeightForm({
   const validate = (): string | null => {
     if (weightKg === null) return 'Enter your weight';
     if (weightKg < LIMITS.weightKg.min || weightKg > LIMITS.weightKg.max)
-      return 'Weight must be between 30 and 350 kg';
+      return unit === 'metric'
+        ? 'Weight must be between 30 and 350 kg'
+        : 'Weight must be between 66 and 771 lb';
     if (!date || !isValidIsoDate(date)) return 'Enter a valid date';
     if (date > today) return "You can't log a weight in the future";
     if (profile?.date_of_birth && date < profile.date_of_birth)
@@ -110,13 +112,13 @@ function WeightForm({
       <TextField label="Note (optional)" value={note} onChangeText={setNote} maxLength={500} />
       <Text variant="caption" color="textSecondary">
         For a reliable trend, weigh yourself in the morning, after the toilet, before eating, in
-        similar clothing. Daily changes of 1–2 kg are normal (water, food, salt). Your 7-day average
-        shows the real trend.
+        similar clothing. Daily changes of {unit === 'metric' ? '1–2 kg' : '2–4 lb'} are normal
+        (water, food, salt). Your 7-day average shows the real trend.
       </Text>
       <ConfirmDialog
         visible={confirmOutlier}
         title="Is this correct?"
-        message={`This is quite different from your recent average${reference ? ` (${reference.toFixed(1)} kg)` : ''}. Check for a typo before saving.`}
+        message={`This is quite different from your recent average${reference ? ` (${formatWeight(reference, unit)})` : ''}. Check for a typo before saving.`}
         confirmLabel="Save anyway"
         cancelLabel="Let me check"
         onCancel={() => setConfirmOutlier(false)}

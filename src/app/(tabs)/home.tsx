@@ -30,6 +30,7 @@ import { useWeightStats } from '@/features/weight/useWeightStats';
 import { ResumeWorkoutCard } from '@/features/training/ResumeWorkoutCard';
 import { radius, spacing, TOUCH_TARGET, useTheme } from '@/theme';
 import { intensityLabel } from '@/domain/format';
+import { MilestoneLine } from '@/features/milestones/MilestoneLine';
 
 const WEEKDAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -266,9 +267,7 @@ export default function Home() {
             accessibilityLabel="All milestones"
           >
             {recent.map((m) => (
-              <Text key={m.milestone_key} variant="small">
-                🏅 {m.title}
-              </Text>
+              <MilestoneLine key={m.milestone_key} title={m.title} />
             ))}
           </Card>
         </>

@@ -167,6 +167,8 @@ export default function WorkoutDetail() {
           {sport ? (
             <Button
               title="Log this session"
+              // One primary action per screen: when the workout can be started, that's the main one.
+              variant={built && w.kind !== 'rest' ? 'secondary' : 'primary'}
               onPress={() =>
                 router.push({ pathname: '/training/log-event', params: { scheduledId: w.id } })
               }

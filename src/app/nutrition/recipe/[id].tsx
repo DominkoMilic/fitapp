@@ -107,7 +107,7 @@ function RecipeView({ recipe }: { recipe: RecipeRow }) {
 
       <Button
         title={savedRow ? 'Saved ✓ (tap to remove)' : 'Save recipe'}
-        variant={savedRow ? 'secondary' : 'primary'}
+        variant="secondary"
         onPress={() =>
           savedRow
             ? void actions.unsave(recipe.id, saved.serverKeys.has(recipe.id))
