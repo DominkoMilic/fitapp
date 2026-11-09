@@ -256,6 +256,12 @@ export default function Nutrition() {
         subtitle="Browse, save and build your own"
         onPress={() => router.push('/nutrition/recipes')}
       />
+      <ListItem
+        title="Meal planner"
+        subtitle="Plan the week, mark meals eaten"
+        onPress={() => router.push('/nutrition/planner')}
+      />
+      <ListItem title="Shopping list" onPress={() => router.push('/nutrition/shopping')} />
 
       <ConfirmDialog
         visible={confirmWater !== null}

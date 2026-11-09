@@ -1,3 +1,5 @@
+import { shoppingSources } from '@/domain/nutrition/plan-shopping';
+import { buildShoppingList } from '@/domain/nutrition/shopping';
 import { readIngredients } from '@/domain/nutrition/recipe-ingredients';
 import { recipeNutrition } from '@/domain/nutrition/recipe-nutrition';
 
@@ -62,5 +64,62 @@ describe('user recipe nutrition (spec 12.5, N9)', () => {
   it('counts ingredients with missing data', () => {
     const n = recipeNutrition([{ food: { ...rice, protein_g: null }, grams: 100 }], 1);
     expect(n.partial).toBe(1);
+  });
+});
+
+describe('plan → shopping sources (spec 12.7, 28.7 #14)', () => {
+  const ing = (name: string, raw: string, q: number | null, unit: string | null) => ({
+    name,
+    raw_measure: raw,
+    quantity_min: q,
+    quantity_max: q,
+    unit,
+    parse_status: q === null ? 'to_taste' : 'parsed',
+  });
+  const recipes = new Map([
+    [
+      'r1',
+      {
+        id: 'r1',
+        name: 'Curry',
+        servings_stated: null,
+        ingredients: [ing('Rice', '200g', 200, 'g'), ing('Salt', 'to taste', null, null)],
+      },
+    ],
+    [
+      'r2',
+      { id: 'r2', name: 'Bowl', servings_stated: 2, ingredients: [ing('rice', '100 g', 100, 'g')] },
+    ],
+  ]);
+  it('scales by planned servings ÷ base, merges same name + unit, flags unknown bases, skips skipped', () => {
+    const { sources, unscaled } = shoppingSources({
+      entries: [
+        { status: 'planned', servings: 2, recipe_id: 'r1', saved_meal_id: null },
+        { status: 'planned', servings: 4, recipe_id: 'r2', saved_meal_id: null },
+        { status: 'skipped', servings: 4, recipe_id: 'r2', saved_meal_id: null },
+        { status: 'planned', servings: 1, recipe_id: null, saved_meal_id: 'm1' },
+      ],
+      recipes,
+      saved: new Map([['r1', { base_servings: 4 }]]),
+      savedMeals: new Map([['m1', { name: 'Oats', items: [{ name: 'Rice', grams: 50 }] }]]),
+    });
+    expect(unscaled).toEqual([]);
+    const lines = buildShoppingList(sources);
+    // Curry base 4 → 2 servings: 100 g; Bowl base 2 → 4: 200 g; saved meal 50 g → 350 g rice
+    expect(lines.find((l) => l.name === 'rice')).toMatchObject({
+      quantityMin: 350,
+      unit: 'g',
+      recipes: ['Curry', 'Bowl', 'Oats'],
+    });
+    expect(lines.find((l) => l.name === 'salt')?.rawText).toBe('to taste (Curry)');
+  });
+  it('without a known base the whole recipe is listed and named', () => {
+    const { unscaled } = shoppingSources({
+      entries: [{ status: 'planned', servings: 2, recipe_id: 'r1', saved_meal_id: null }],
+      recipes,
+      saved: new Map(),
+      savedMeals: new Map(),
+    });
+    expect(unscaled).toEqual(['Curry']);
   });
 });
