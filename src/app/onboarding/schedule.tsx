@@ -206,6 +206,7 @@ export default function ScheduleStep() {
           />
           <ChipGroup
             accessibilityLabel="Day of the week"
+            single
             options={WEEKDAYS}
             selected={[String(editing.weekday) as (typeof WEEKDAYS)[number]['value']]}
             onToggle={(v) => setEditing({ ...editing, weekday: Number(v) })}

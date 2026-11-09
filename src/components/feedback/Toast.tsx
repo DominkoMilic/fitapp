@@ -5,6 +5,7 @@ import { create } from 'zustand';
 
 import { Text } from '@/components/ui/Text';
 import { radius, spacing, useTheme } from '@/theme';
+import { announce, isScreenReaderOn } from '@/services/a11y/announce';
 
 interface ToastState {
   message: string | null;
@@ -43,9 +44,11 @@ export function ToastHost() {
 
   useEffect(() => {
     if (!message) return;
-    const t = setTimeout(hide, DURATION_MS);
+    // Spoken on iOS and Android; a screen-reader user gets longer to reach an action like Undo.
+    announce(actionLabel ? `${message}. ${actionLabel} available.` : message);
+    const t = setTimeout(hide, actionLabel && isScreenReaderOn() ? DURATION_MS * 2 : DURATION_MS);
     return () => clearTimeout(t);
-  }, [message, key, hide]);
+  }, [message, actionLabel, key, hide]);
 
   if (!message) return null;
   return (

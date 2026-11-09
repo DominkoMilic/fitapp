@@ -33,7 +33,7 @@ export function SegmentedControl<T extends string>({
           <Pressable
             key={o.value}
             accessibilityRole="radio"
-            accessibilityState={{ selected }}
+            accessibilityState={{ checked: selected }}
             accessibilityLabel={o.label}
             onPress={() => onChange(o.value)}
             style={[styles.segment, selected && { backgroundColor: colors.accent }]}
@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', borderRadius: radius.button, borderWidth: 1, padding: 3, gap: 3 },
   segment: {
     flex: 1,
-    minHeight: TOUCH_TARGET - 4,
+    minHeight: TOUCH_TARGET,
     borderRadius: radius.button - 3,
     alignItems: 'center',
     justifyContent: 'center',

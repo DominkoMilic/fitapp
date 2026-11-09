@@ -38,7 +38,7 @@ export function DateField({
   };
 
   return (
-    <View style={styles.wrapper} accessibilityLabel={label}>
+    <View style={styles.wrapper}>
       <Text variant="small" color="textSecondary">
         {label}
       </Text>
@@ -46,6 +46,7 @@ export function DateField({
         <View style={styles.small}>
           <NumberField
             label="Day"
+            accessibilityLabel={`${label}, day${error ? `, error: ${error}` : ''}`}
             decimal={false}
             precision={0}
             value={parts.d}
@@ -56,6 +57,7 @@ export function DateField({
         <View style={styles.small}>
           <NumberField
             label="Month"
+            accessibilityLabel={`${label}, month${error ? `, error: ${error}` : ''}`}
             decimal={false}
             precision={0}
             value={parts.m}
@@ -66,6 +68,7 @@ export function DateField({
         <View style={styles.large}>
           <NumberField
             label="Year"
+            accessibilityLabel={`${label}, year${error ? `, error: ${error}` : ''}`}
             decimal={false}
             precision={0}
             value={parts.y}

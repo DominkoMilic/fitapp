@@ -9,17 +9,20 @@ export function Chip({
   selected,
   onPress,
   onRemove,
+  single,
 }: {
   label: string;
   selected?: boolean;
   onPress?: () => void;
   onRemove?: () => void;
+  /** One choice in a group (radio semantics) rather than an independent toggle. */
+  single?: boolean;
 }) {
   const { colors } = useTheme();
   const press = onRemove ?? onPress;
   return (
     <Pressable
-      accessibilityRole={onRemove ? 'button' : 'checkbox'}
+      accessibilityRole={onRemove ? 'button' : single ? 'radio' : 'checkbox'}
       accessibilityState={onRemove ? undefined : { checked: !!selected }}
       accessibilityLabel={onRemove ? `Remove ${label}` : label}
       onPress={press}
@@ -36,7 +39,12 @@ export function Chip({
         variant="small"
         style={{ color: selected ? colors.onAccent : colors.textPrimary, fontWeight: '500' }}
       >
-        {onRemove ? `${label}  ✕` : label}
+        {label}
+        {onRemove ? (
+          <Text variant="small" accessibilityElementsHidden importantForAccessibility="no">
+            {'  ✕'}
+          </Text>
+        ) : null}
       </Text>
     </Pressable>
   );
@@ -47,21 +55,29 @@ export function ChipGroup<T extends string>({
   selected,
   onToggle,
   accessibilityLabel,
+  single,
 }: {
   options: readonly { value: T; label: string }[];
   selected: readonly T[];
   onToggle: (value: T) => void;
+  /** Exactly one option can be chosen (read as radio buttons). */
+  single?: boolean;
   /** Names the group for screen readers (needed when two groups share option labels). */
   accessibilityLabel?: string;
 }) {
   return (
-    <View style={styles.group} role="group" aria-label={accessibilityLabel}>
+    <View
+      style={styles.group}
+      role={single ? 'radiogroup' : 'group'}
+      aria-label={accessibilityLabel}
+    >
       {options.map((o) => (
         <Chip
           key={o.value}
           label={o.label}
           selected={selected.includes(o.value)}
           onPress={() => onToggle(o.value)}
+          single={single}
         />
       ))}
     </View>

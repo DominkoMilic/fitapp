@@ -19,7 +19,7 @@ export function OptionCard({
   return (
     <Pressable
       accessibilityRole="radio"
-      accessibilityState={{ selected }}
+      accessibilityState={{ checked: selected }}
       accessibilityLabel={description ? `${title}. ${description}` : title}
       onPress={onPress}
       style={[

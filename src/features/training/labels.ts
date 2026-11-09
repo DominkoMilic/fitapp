@@ -9,7 +9,7 @@ export const dayLabel = (date: string, today: string) =>
 
 export const STATUS_LABEL: Record<string, string> = {
   planned: '',
-  completed: '✓ Done',
+  completed: 'Done',
   skipped: 'Skipped',
   cancelled: 'Cancelled',
 };

@@ -26,6 +26,7 @@ import {
   watchAccuracy,
 } from '@/services/location/tracker';
 import { spacing } from '@/theme';
+import { announce } from '@/services/a11y/announce';
 
 type Perm = Awaited<ReturnType<typeof permissionState>>;
 /** Good enough to start without a warning (spec 11.3: wait for a fix ≤ 25 m). */
@@ -172,13 +173,7 @@ function Setup({ userId }: { userId: string | undefined }) {
         <Text variant="small" color="textSecondary">
           GPS signal
         </Text>
-        <Text variant="title" accessibilityLiveRegion="polite">
-          {accuracy === null
-            ? 'Searching…'
-            : ready
-              ? `Ready (±${Math.round(accuracy)} m)`
-              : `Weak (±${Math.round(accuracy)} m) — move to open sky`}
-        </Text>
+        <SignalStatus accuracy={accuracy} ready={ready} />
       </Card>
       <Button
         title={ready ? 'Start' : 'Start anyway'}
@@ -187,6 +182,24 @@ function Setup({ userId }: { userId: string | undefined }) {
         onPress={() => void start()}
       />
     </Screen>
+  );
+}
+
+/** GPS status; spoken only when it changes between searching, ready and weak (not on every fix). */
+function SignalStatus({ accuracy, ready }: { accuracy: number | null; ready: boolean }) {
+  const signal = accuracy === null ? 'searching' : ready ? 'ready' : 'weak';
+  useEffect(() => {
+    if (signal !== 'searching')
+      announce(signal === 'ready' ? 'GPS ready' : 'GPS signal weak. Move to open sky.');
+  }, [signal]);
+  return (
+    <Text variant="title">
+      {accuracy === null
+        ? 'Searching…'
+        : ready
+          ? `Ready (±${Math.round(accuracy)} m)`
+          : `Weak (±${Math.round(accuracy)} m) — move to open sky`}
+    </Text>
   );
 }
 
@@ -240,7 +253,7 @@ function Live() {
       {quality === 'poor' ? (
         <Banner tone="warning" message="Weak GPS signal. Distance is an estimate and may be off." />
       ) : null}
-      <View style={styles.hero} accessibilityLiveRegion="polite">
+      <View style={styles.hero}>
         <Text variant="small" color="textSecondary">
           {paused ? 'Paused' : 'Recording'} · {formatClock(s.movingS)}
         </Text>

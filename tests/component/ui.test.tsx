@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 import { Banner, EmptyState } from '@/components/feedback';
 import { Button, NumberField, ProgressBar, SegmentedControl } from '@/components/ui';
+import { spokenLabel } from '@/components/ui/Button';
 import { resolveScheme } from '@/theme';
 
 import { renderWithTheme } from '../setup/render';
@@ -117,5 +118,13 @@ describe('theme', () => {
     expect(resolveScheme('system', 'light')).toBe('light');
     expect(resolveScheme('dark', 'light')).toBe('dark');
     expect(resolveScheme('light', 'dark')).toBe('light');
+  });
+});
+
+describe('button spoken labels (audit: glyphs are not read aloud)', () => {
+  it('strips decorative glyphs', () => {
+    expect(spokenLabel('+ Add set')).toBe('Add set');
+    expect(spokenLabel('Saved ✓ (tap to remove)')).toBe('Saved (tap to remove)');
+    expect(spokenLabel('‹ Prev')).toBe('Prev');
   });
 });

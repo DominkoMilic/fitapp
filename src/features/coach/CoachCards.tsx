@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Button, Card, SectionHeader, Text } from '@/components/ui';
 import type { Recommendation } from '@/domain/coach/rules';
-import { spacing } from '@/theme';
+import { spacing, TOUCH_TARGET } from '@/theme';
 
 import { useCoach } from './useCoach';
 
@@ -28,6 +28,7 @@ function CoachCard({ card, onDismiss }: { card: Recommendation; onDismiss: () =>
           accessibilityState={{ expanded: why }}
           onPress={() => setWhy((w) => !w)}
           hitSlop={8}
+          style={styles.link}
         >
           <Text variant="small" color="accent">
             {why ? 'Hide reason' : 'Why am I seeing this?'}
@@ -38,6 +39,7 @@ function CoachCard({ card, onDismiss }: { card: Recommendation; onDismiss: () =>
           accessibilityLabel={`Dismiss ${card.title} for today`}
           onPress={onDismiss}
           hitSlop={8}
+          style={styles.link}
         >
           <Text variant="small" color="textSecondary">
             Dismiss
@@ -72,4 +74,6 @@ export function CoachCards() {
 const styles = StyleSheet.create({
   list: { gap: spacing.sm },
   row: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md },
+  // 44 pt tall tap areas (Fitts / WCAG 2.5.8) for the small text links.
+  link: { minHeight: TOUCH_TARGET, justifyContent: 'center' },
 });

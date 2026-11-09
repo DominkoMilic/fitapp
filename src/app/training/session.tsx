@@ -1,6 +1,6 @@
 import { randomUUID } from 'expo-crypto';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { Banner, ConfirmDialog, EmptyState, ErrorState, LoadingState } from '@/components/feedback';
@@ -32,6 +32,7 @@ import { useSessions } from '@/features/training/session-api';
 import { useBuiltWorkout } from '@/features/training/useBuiltWorkout';
 import { radius, spacing, TOUCH_TARGET, useTheme } from '@/theme';
 import { KG_PER_LB } from '@/domain/calculations/units';
+import { announce } from '@/services/a11y/announce';
 
 /** Starts (or resumes) a workout and runs it set by set. */
 export default function WorkoutSession() {
@@ -155,6 +156,13 @@ function Runner() {
   const ex = w.exercises[i]!;
   const info = EXERCISE_BY_SLUG[ex.slug];
   const rest = restRemainingS(w, now);
+  // Speak once when a rest ends (a live region would read the timer every second).
+  const resting = rest > 0;
+  const wasResting = useRef(false);
+  useEffect(() => {
+    if (wasResting.current && !resting) announce('Rest over. Time for your next set.');
+    wasResting.current = resting;
+  }, [resting]);
   const last = lastSets[ex.slug];
   const suggestion =
     last && ex.phase === 'main'
@@ -270,7 +278,7 @@ function Runner() {
           <Text variant="small" color="textSecondary">
             Rest
           </Text>
-          <Text variant="display" numeric accessibilityLiveRegion="polite">
+          <Text variant="display" numeric>
             {formatClock(rest)}
           </Text>
           <Button

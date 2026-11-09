@@ -4,6 +4,13 @@ import { radius, spacing, TOUCH_TARGET, useTheme } from '@/theme';
 
 import { Text } from './Text';
 
+/** Decorative glyphs (‹ › ✓ + ✕) are not read aloud: "+ Add set" is spoken as "Add set". */
+export const spokenLabel = (title: string) =>
+  title
+    .replace(/[‹›✓✕+]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'destructive';
 
 export interface ButtonProps extends Omit<PressableProps, 'children' | 'style'> {
@@ -41,7 +48,7 @@ export function Button({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={title}
+      accessibilityLabel={rest.accessibilityLabel ?? spokenLabel(title)}
       accessibilityState={{ disabled: !!isDisabled, busy: loading }}
       disabled={isDisabled}
       style={({ pressed }) => [

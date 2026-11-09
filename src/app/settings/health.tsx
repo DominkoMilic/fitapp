@@ -145,6 +145,7 @@ export default function HealthSettings() {
         <Card raised>
           <ChipGroup
             accessibilityLabel="Body area"
+            single
             options={BODY_AREAS.map((a) => ({ value: a, label: BODY_AREA_LABELS[a as BodyArea] }))}
             selected={[editing.bodyArea]}
             onToggle={(bodyArea) => setEditing({ ...editing, bodyArea: bodyArea as BodyArea })}

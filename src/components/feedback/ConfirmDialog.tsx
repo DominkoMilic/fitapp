@@ -31,14 +31,16 @@ export function ConfirmDialog({
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={onCancel}
+      onRequestClose={() => {
+        if (!loading) onCancel();
+      }}
       statusBarTranslucent
     >
       {/* The backdrop is a sibling, not a wrapper: buttons must not be nested inside a button. */}
       <View style={styles.backdrop}>
         <Pressable
           style={[StyleSheet.absoluteFill, { backgroundColor: colors.overlay }]}
-          onPress={onCancel}
+          onPress={loading ? undefined : onCancel}
           accessibilityLabel="Dismiss"
           accessibilityRole="button"
         />

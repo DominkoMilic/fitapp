@@ -28,7 +28,7 @@ export function TextField({ label, error, hint, suffix, style, ref, ...rest }: T
       >
         <TextInput
           ref={ref}
-          accessibilityLabel={label}
+          accessibilityLabel={error ? `${label}, error: ${error}` : label}
           accessibilityHint={hint}
           placeholderTextColor={colors.textSecondary}
           style={[styles.input, typography.body, { color: colors.textPrimary }, style]}

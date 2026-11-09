@@ -9,6 +9,7 @@ import { Button, Screen, Text } from '@/components/ui';
 import { signInSchema, type SignInValues } from '@/domain/validation/auth';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { type FriendlyAuthError } from '@/features/auth/errors';
+import { TOUCH_TARGET } from '@/theme';
 
 export default function SignIn() {
   const { signIn } = useAuth();
@@ -59,7 +60,11 @@ export default function SignIn() {
         onSubmitEditing={() => void onSubmit()}
       />
       <Button title="Sign in" loading={formState.isSubmitting} onPress={() => void onSubmit()} />
-      <Link href="/forgot-password" accessibilityRole="link">
+      <Link
+        href="/forgot-password"
+        accessibilityRole="link"
+        style={{ minHeight: TOUCH_TARGET, justifyContent: 'center' }}
+      >
         <Text variant="body" color="accent">
           Forgot your password?
         </Text>

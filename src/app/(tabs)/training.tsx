@@ -64,6 +64,7 @@ export default function Training() {
       <View style={styles.weekNav}>
         <Button
           title="‹ Prev"
+          accessibilityLabel="Previous week"
           variant="ghost"
           fullWidth={false}
           onPress={() => setOffset(offset - 1)}
@@ -73,6 +74,7 @@ export default function Training() {
         </Text>
         <Button
           title="Next ›"
+          accessibilityLabel="Next week"
           variant="ghost"
           fullWidth={false}
           onPress={() => setOffset(offset + 1)}

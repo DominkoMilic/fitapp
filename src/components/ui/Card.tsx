@@ -11,6 +11,7 @@ export function Card({
   raised,
 }: PropsWithChildren<{
   onPress?: () => void;
+  /** What tapping does (read as a hint; the card's own text stays readable). */
   accessibilityLabel?: string;
   style?: ViewStyle;
   raised?: boolean;
@@ -25,7 +26,7 @@ export function Card({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel}
+      accessibilityHint={accessibilityLabel}
       onPress={onPress}
       style={({ pressed }) => [...base, { opacity: pressed ? 0.85 : 1 }]}
     >
