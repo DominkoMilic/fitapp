@@ -43,7 +43,7 @@ export const LEGAL_DOCS: Record<LegalDocId, Doc> = {
       },
       {
         heading: 'Where your data is stored and who processes it',
-        body: 'Your data is stored by Supabase (database, sign-in and file storage) in the European Union, acting as our processor. Recipe searches go through our server to TheMealDB; only the search words are sent, never your identity. Reminders are local notifications created on your phone; no notification service receives your data.',
+        body: 'Your data is stored by Supabase (database, sign-in and file storage) in the European Union, acting as our processor. Recipe searches go through our server to TheMealDB; only the search words are sent, never your identity. Recipe photos are copied to our own storage and shown from there, so your phone never contacts TheMealDB. Reminders are local notifications created on your phone; no notification service receives your data.',
       },
       {
         heading: 'Security',
@@ -147,7 +147,7 @@ export const LEGAL_DOCS: Record<LegalDocId, Doc> = {
       },
       {
         heading: 'Recipes',
-        body: 'Recipes and images are provided by TheMealDB (themealdb.com) and belong to their respective owners. PACE shows them with attribution and does not add nutrition to them.',
+        body: 'Recipes and images are provided by TheMealDB (themealdb.com) and belong to their respective owners. PACE shows them with attribution, keeps a copy of each photo on its own server so your phone never contacts TheMealDB, and does not add nutrition to them.',
       },
       {
         heading: 'Exercise energy (MET values)',

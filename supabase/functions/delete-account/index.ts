@@ -15,7 +15,10 @@ const CORS = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { ...CORS, 'Content-Type': 'application/json' } });
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...CORS, 'Content-Type': 'application/json' },
+  });
 const env = (name: string) => Deno.env.get(name) ?? '';
 const requestSchema = z.object({ confirm: z.literal('DELETE') });
 
@@ -40,7 +43,9 @@ Deno.serve(async (req) => {
   if (!recentlyAuthenticated(auth.user.last_sign_in_at, Date.now()))
     return json({ error: 'reauthentication_required' }, 403);
 
-  const admin = createClient(url, env('SUPABASE_SERVICE_ROLE_KEY'), { auth: { persistSession: false } });
+  const admin = createClient(url, env('SUPABASE_SERVICE_ROLE_KEY'), {
+    auth: { persistSession: false },
+  });
   const { data: allowed, error: rlError } = await admin.rpc('hit_rate_limit', {
     uid: auth.user.id,
     bucket_name: 'delete-account',

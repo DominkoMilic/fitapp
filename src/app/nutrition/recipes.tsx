@@ -21,6 +21,7 @@ import {
   useSavedRecipes,
 } from '@/features/nutrition/recipes-api';
 import { radius, spacing, useTheme } from '@/theme';
+import { recipeImage } from '@/integrations/recipes/images';
 
 type Tab = 'saved' | 'mine' | 'browse';
 
@@ -168,9 +169,9 @@ function BrowseTab() {
           onPress={() => openRecipe({ ext: r.externalId })}
           style={[styles.row, { borderBottomColor: colors.border }]}
         >
-          {r.imageUrl ? (
+          {recipeImage(r.imageUrl) ? (
             <Image
-              source={{ uri: `${r.imageUrl}/small` }}
+              source={{ uri: recipeImage(r.imageUrl) as string }}
               style={styles.thumb}
               accessibilityIgnoresInvertColors
               accessible={false}

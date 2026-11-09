@@ -30,6 +30,7 @@ import { useRecipeFlagger } from '@/features/nutrition/usePreferencesFlags';
 import { usePreferences } from '@/features/profile/api';
 import { recipeErrorMessage } from '@/integrations/recipes/themealdb.provider';
 import { radius, spacing } from '@/theme';
+import { recipeImage } from '@/integrations/recipes/images';
 
 export default function RecipeDetail() {
   const params = useLocalSearchParams<{ id: string; ext?: string }>();
@@ -78,9 +79,9 @@ function RecipeView({ recipe }: { recipe: RecipeRow }) {
 
   return (
     <Screen edges={['bottom']}>
-      {recipe.image_url ? (
+      {recipeImage(recipe.image_url) ? (
         <Image
-          source={{ uri: recipe.image_url }}
+          source={{ uri: recipeImage(recipe.image_url) as string }}
           style={styles.image}
           accessibilityIgnoresInvertColors
           accessibilityLabel={recipe.name}
