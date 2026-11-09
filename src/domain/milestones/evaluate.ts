@@ -11,7 +11,7 @@ export interface MilestoneDefinition {
   key: string;
   title: string;
   description: string;
-  category: 'weight' | 'consistency' | 'training';
+  category: 'weight' | 'consistency' | 'training' | 'activity';
   threshold: number | null;
 }
 
@@ -52,6 +52,40 @@ const CONSISTENCY: MilestoneDefinition[] = [
 ];
 
 const count = (n: number, noun: string) => `${n} ${noun}${n === 1 ? '' : 's'}`;
+/** Single-activity distance milestones (spec 25.5). */
+export const ACTIVITY_DISTANCES: {
+  key: string;
+  type: 'walk' | 'run' | 'cycle';
+  meters: number;
+  title: string;
+}[] = [
+  { key: 'walk_5k', type: 'walk', meters: 5000, title: 'First 5 km walk' },
+  { key: 'run_5k', type: 'run', meters: 5000, title: 'First 5 km run' },
+  { key: 'run_10k', type: 'run', meters: 10000, title: 'First 10 km run' },
+  { key: 'cycle_10k', type: 'cycle', meters: 10000, title: 'First 10 km ride' },
+  { key: 'cycle_25k', type: 'cycle', meters: 25000, title: 'First 25 km ride' },
+];
+const ACTIVITY: MilestoneDefinition[] = ACTIVITY_DISTANCES.map((a) => ({
+  key: a.key,
+  title: a.title,
+  description: `One ${a.type === 'cycle' ? 'ride' : a.type} of ${a.meters / 1000} km or more`,
+  category: 'activity' as const,
+  threshold: a.meters,
+}));
+
+export interface ActivityLike {
+  date: IsoDate;
+  type: string;
+  distanceM: number | null;
+  movingS: number;
+  quality: string;
+  source: string;
+}
+
+/** GPS distances only count with good or fair GPS; manual entries count with a distance. */
+export const distanceTrusted = (a: Pick<ActivityLike, 'quality' | 'source'>) =>
+  a.source === 'manual' || a.quality === 'good' || a.quality === 'fair';
+
 const TRAINING: MilestoneDefinition[] = [
   ...[1, 5, 10, 25, 50, 100].map((n) => ({
     key: `workouts_${n}`,
@@ -92,7 +126,7 @@ export function milestoneCatalogue(goal: GoalLike | null): MilestoneDefinition[]
           threshold: m.thresholdKg,
         }))
       : [];
-  return [...weight, ...CONSISTENCY, ...TRAINING];
+  return [...weight, ...CONSISTENCY, ...TRAINING, ...ACTIVITY];
 }
 
 /** Longest run of consecutive dates (any order, duplicates ignored), with its end date. */
@@ -136,6 +170,8 @@ export function evaluateMilestones(input: {
   unlockedKeys: ReadonlySet<string>;
   /** Completed workout sessions and sport events (abandoned ones are excluded by the caller). */
   sessions?: readonly { date: IsoDate; durationS: number; category: string }[];
+  /** Walks, runs and rides (GPS or manual). */
+  activities?: readonly ActivityLike[];
 }): MilestoneUnlock[] {
   const out: MilestoneUnlock[] = [];
   const catalogue = milestoneCatalogue(input.goal);
@@ -195,7 +231,26 @@ export function evaluateMilestones(input: {
     sessions.filter((s) => s.category === 'strength'),
     (l) => l.length,
   );
-  crossing('training_hours_', sessions, (l) => l.reduce((a, s) => a + s.durationS, 0) / 3600);
+  // Training hours include activity moving time.
+  const timed = [
+    ...sessions,
+    ...(input.activities ?? []).map((a) => ({
+      date: a.date,
+      durationS: a.movingS,
+      category: 'activity',
+    })),
+  ].sort((a, b) => a.date.localeCompare(b.date));
+  crossing('training_hours_', timed, (l) => l.reduce((a, s) => a + s.durationS, 0) / 3600);
+
+  const acts = [...(input.activities ?? [])].sort((a, b) => a.date.localeCompare(b.date));
+  for (const d of ACTIVITY_DISTANCES) {
+    const def = catalogue.find((c) => c.key === d.key);
+    if (!def || input.unlockedKeys.has(d.key)) continue;
+    const hit = acts.find(
+      (a) => a.type === d.type && distanceTrusted(a) && (a.distanceM ?? 0) >= d.meters,
+    );
+    if (hit) out.push({ ...def, value: hit.distanceM, achievedOn: hit.date });
+  }
   return out;
 }
 
