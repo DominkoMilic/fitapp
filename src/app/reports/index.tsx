@@ -8,11 +8,12 @@ import { useProfile } from '@/features/profile/api';
 import { useCachedReports, useWeeklyReport, useWeekStart } from '@/features/reports/api';
 import { WeeklyReportView } from '@/features/reports/WeeklyReportView';
 import { formatWeekOf } from '@/domain/format';
+import { LoadErrorBanner } from '@/components/feedback/LoadErrorBanner';
 
 /** This week (live) and the last 12 weeks. */
 export default function Reports() {
   const { current } = useWeekStart();
-  const { report, isPending } = useWeeklyReport(current);
+  const { report, isPending, isError, refetch } = useWeeklyReport(current);
   const cached = useCachedReports();
   const unit = (useProfile().data?.unit_system ?? 'metric') as UnitSystem;
   const past = Array.from({ length: 12 }, (_, i) => addDays(current, -7 * (i + 1)));
@@ -20,7 +21,12 @@ export default function Reports() {
 
   return (
     <Screen edges={['bottom']}>
-      {isPending || !report ? <LoadingState /> : <WeeklyReportView report={report} unit={unit} />}
+      <LoadErrorBanner visible={isError} what="this week's report" onRetry={() => void refetch()} />
+      {report ? (
+        <WeeklyReportView report={report} unit={unit} />
+      ) : isPending && !isError ? (
+        <LoadingState />
+      ) : null}
       <SectionHeader title="Past weeks" />
       {past.map((w) => (
         <ListItem

@@ -1,7 +1,13 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 
-import { ConfirmDialog, EmptyState, LoadingState, useToast } from '@/components/feedback';
+import {
+  ConfirmDialog,
+  EmptyState,
+  ErrorState,
+  LoadingState,
+  useToast,
+} from '@/components/feedback';
 import { Button, Card, Screen, Text } from '@/components/ui';
 import { sumNutrition, mealTypeForTime } from '@/domain/nutrition/totals';
 import { useToday } from '@/features/dashboard/useToday';
@@ -28,6 +34,15 @@ export default function SavedMeals() {
     return (
       <Screen edges={['bottom']}>
         <LoadingState />
+      </Screen>
+    );
+  if (saved.isError && !saved.rows.length)
+    return (
+      <Screen edges={['bottom']}>
+        <ErrorState
+          message="Your saved meals couldn't be loaded. Check your connection."
+          onRetry={() => void saved.refetch()}
+        />
       </Screen>
     );
   if (!saved.rows.length) {

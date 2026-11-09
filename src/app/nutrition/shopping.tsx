@@ -22,6 +22,7 @@ import { dayLabel } from '@/features/training/labels';
 import { radius, spacing, TOUCH_TARGET, useTheme } from '@/theme';
 import { addDays } from '@/domain/calculations/dates';
 import { useGuardedAction } from '@/hooks/useSubmit';
+import { LoadErrorBanner } from '@/components/feedback/LoadErrorBanner';
 
 const qty = (it: ShoppingItem) => {
   if (it.raw_text) return it.raw_text;
@@ -84,6 +85,11 @@ export default function Shopping() {
 
   return (
     <Screen edges={['bottom']}>
+      <LoadErrorBanner
+        visible={lists.isError || items.isError}
+        what="your shopping list"
+        onRetry={() => void Promise.all([lists.refetch(), items.refetch()])}
+      />
       {!list ? (
         <EmptyState
           title="No shopping list yet"

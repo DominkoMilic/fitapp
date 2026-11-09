@@ -2,7 +2,14 @@ import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { Banner, ConfirmDialog, EmptyState, LoadingState, useToast } from '@/components/feedback';
+import {
+  Banner,
+  ConfirmDialog,
+  EmptyState,
+  ErrorState,
+  LoadingState,
+  useToast,
+} from '@/components/feedback';
 import { Button, Screen, SegmentedControl, StatTile, Text } from '@/components/ui';
 import { formatDistance, formatPace, formatSpeed } from '@/domain/activity/geo';
 import type { ActivityType } from '@/domain/activity/met';
@@ -18,7 +25,7 @@ import { formatDate } from '@/domain/format';
 
 export default function ActivityDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { rows, isPending } = useActivities();
+  const { rows, isPending, isError, refetch } = useActivities();
   const a = rows.find((r) => r.id === id) ?? null;
   const route = useRoute(a);
   const { data: profile } = useProfile();
@@ -33,6 +40,15 @@ export default function ActivityDetail() {
     return (
       <Screen edges={['bottom']}>
         <LoadingState />
+      </Screen>
+    );
+  if (!a && isError)
+    return (
+      <Screen edges={['bottom']}>
+        <ErrorState
+          message="This activity couldn't be loaded. Check your connection."
+          onRetry={() => void refetch()}
+        />
       </Screen>
     );
   if (!a)

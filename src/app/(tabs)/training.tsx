@@ -16,6 +16,7 @@ import { ResumeWorkoutCard } from '@/features/training/ResumeWorkoutCard';
 import { ResumeActivityCard } from '@/features/activity/ResumeActivityCard';
 import { spacing } from '@/theme';
 import { EXERCISES } from '@/domain/training/catalogue';
+import { LoadErrorBanner } from '@/components/feedback/LoadErrorBanner';
 
 export default function Training() {
   const { today } = useToday();
@@ -33,6 +34,11 @@ export default function Training() {
       <Text variant="heading" accessibilityRole="header">
         Training
       </Text>
+      <LoadErrorBanner
+        visible={week.isError}
+        what="your week"
+        onRetry={() => void week.refetch()}
+      />
       {restrictions.sportRestricted ? (
         <Banner
           tone="warning"

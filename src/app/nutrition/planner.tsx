@@ -45,6 +45,7 @@ import { usePreferences, useProfile, useTargetHistory } from '@/features/profile
 import { dayLabel } from '@/features/training/labels';
 import { spacing } from '@/theme';
 import { useGuardedAction } from '@/hooks/useSubmit';
+import { LoadErrorBanner } from '@/components/feedback/LoadErrorBanner';
 
 export default function Planner() {
   const { today } = useToday();
@@ -186,6 +187,11 @@ export default function Planner() {
         />
       }
     >
+      <LoadErrorBanner
+        visible={plan.isError}
+        what="your meal plan"
+        onRetry={() => void plan.refetch()}
+      />
       <View style={styles.row}>
         <Button
           title="‹"

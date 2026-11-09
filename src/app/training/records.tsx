@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { EmptyState, LoadingState } from '@/components/feedback';
+import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
 import { Card, Screen, Text } from '@/components/ui';
 import { formatDistance, formatPace } from '@/domain/activity/geo';
 import { activityRecords } from '@/domain/activity/records';
@@ -11,7 +11,7 @@ import { useSessions } from '@/features/training/session-api';
 import { formatDate, formatWeekOf } from '@/domain/format';
 
 export default function Records() {
-  const { sessions, sets, isPending } = useSessions();
+  const { sessions, sets, isPending, isError, refetch } = useSessions();
   const { data: profile } = useProfile();
   const activities = useActivities();
   const units = (profile?.unit_system ?? 'metric') as 'metric' | 'imperial';
@@ -61,6 +61,15 @@ export default function Records() {
     return (
       <Screen edges={['bottom']}>
         <LoadingState />
+      </Screen>
+    );
+  if ((isError || activities.isError) && !records.length && !actRecords.length)
+    return (
+      <Screen edges={['bottom']}>
+        <ErrorState
+          message="Your records couldn't be loaded. Check your connection."
+          onRetry={() => void Promise.all([refetch(), activities.refetch()])}
+        />
       </Screen>
     );
   if (!records.length && !actRecords.length)

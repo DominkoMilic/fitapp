@@ -19,6 +19,7 @@ import { type Checkin, useCheckins, useSaveCheckin } from '@/features/checkin/ap
 import { useToday } from '@/features/dashboard/useToday';
 import { useTheme } from '@/theme';
 import { useSubmit } from '@/hooks/useSubmit';
+import { LoadErrorBanner } from '@/components/feedback/LoadErrorBanner';
 
 const SCALE = ['1', '2', '3', '4', '5'] as const;
 
@@ -51,6 +52,7 @@ export default function CheckinScreen() {
 }
 
 function CheckinForm({ today, existing }: { today: string; existing: Checkin | undefined }) {
+  const checkins = useCheckins(); // same cached query; used for the load-error banner
   const save = useSaveCheckin();
   const showToast = useToast((s) => s.show);
   const [v, setV] = useState<CheckinValues>({
@@ -105,6 +107,11 @@ function CheckinForm({ today, existing }: { today: string; existing: Checkin | u
         )
       }
     >
+      <LoadErrorBanner
+        visible={checkins.isError}
+        what="today's check-in"
+        onRetry={() => void checkins.refetch()}
+      />
       {saved ? <Banner tone="success" message="Check-in saved." /> : null}
       {errors.map((e) => (
         <Banner key={e} tone="danger" message={e} />

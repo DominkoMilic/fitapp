@@ -9,6 +9,7 @@ import { dayLabel, WEEKDAY_SHORT } from '@/features/training/labels';
 import { OccurrenceRow } from '@/features/training/OccurrenceRow';
 import { useScheduledWorkouts } from '@/features/training/schedule-api';
 import { radius, spacing, TOUCH_TARGET, useTheme } from '@/theme';
+import { LoadErrorBanner } from '@/components/feedback/LoadErrorBanner';
 
 const monthStart = (date: string, offset: number) => {
   const d = new Date(Date.UTC(+date.slice(0, 4), +date.slice(5, 7) - 1 + offset, 1));
@@ -23,7 +24,10 @@ export default function MonthCalendar() {
   const first = monthStart(today, offset);
   const nextFirst = monthStart(today, offset + 1);
   const gridStart = addDays(first, -(isoWeekday(first) - 1));
-  const { rows, isPending } = useScheduledWorkouts(gridStart, addDays(gridStart, 41));
+  const { rows, isPending, isError, refetch } = useScheduledWorkouts(
+    gridStart,
+    addDays(gridStart, 41),
+  );
   const cells = Array.from({ length: 42 }, (_, i) => addDays(gridStart, i));
   const title = new Date(`${first}T12:00:00Z`).toLocaleDateString(undefined, {
     month: 'long',
@@ -32,6 +36,7 @@ export default function MonthCalendar() {
 
   return (
     <Screen edges={['bottom']}>
+      <LoadErrorBanner visible={isError} what="your calendar" onRetry={() => void refetch()} />
       <View style={styles.nav}>
         <Button
           title="‹"
