@@ -140,7 +140,7 @@ export default function Planner() {
           fibre_g: n(r.fibre_per_serving),
         },
         source: 'meal_plan',
-        confidence: 'calculated',
+        confidence: r.nutritional_confidence === 'user_estimate' ? 'user_estimate' : 'calculated',
       });
     } else if (m) {
       for (const i of savedMealItems(m)) {

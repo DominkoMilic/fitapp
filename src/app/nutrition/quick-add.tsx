@@ -12,12 +12,12 @@ import { useSubmit } from '@/hooks/useSubmit';
 
 /** Calories (and optional macros) without a food, e.g. a restaurant meal (spec 12.2). */
 export default function QuickAdd() {
-  const params = useLocalSearchParams<{ date?: string; meal?: string }>();
+  const params = useLocalSearchParams<{ date?: string; meal?: string; name?: string }>();
   const { today } = useToday();
   const actions = useNutritionActions();
   const showToast = useToast((s) => s.show);
   const [meal, setMeal] = useState(asMeal(params.meal));
-  const [name, setName] = useState('');
+  const [name, setName] = useState((params.name ?? '').slice(0, 120));
   const [kcal, setKcal] = useState<number | null>(null);
   const [p, setP] = useState<number | null>(null);
   const [c, setC] = useState<number | null>(null);

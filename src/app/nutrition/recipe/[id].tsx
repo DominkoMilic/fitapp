@@ -4,7 +4,7 @@ import { Image, StyleSheet, View } from 'react-native';
 
 import { goBack } from '@/navigation/back';
 import { isSafeExternalUrl, openExternalUrl } from '@/navigation/external-link';
-import { Banner, ErrorState, LoadingState, useToast } from '@/components/feedback';
+import { Banner, ConfirmDialog, ErrorState, LoadingState, useToast } from '@/components/feedback';
 import {
   Button,
   Card,
@@ -17,9 +17,12 @@ import {
 } from '@/components/ui';
 import { scaleMeasure } from '@/domain/nutrition/measure-parser';
 import { readIngredients } from '@/domain/nutrition/recipe-ingredients';
-import { mealTypeForTime } from '@/domain/nutrition/totals';
+import { addDays } from '@/domain/calculations/dates';
+import { type MealType, mealTypeForTime } from '@/domain/nutrition/totals';
 import { useToday } from '@/features/dashboard/useToday';
-import { useNutritionActions } from '@/features/nutrition/api';
+import { type LogItemInput, useNutritionActions } from '@/features/nutrition/api';
+import { MealPicker } from '@/features/nutrition/MealPicker';
+import { useSubmit } from '@/hooks/useSubmit';
 import {
   type RecipeRow,
   useRecipe,
@@ -71,8 +74,18 @@ function RecipeView({ recipe }: { recipe: RecipeRow }) {
   const ingredients = readIngredients(recipe.ingredients);
   const factor = base ? servings / base : 1;
   const flags = flag(ingredients.map((i) => i.name));
+  const isEstimate = recipe.nutritional_confidence === 'user_estimate';
   const hasNutrition =
-    recipe.nutritional_confidence === 'calculated' && recipe.kcal_per_serving !== null;
+    (recipe.nutritional_confidence === 'calculated' || isEstimate) &&
+    recipe.kcal_per_serving !== null;
+  const foodRows = ingredients.filter((i) => i.foodId && i.grams !== null).length;
+  const nutritionCaption = isEstimate
+    ? 'Your estimate'
+    : foodRows < ingredients.length
+      ? `Calculated from ${foodRows} of ${ingredients.length} ingredients — the rest have no nutrition data`
+      : 'Calculated from your ingredients';
+  const [logging, setLogging] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState(false);
 
   const persist = (values: { base_servings: number | null; default_servings: number | null }) =>
     void actions.save(recipe.id, saved.serverKeys.has(recipe.id), values);
@@ -106,41 +119,75 @@ function RecipeView({ recipe }: { recipe: RecipeRow }) {
         />
       ) : null}
 
-      <Button
-        title={savedRow ? 'Saved ✓ (tap to remove)' : 'Save recipe'}
-        variant="secondary"
-        onPress={() =>
-          savedRow
-            ? void actions.unsave(recipe.id, saved.serverKeys.has(recipe.id))
-            : persist({ base_servings: base, default_servings: servings })
-        }
-      />
+      {isUser ? (
+        <View style={styles.row}>
+          <View style={styles.flex}>
+            <Button
+              title="Edit"
+              variant="secondary"
+              onPress={() =>
+                router.push({ pathname: '/nutrition/recipe-edit', params: { id: recipe.id } })
+              }
+            />
+          </View>
+          <View style={styles.flex}>
+            <Button
+              title="Duplicate"
+              variant="secondary"
+              onPress={() =>
+                router.push({ pathname: '/nutrition/recipe-edit', params: { from: recipe.id } })
+              }
+            />
+          </View>
+        </View>
+      ) : (
+        <>
+          <Button
+            title={savedRow ? 'Saved ✓ (tap to remove)' : 'Save recipe'}
+            variant="secondary"
+            onPress={() =>
+              savedRow
+                ? void actions.unsave(recipe.id, saved.serverKeys.has(recipe.id))
+                : persist({ base_servings: base, default_servings: servings })
+            }
+          />
+          <Button
+            title="Make it my own"
+            variant="secondary"
+            accessibilityHint="Copies this recipe so you can change it and add nutrition"
+            onPress={() =>
+              router.push({
+                pathname: '/nutrition/recipe-edit',
+                params: recipe.id ? { from: recipe.id } : { ext: recipe.external_id ?? '' },
+              })
+            }
+          />
+        </>
+      )}
 
       <SectionHeader title="Nutrition per serving" />
       {hasNutrition ? (
         <View style={styles.row}>
           <StatTile label="kcal" value={String(Math.round(Number(recipe.kcal_per_serving)))} />
-          <StatTile
-            label="Protein"
-            value={String(Math.round(Number(recipe.protein_per_serving ?? 0)))}
-            unit="g"
-          />
-          <StatTile
-            label="Carbs"
-            value={String(Math.round(Number(recipe.carbs_per_serving ?? 0)))}
-            unit="g"
-          />
-          <StatTile
-            label="Fat"
-            value={String(Math.round(Number(recipe.fat_per_serving ?? 0)))}
-            unit="g"
-          />
+          <StatTile label="Protein" value={fmtMacro(recipe.protein_per_serving)} unit="g" />
+          <StatTile label="Carbs" value={fmtMacro(recipe.carbs_per_serving)} unit="g" />
+          <StatTile label="Fat" value={fmtMacro(recipe.fat_per_serving)} unit="g" />
         </View>
-      ) : (
+      ) : null}
+      {hasNutrition && isUser ? (
+        <Text variant="caption" color="textSecondary">
+          {nutritionCaption}
+        </Text>
+      ) : null}
+      {hasNutrition ? null : (
         <Banner
           tone="info"
           title="Nutrition unavailable"
-          message="The source doesn't provide nutrition. Log it with your own estimate, or rebuild it as your own recipe from foods for exact numbers."
+          message={
+            isUser
+              ? 'Edit the recipe to add foods from the database or enter your own estimate.'
+              : "The source doesn't provide nutrition. Log it with your own estimate, or make it your own and add foods for exact numbers."
+          }
         />
       )}
 
@@ -213,35 +260,26 @@ function RecipeView({ recipe }: { recipe: RecipeRow }) {
       ))}
 
       {hasNutrition ? (
-        <Button
-          title="Log 1 serving"
-          onPress={() =>
-            void log
-              .logItem({
-                date: today,
-                meal: mealTypeForTime(hour * 60),
-                name: recipe.name,
-                foodId: null,
-                recipeId: recipe.id,
-                quantity: 1,
-                unit: 'serving',
-                grams: null,
-                nutrition: {
-                  kcal: Number(recipe.kcal_per_serving),
-                  protein_g:
-                    recipe.protein_per_serving === null ? null : Number(recipe.protein_per_serving),
-                  carbs_g:
-                    recipe.carbs_per_serving === null ? null : Number(recipe.carbs_per_serving),
-                  fat_g: recipe.fat_per_serving === null ? null : Number(recipe.fat_per_serving),
-                  fibre_g:
-                    recipe.fibre_per_serving === null ? null : Number(recipe.fibre_per_serving),
-                },
-                source: 'recipe',
-                confidence: 'calculated',
-              })
-              .then(() => showToast('Serving logged'))
-          }
-        />
+        logging ? (
+          <LogSheet
+            recipe={recipe}
+            estimate={isEstimate}
+            defaultMeal={mealTypeForTime(hour * 60)}
+            today={today}
+            onLog={async (input) => {
+              await log.logItem(input);
+              setLogging(false);
+              showToast(
+                input.quantity === 1
+                  ? 'Serving logged'
+                  : `${formatServings(input.quantity)} servings logged`,
+              );
+            }}
+            onCancel={() => setLogging(false)}
+          />
+        ) : (
+          <Button title="Log servings" onPress={() => setLogging(true)} />
+        )
       ) : (
         <Button
           title="Log with my own estimate"
@@ -249,7 +287,7 @@ function RecipeView({ recipe }: { recipe: RecipeRow }) {
           onPress={() =>
             router.push({
               pathname: '/nutrition/quick-add',
-              params: { meal: mealTypeForTime(hour * 60) },
+              params: { meal: mealTypeForTime(hour * 60), name: recipe.name },
             })
           }
         />
@@ -281,16 +319,109 @@ function RecipeView({ recipe }: { recipe: RecipeRow }) {
           title="Remove recipe"
           variant="ghost"
           fullWidth={false}
-          onPress={() =>
-            void actions.archiveRecipe(recipe).then(() => goBack('/nutrition/recipes'))
-          }
+          onPress={() => setConfirmRemove(true)}
         />
       )}
+      <ConfirmDialog
+        visible={confirmRemove}
+        title="Remove this recipe?"
+        message="It disappears from your recipes. Meals you already logged keep their numbers."
+        confirmLabel="Remove"
+        destructive
+        onCancel={() => setConfirmRemove(false)}
+        onConfirm={() => {
+          setConfirmRemove(false);
+          void actions.archiveRecipe(recipe).then(() => {
+            showToast('Recipe removed');
+            goBack('/nutrition/recipes');
+          });
+        }}
+      />
     </Screen>
+  );
+}
+
+const fmtMacro = (v: number | string | null) => (v === null ? '—' : String(Math.round(Number(v))));
+const formatServings = (v: number | null) => (v === null ? '' : String(Math.round(v * 100) / 100));
+
+/** Log a number of servings (0.25 steps) of a recipe to a meal on today or one of the two days before. */
+function LogSheet({
+  recipe,
+  estimate,
+  defaultMeal,
+  today,
+  onLog,
+  onCancel,
+}: {
+  recipe: RecipeRow;
+  estimate: boolean;
+  defaultMeal: MealType;
+  today: string;
+  onLog: (input: LogItemInput) => Promise<void>;
+  onCancel: () => void;
+}) {
+  const [servings, setServings] = useState<number | null>(1);
+  const [meal, setMeal] = useState<MealType>(defaultMeal);
+  const [day, setDay] = useState<'0' | '1' | '2'>('0');
+  const ok = servings !== null && servings > 0 && servings <= 20;
+  const per = (v: number | string | null) => (v === null ? null : Number(v));
+  const times = (v: number | null) =>
+    v === null || !ok ? null : Math.round(v * (servings as number) * 10) / 10;
+  const kcal = times(per(recipe.kcal_per_serving));
+  const submit = useSubmit(() =>
+    onLog({
+      date: addDays(today, -Number(day)),
+      meal,
+      name: recipe.name,
+      foodId: null,
+      recipeId: recipe.id,
+      quantity: servings,
+      unit: 'serving',
+      grams: null,
+      nutrition: {
+        kcal,
+        protein_g: times(per(recipe.protein_per_serving)),
+        carbs_g: times(per(recipe.carbs_per_serving)),
+        fat_g: times(per(recipe.fat_per_serving)),
+        fibre_g: times(per(recipe.fibre_per_serving)),
+      },
+      source: 'recipe',
+      confidence: estimate ? 'user_estimate' : 'calculated',
+    }),
+  );
+  return (
+    <Card raised>
+      <NumberField
+        label="Servings"
+        value={servings}
+        precision={2}
+        onChangeValue={(v) => setServings(v === null ? null : Math.round(v * 4) / 4)}
+        hint="In steps of a quarter serving"
+      />
+      <SegmentedControl
+        accessibilityLabel="Day"
+        options={[
+          { value: '0', label: 'Today' },
+          { value: '1', label: 'Yesterday' },
+          { value: '2', label: '2 days ago' },
+        ]}
+        value={day}
+        onChange={setDay}
+      />
+      <MealPicker value={meal} onChange={setMeal} />
+      <Text variant="caption" color="textSecondary">
+        {kcal === null
+          ? 'Enter servings above 0 and up to 20.'
+          : `${Math.round(kcal)} kcal${estimate ? ' (your estimate)' : ''}`}
+      </Text>
+      <Button title="Log" disabled={!ok} loading={submit.busy} onPress={() => void submit.run()} />
+      <Button title="Cancel" variant="ghost" onPress={onCancel} />
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
   image: { width: '100%', aspectRatio: 16 / 10, borderRadius: radius.card },
   row: { flexDirection: 'row', gap: spacing.xs, flexWrap: 'wrap' },
+  flex: { flex: 1 },
 });

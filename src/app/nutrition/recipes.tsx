@@ -34,7 +34,7 @@ export default function Recipes() {
         <Button
           title="Create my own recipe"
           variant="secondary"
-          onPress={() => router.push('/nutrition/recipe-new')}
+          onPress={() => router.push('/nutrition/recipe-edit')}
         />
       }
     >
@@ -102,9 +102,9 @@ function MineTab() {
     return (
       <EmptyState
         title="No recipes yet"
-        message="Build a recipe from foods and PACE calculates its nutrition per serving."
+        message="Type in a family recipe, or build one from foods and PACE calculates its nutrition per serving."
         actionLabel="Create a recipe"
-        onAction={() => router.push('/nutrition/recipe-new')}
+        onAction={() => router.push('/nutrition/recipe-edit')}
       />
     );
   }
@@ -114,7 +114,7 @@ function MineTab() {
         <ListItem
           key={r.id}
           title={r.name}
-          subtitle={`${r.kcal_per_serving === null ? '—' : Math.round(Number(r.kcal_per_serving))} kcal · P ${r.protein_per_serving === null ? '—' : Math.round(Number(r.protein_per_serving))} g per serving${r._pending ? ' · not synced yet' : ''}`}
+          subtitle={`${r.kcal_per_serving === null ? '—' : Math.round(Number(r.kcal_per_serving))} kcal · P ${r.protein_per_serving === null ? '—' : Math.round(Number(r.protein_per_serving))} g per serving${r.nutritional_confidence === 'user_estimate' ? ' (your estimate)' : ''}${r._pending ? ' · not synced yet' : ''}`}
           onPress={() => openRecipe({ id: r.id })}
         />
       ))}

@@ -385,20 +385,23 @@ export function useNutritionActions() {
         createdOffline: false,
         payload: { ...stripMeta(m), archived_at: new Date().toISOString() },
       }),
-    createFood: async (
+    /** Create a custom food, or replace one of yours (`existing`). Logged entries keep their snapshot. */
+    saveFood: async (
       f: { name: string; brand: string | null; basis: 'per_100g' | 'per_100ml' } & Nutrition & {
           portions: FoodPortion[];
         },
+      existing?: { id: string; onServer: boolean },
     ) => {
-      const id = randomUUID();
+      const id = existing?.id ?? randomUUID();
       await write({
         id: randomUUID(),
         entity: 'foods',
         recordKey: id,
         kind: 'upsert',
-        createdOffline: true,
+        createdOffline: !existing?.onServer,
         payload: {
           id,
+          archived_at: null,
           name: f.name.trim().slice(0, 200),
           brand: f.brand?.trim() || null,
           basis: f.basis,
@@ -413,6 +416,27 @@ export function useNutritionActions() {
         },
       });
       return id;
+    },
+    /** Remove one of your foods from search and lists (history keeps its entries). */
+    archiveFood: (food: Food, onServer: boolean) => {
+      const {
+        _pending,
+        _failed,
+        created_at,
+        updated_at,
+        client_updated_at,
+        owner_id,
+        search,
+        ...rest
+      } = food as Food & { _pending?: boolean; _failed?: boolean };
+      return write({
+        id: randomUUID(),
+        entity: 'foods',
+        recordKey: food.id,
+        kind: 'upsert',
+        createdOffline: !onServer,
+        payload: { ...rest, archived_at: new Date().toISOString() },
+      });
     },
   };
 }

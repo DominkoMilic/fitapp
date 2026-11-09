@@ -6,7 +6,8 @@ import { Banner, ConfirmDialog, ErrorState, LoadingState, useToast } from '@/com
 import { Button, Card, ChipGroup, NumberField, Screen, StatTile, Text } from '@/components/ui';
 import { checkGrams, nutritionForGrams, MEAL_LABELS } from '@/domain/nutrition/totals';
 import { useToday } from '@/features/dashboard/useToday';
-import { portionsOf, useFood, useNutritionActions } from '@/features/nutrition/api';
+import { portionsOf, useCustomFoods, useFood, useNutritionActions } from '@/features/nutrition/api';
+import { goBack } from '@/navigation/back';
 import { MealPicker } from '@/features/nutrition/MealPicker';
 import { asDate, asMeal } from '@/features/nutrition/params';
 import { spacing } from '@/theme';
@@ -23,6 +24,8 @@ export default function FoodAmount() {
   const [amount, setAmount] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmLarge, setConfirmLarge] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  const custom = useCustomFoods();
   const date = asDate(params.date, today);
   const submit = useSubmit(
     async (
@@ -89,6 +92,25 @@ export default function FoodAmount() {
             ? 'Crowdsourced data: check the package'
             : 'Your food'}
       </Text>
+      {food.owner_id ? (
+        <View style={styles.row}>
+          <Button
+            title="Edit food"
+            variant="ghost"
+            fullWidth={false}
+            onPress={() =>
+              router.push({ pathname: '/nutrition/food-new', params: { id: food.id } })
+            }
+          />
+          <Button
+            title="Remove"
+            variant="ghost"
+            fullWidth={false}
+            accessibilityLabel={`Remove ${food.name}`}
+            onPress={() => setConfirmRemove(true)}
+          />
+        </View>
+      ) : null}
       {error ? <Banner tone="danger" message={error} /> : null}
       {food.kcal === null ||
       food.protein_g === null ||
@@ -137,6 +159,21 @@ export default function FoodAmount() {
           <StatTile label="Fat" value={n.fat_g === null ? '—' : String(n.fat_g)} unit="g" />
         </View>
       </Card>
+      <ConfirmDialog
+        visible={confirmRemove}
+        title="Remove this food?"
+        message="It disappears from search and your foods. Entries you already logged keep their numbers."
+        confirmLabel="Remove"
+        destructive
+        onCancel={() => setConfirmRemove(false)}
+        onConfirm={() => {
+          setConfirmRemove(false);
+          void actions.archiveFood(food, custom.serverKeys.has(food.id)).then(() => {
+            showToast('Food removed');
+            goBack('/nutrition/add');
+          });
+        }}
+      />
       <ConfirmDialog
         visible={confirmLarge}
         title="Large amount"

@@ -1,27 +1,69 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 
-import { Banner, useToast } from '@/components/feedback';
+import { Banner, ErrorState, LoadingState, useToast } from '@/components/feedback';
 import { Button, NumberField, Screen, SegmentedControl, Text, TextField } from '@/components/ui';
 import { macroKcal } from '@/domain/calculations/targets';
-import { useNutritionActions } from '@/features/nutrition/api';
+import {
+  type Food,
+  portionsOf,
+  useCustomFoods,
+  useFood,
+  useNutritionActions,
+} from '@/features/nutrition/api';
+import { goBack } from '@/navigation/back';
 import { useSubmit } from '@/hooks/useSubmit';
 
-/** Custom food per 100 g/ml, with an optional named portion (e.g. "1 cup = 170 g"). */
-export default function NewFood() {
-  const params = useLocalSearchParams<{ date?: string; meal?: string }>();
+/**
+ * Custom food per 100 g/ml, with an optional named portion (e.g. "1 cup = 170 g").
+ * With ?id= it edits one of your foods; entries you already logged keep their numbers.
+ */
+export default function FoodForm() {
+  const params = useLocalSearchParams<{ id?: string; date?: string; meal?: string }>();
+  const { food, isPending, isError, refetch } = useFood(params.id);
+  if (!params.id) return <Form date={params.date} meal={params.meal} />;
+  if (isPending)
+    return (
+      <Screen edges={['bottom']}>
+        <LoadingState />
+      </Screen>
+    );
+  if (isError || !food || !food.owner_id)
+    return (
+      <Screen edges={['bottom']}>
+        <ErrorState
+          message={
+            food && !food.owner_id
+              ? 'Only your own foods can be edited.'
+              : "We couldn't load this food."
+          }
+          onRetry={food ? undefined : () => void refetch()}
+        />
+      </Screen>
+    );
+  return <Form key={food.id} existing={food} />;
+}
+
+const n = (v: number | string | null | undefined) =>
+  v === null || v === undefined ? null : Number(v);
+
+function Form({ existing, date, meal }: { existing?: Food; date?: string; meal?: string }) {
   const actions = useNutritionActions();
+  const custom = useCustomFoods();
   const showToast = useToast((s) => s.show);
-  const [name, setName] = useState('');
-  const [brand, setBrand] = useState('');
-  const [basis, setBasis] = useState<'per_100g' | 'per_100ml'>('per_100g');
-  const [kcal, setKcal] = useState<number | null>(null);
-  const [p, setP] = useState<number | null>(null);
-  const [c, setC] = useState<number | null>(null);
-  const [f, setF] = useState<number | null>(null);
-  const [fibre, setFibre] = useState<number | null>(null);
-  const [portionLabel, setPortionLabel] = useState('');
-  const [portionGrams, setPortionGrams] = useState<number | null>(null);
+  const firstPortion = existing ? portionsOf(existing)[0] : undefined;
+  const [name, setName] = useState(existing?.name ?? '');
+  const [brand, setBrand] = useState(existing?.brand ?? '');
+  const [basis, setBasis] = useState<'per_100g' | 'per_100ml'>(
+    existing?.basis === 'per_100ml' ? 'per_100ml' : 'per_100g',
+  );
+  const [kcal, setKcal] = useState<number | null>(n(existing?.kcal));
+  const [p, setP] = useState<number | null>(n(existing?.protein_g));
+  const [c, setC] = useState<number | null>(n(existing?.carbs_g));
+  const [f, setF] = useState<number | null>(n(existing?.fat_g));
+  const [fibre, setFibre] = useState<number | null>(n(existing?.fibre_g));
+  const [portionLabel, setPortionLabel] = useState(firstPortion?.label ?? '');
+  const [portionGrams, setPortionGrams] = useState<number | null>(firstPortion?.grams ?? null);
   const [error, setError] = useState<string | null>(null);
   const u = basis === 'per_100ml' ? 'ml' : 'g';
 
@@ -35,25 +77,30 @@ export default function NewFood() {
       return setError('Protein + carbs + fat cannot exceed 100 g per 100.');
     if (portionLabel.trim() && !(portionGrams && portionGrams > 0))
       return setError('Enter the grams for the portion.');
-    const id = await actions.createFood({
-      name,
-      brand: brand || null,
-      basis,
-      kcal,
-      protein_g: p,
-      carbs_g: c,
-      fat_g: f,
-      fibre_g: fibre,
-      portions:
-        portionLabel.trim() && portionGrams
-          ? [{ label: portionLabel.trim().slice(0, 80), grams: portionGrams }]
-          : [],
-    });
+    const id = await actions.saveFood(
+      {
+        name,
+        brand: brand || null,
+        basis,
+        kcal,
+        protein_g: p,
+        carbs_g: c,
+        fat_g: f,
+        fibre_g: fibre,
+        portions:
+          portionLabel.trim() && portionGrams
+            ? [{ label: portionLabel.trim().slice(0, 80), grams: portionGrams }]
+            : [],
+      },
+      existing ? { id: existing.id, onServer: custom.serverKeys.has(existing.id) } : undefined,
+    );
+    if (existing) {
+      showToast('Food updated');
+      goBack('/nutrition/add');
+      return;
+    }
     showToast('Food created');
-    router.replace({
-      pathname: '/nutrition/food/[id]',
-      params: { id, date: params.date, meal: params.meal },
-    });
+    router.replace({ pathname: '/nutrition/food/[id]', params: { id, date, meal } });
   };
   const submit = useSubmit(save);
   const fromMacros = p !== null && c !== null && f !== null ? Math.round(macroKcal(p, c, f)) : null;
@@ -62,10 +109,19 @@ export default function NewFood() {
     <Screen
       edges={['bottom']}
       footer={
-        <Button title="Create food" loading={submit.busy} onPress={() => void submit.run()} />
+        <Button
+          title={existing ? 'Save changes' : 'Create food'}
+          loading={submit.busy}
+          onPress={() => void submit.run()}
+        />
       }
     >
       {error ? <Banner tone="danger" message={error} /> : null}
+      {existing ? (
+        <Text variant="small" color="textSecondary">
+          Changes apply to new entries. Food you already logged keeps its numbers.
+        </Text>
+      ) : null}
       <TextField
         label="Name"
         placeholder="e.g. Skyr natural"

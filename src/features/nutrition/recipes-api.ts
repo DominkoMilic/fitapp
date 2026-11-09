@@ -2,7 +2,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
 import { useCallback } from 'react';
 
-import { type RecipeIngredientInput, recipeNutrition } from '@/domain/nutrition/recipe-nutrition';
+import { draftToRow, type RecipeDraft } from '@/domain/nutrition/recipe-draft';
+import type { Per100 } from '@/domain/nutrition/totals';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useSyncActions } from '@/features/sync/SyncProvider';
 import { useSyncedRows } from '@/features/sync/useSyncedRows';
@@ -12,7 +13,6 @@ import type { Tables } from '@/integrations/supabase/database.types';
 
 export type SavedRecipe = Tables<'saved_recipes'>;
 export type { RecipeRow };
-export { type RecipeIngredientInput, recipeNutrition };
 
 const db = () => requireSupabase();
 
@@ -55,6 +55,37 @@ export function useMyRecipes() {
         .order('name');
       if (error) throw error;
       return data;
+    },
+  });
+}
+
+/** Per-100 g nutrition for foods by id (fills in recipes saved before ingredients kept a snapshot). */
+export function useFoodNutrition(ids: readonly string[]) {
+  const userId = useAuth().session?.user.id;
+  const sorted = [...new Set(ids)].sort();
+  return useQuery({
+    queryKey: ['food-nutrition', sorted],
+    enabled: !!userId && sorted.length > 0,
+    staleTime: 3600_000,
+    queryFn: async (): Promise<Record<string, Per100>> => {
+      const { data, error } = await db()
+        .from('foods')
+        .select('id, kcal, protein_g, carbs_g, fat_g, fibre_g')
+        .in('id', sorted);
+      if (error) throw error;
+      const num = (v: number | string | null) => (v === null ? null : Number(v));
+      return Object.fromEntries(
+        data.map((f) => [
+          f.id,
+          {
+            kcal: num(f.kcal),
+            protein_g: num(f.protein_g),
+            carbs_g: num(f.carbs_g),
+            fat_g: num(f.fat_g),
+            fibre_g: num(f.fibre_g),
+          },
+        ]),
+      );
     },
   });
 }
@@ -145,46 +176,18 @@ export function useRecipeActions() {
         payload: null,
         createdOffline: !existsOnServer,
       }),
-    createRecipe: async (r: {
-      name: string;
-      servings: number;
-      minutes: number | null;
-      instructions: string[];
-      ingredients: RecipeIngredientInput[];
-    }) => {
-      const id = randomUUID();
-      const n = recipeNutrition(r.ingredients, r.servings);
+    /** Create (new id) or replace (existing id) one of your own recipes. Works offline. */
+    saveRecipe: async (draft: RecipeDraft, existing?: { id: string; onServer: boolean }) => {
+      const id = existing?.id ?? randomUUID();
       await write({
         id: randomUUID(),
         entity: 'recipes',
         recordKey: id,
         kind: 'upsert',
-        createdOffline: true,
-        payload: {
-          id,
-          source: 'user',
-          name: r.name.trim().slice(0, 200),
-          instructions: r.instructions,
-          ingredients: r.ingredients.map((i) => ({
-            name: i.food.name,
-            food_id: i.food.id,
-            grams: i.grams,
-            raw_measure: `${i.grams} g`,
-            quantity_min: i.grams,
-            quantity_max: i.grams,
-            unit: 'g',
-            parse_status: 'parsed',
-          })),
-          servings_stated: r.servings,
-          cooking_minutes: r.minutes,
-          nutritional_confidence: 'calculated',
-          kcal_per_serving: n.perServing.kcal,
-          protein_per_serving: n.perServing.protein_g,
-          carbs_per_serving: n.perServing.carbs_g,
-          fat_per_serving: n.perServing.fat_g,
-          fibre_per_serving: n.perServing.fibre_g,
-        },
+        createdOffline: !existing?.onServer,
+        payload: draftToRow(draft, id),
       });
+      void qc.invalidateQueries({ queryKey: ['recipe', id] });
       return id;
     },
     archiveRecipe: (r: RecipeRow) => {
