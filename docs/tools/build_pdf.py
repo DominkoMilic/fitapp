@@ -6,7 +6,8 @@ bullet and numbered lists, pipe tables, fenced code blocks, horizontal rules,
 **bold** and `inline code`.
 
 Output: PACE_Specification.pdf at the repository root.
-Usage: python3 docs/tools/build_pdf.py
+Usage: python3 docs/tools/build_pdf.py   (needs reportlab: pip install reportlab)
+Fonts: DejaVu (Linux, or PACE_PDF_FONT_DIR), else the macOS system fonts.
 """
 import re
 import sys
@@ -30,11 +31,27 @@ ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "PACE_SPEC.md"
 OUT = ROOT.parent / "PACE_Specification.pdf"
 
-FONT_DIR = Path("/usr/share/fonts/truetype/dejavu")
-pdfmetrics.registerFont(TTFont("Sans", str(FONT_DIR / "DejaVuSans.ttf")))
-pdfmetrics.registerFont(TTFont("Sans-Bold", str(FONT_DIR / "DejaVuSans-Bold.ttf")))
-pdfmetrics.registerFont(TTFont("Sans-Oblique", str(FONT_DIR / "DejaVuSans.ttf")))
-pdfmetrics.registerFont(TTFont("Mono", str(FONT_DIR / "DejaVuSansMono.ttf")))
+def _font_files():
+    """Sans, bold and mono TTFs. DejaVu when available (Linux/CI, or PACE_PDF_FONT_DIR);
+    otherwise the system fonts on macOS (Arial Unicode has the same wide glyph coverage)."""
+    import os
+    dejavu_dirs = [os.environ.get("PACE_PDF_FONT_DIR"), "/usr/share/fonts/truetype/dejavu",
+                   "/usr/share/fonts/dejavu", "/Library/Fonts", str(Path.home() / "Library/Fonts")]
+    for d in filter(None, dejavu_dirs):
+        d = Path(d)
+        if (d / "DejaVuSans.ttf").exists():
+            return d / "DejaVuSans.ttf", d / "DejaVuSans-Bold.ttf", d / "DejaVuSansMono.ttf"
+    mac = Path("/System/Library/Fonts/Supplemental")
+    if (mac / "Arial Unicode.ttf").exists():
+        return mac / "Arial Unicode.ttf", mac / "Arial Bold.ttf", mac / "Courier New.ttf"
+    sys.exit("No usable fonts found. Install DejaVu fonts or set PACE_PDF_FONT_DIR to a folder with DejaVuSans.ttf.")
+
+
+_SANS, _BOLD, _MONO = _font_files()
+pdfmetrics.registerFont(TTFont("Sans", str(_SANS)))
+pdfmetrics.registerFont(TTFont("Sans-Bold", str(_BOLD)))
+pdfmetrics.registerFont(TTFont("Sans-Oblique", str(_SANS)))
+pdfmetrics.registerFont(TTFont("Mono", str(_MONO)))
 from reportlab.pdfbase.pdfmetrics import registerFontFamily
 registerFontFamily("Sans", normal="Sans", bold="Sans-Bold", italic="Sans-Oblique", boldItalic="Sans-Bold")
 
@@ -132,8 +149,24 @@ def build_table(header, data, width):
     # column widths proportional to content length (bounded)
     lens = [max([len(header[i])] + [len(r[i]) if i < len(r) else 0 for r in data]) for i in range(ncol)]
     lens = [min(max(l, 6), 70) for l in lens]
+    # Every column is at least as wide as its longest word (so words never break mid-word),
+    # capped at 30% of the table; the remaining width is shared by content length.
+    def word_w(text, font, size):
+        plain = re.sub(r"[`*]", "", text)
+        return max([pdfmetrics.stringWidth(w, font, size) for w in plain.split()] + [0])
+    pad = 8
+    mins = []
+    for i in range(ncol):
+        w = word_w(header[i], "Sans-Bold", 7.6)
+        for r in data:
+            if i < len(r):
+                w = max(w, word_w(r[i], "Sans", 7.6))
+        mins.append(min(w + pad, width * 0.3))
+    if sum(mins) > width:
+        mins = [m * width / sum(mins) for m in mins]
+    spare = width - sum(mins)
     total = sum(lens)
-    widths = [width * l / total for l in lens]
+    widths = [m + spare * l / total for m, l in zip(mins, lens)]
     rows = [[Paragraph(inline(h), small_head) for h in header]]
     for r in data:
         r = r + [""] * (ncol - len(r))

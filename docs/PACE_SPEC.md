@@ -1269,11 +1269,11 @@ Tags: I = impact, J = jumping, L = lateral, S = sprint, AH = ankle_load_high, SL
 | burpee | Burpee | conditioning | none | reps | 4×8 | I, J, W |
 | high-knees | High knees | conditioning | none | time | 4×20 s | I, AH |
 | bike-intervals | Exercise bike intervals | cardio | exercise bike | time | 6×1 min | — |
-| ball-mastery | Ball mastery (sole rolls, toe taps) | football | ball | time | 5×1 min | SLB, AH |
-| wall-passing | Wall passing (both feet) | football | ball, wall | time | 4×2 min | SLB |
-| cone-dribbling | Cone dribbling | football | ball, cones | time | 6×30 s | L, S, AH |
-| acceleration-sprints | Acceleration sprints 10–20 m | football | none | reps | 6–8 | I, S, AH |
-| change-of-direction | Change-of-direction drill | football | cones | reps | 6–8 | I, L, S, AH |
+| ball-mastery | Ball mastery (sole rolls, toe taps) | sport_skills (football, futsal) | ball | time | 5×1 min | SLB, AH |
+| wall-passing | Wall passing (both feet) | sport_skills (football, futsal) | ball, wall | time | 4×2 min | SLB |
+| cone-dribbling | Cone dribbling | sport_skills (football, futsal) | ball, cones | time | 6×30 s | L, S, AH |
+| acceleration-sprints | Acceleration sprints 10–20 m | sport_skills (football, futsal) | none | reps | 6–8 | I, S, AH |
+| change-of-direction | Change-of-direction drill | sport_skills (football, futsal) | cones | reps | 6–8 | I, L, S, AH |
 | single-leg-balance | Single-leg balance | mobility | none | time | 3×30 s/side | SLB |
 
 Every system exercise MUST have instructions (3–6 steps), caution notes, and at least one alternative mapping in templates. Media URLs are left empty until licensed media is available (do not hotlink random videos).
@@ -1290,7 +1290,7 @@ Every system exercise MUST have instructions (3–6 steps), caution notes, and a
 | Recovery | easy | 30–45 | easy-walk 20–30 min + cat-cow, hip-flexor-stretch, hamstring-stretch, calf-stretch, thoracic-rotation | calf-stretch skipped if ankle active |
 | Mobility 15 | easy | 15 | cat-cow, worlds-greatest-stretch, ninety-ninety, thoracic-rotation, hamstring-stretch | worlds-greatest-stretch → hip-flexor-stretch |
 | Football & futsal skills (`futsal-skills`) | moderate | 30 | ball-mastery, wall-passing, cone-dribbling, acceleration-sprints | not scheduled while restricted |
-| Per-sport packs (`basketball-skills`, `handball-skills`, `volleyball-skills`, `racket-skills`, `hockey-skills`, `rugby-skills`, `swim-skills`, `combat-skills`, `run-skills`, `cycle-skills`, `athletic-skills`) | moderate | 30 | 4–6 sport drills each (31 drills, no contact or sparring); see `src/domain/training/catalogue.ts` | one weekly session uses the first sport's pack when the user plays a sport, has the sport focus, trains ≥ 3 days and is not restricted for that sport; every pack still works with no equipment |
+| Per-sport packs (11) | moderate | 30 | 4–6 sport drills each (31 drills, no contact or sparring): basketball-, handball-, volleyball-, racket-, hockey-, rugby-, swim-, combat-, run-, cycle- and athletic-skills | one weekly session uses the first sport's pack when the user plays a sport, has the sport focus, trains ≥ 3 days and is not restricted for that sport; every pack still works with no equipment |
 
 Every template includes a 5-minute warm-up and a short cool-down.
 
