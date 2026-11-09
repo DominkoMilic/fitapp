@@ -147,3 +147,12 @@ Clarifications of, and deviations from, `docs/PACE_SPEC.md`. Newest first.
 6. **The training seed moves to `20261116000200_training_seed_warmup.sql`**; earlier seed migrations are applied and frozen.
 7. **`docs/expert-review-pack.md`** lists every number with its source and status, and the questions for each expert.
 
+## 2026-11-09: Manual workouts, own durations and edits
+
+1. **One editable workout model for live, logged and edited workouts.** Logging afterwards and editing reuse the live workout state machine (`active-workout.ts`), so volume, completion and calories always follow the same rules (`sessionRecord`).
+2. **Added exercises don't count as planned** (`targetSets = 0`), so doing more never lowers the completion rate.
+3. **Edits replace the session's sets** (old set rows deleted, new ones written) instead of diffing; sets are never referenced elsewhere, and records and milestones are recalculated from sets.
+4. **Manual times must lie in the past** (start and end at most 5 minutes in the future), 1–300 minutes, up to 60 days back.
+5. **Just-synced writes stay applied locally for 15 s** (sync engine overlay), fixing a flash of old values after saving while the refetch is in flight.
+6. **No schema change**: sessions already support `source = 'manual'`, and sets can be deleted by their owner.
+

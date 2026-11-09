@@ -19,7 +19,11 @@ export function ProgressBar({
   const { colors } = useTheme();
   const ratio = value === null || max <= 0 ? 0 : Math.min(1, Math.max(0, value / max));
   const text =
-    value === null ? `No data · target ${max} ${unit}` : `${Math.round(value)} / ${max} ${unit}`;
+    value === null
+      ? `No data · target ${max} ${unit}`
+      : unit === '%' && max === 100
+        ? `${Math.round(value)}%`
+        : `${Math.round(value)} / ${max} ${unit}`;
   return (
     <View
       style={styles.wrapper}

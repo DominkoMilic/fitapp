@@ -33,6 +33,8 @@ export interface ActiveExercise {
   skipped: boolean;
   painFlag: boolean;
   sets: ActiveSet[];
+  /** Added by the user (not in the plan): planned-set counts ignore it; it can be removed. */
+  added?: boolean;
 }
 
 export interface ActiveWorkout {
@@ -169,6 +171,74 @@ export function addSet(w: ActiveWorkout, exIndex: number): ActiveWorkout {
       ],
     };
   });
+}
+
+/** Remove one set (an exercise keeps at least one; remove the exercise instead). */
+export function removeSet(w: ActiveWorkout, exIndex: number, setIndex: number): ActiveWorkout {
+  return mapExercise(w, exIndex, (e) =>
+    e.sets.length <= 1 ? e : { ...e, sets: e.sets.filter((_, i) => i !== setIndex) },
+  );
+}
+
+/** An exercise from the library, for adding one the plan didn't include. */
+export interface ExerciseToAdd {
+  slug: string;
+  name: string;
+  tracking: TrackingType;
+  unilateral: boolean;
+  defaultSets: number;
+  repsMin: number | null;
+  repsMax: number | null;
+  durationS: number | null;
+}
+
+/**
+ * Add an exercise the plan didn't include (e.g. push-ups) right after `afterIndex` and move to
+ * it. Its sets are pre-filled from the last time it was done, else from its defaults. It doesn't
+ * count towards planned sets, so adding work never lowers the completion rate.
+ */
+export function addExercise(
+  w: ActiveWorkout,
+  ex: ExerciseToAdd,
+  lastSets: LastSets,
+  afterIndex: number = w.currentIndex,
+): ActiveWorkout {
+  const last = lastSets[ex.slug] ?? [];
+  const count = Math.max(1, Math.min(10, last.length || ex.defaultSets || 3));
+  const added: ActiveExercise = {
+    slug: ex.slug,
+    name: ex.name,
+    phase: 'main',
+    tracking: ex.tracking,
+    targetSets: 0,
+    repsMin: ex.repsMin,
+    repsMax: ex.repsMax,
+    durationS: ex.durationS,
+    restS: 60,
+    unilateral: ex.unilateral,
+    skipped: false,
+    painFlag: false,
+    added: true,
+    sets: Array.from({ length: count }, (_, i) => {
+      const prev = last[i] ?? last[last.length - 1];
+      return {
+        reps: ex.tracking === 'time' ? null : (prev?.reps ?? ex.repsMax ?? ex.repsMin ?? 10),
+        weightKg: ex.tracking === 'reps_weight' ? (prev?.weightKg ?? null) : null,
+        durationS: ex.tracking === 'time' ? (prev?.durationS ?? ex.durationS ?? 30) : null,
+        completed: false,
+      };
+    }),
+  };
+  const at = Math.max(0, Math.min(w.exercises.length, afterIndex + 1));
+  const exercises = [...w.exercises.slice(0, at), added, ...w.exercises.slice(at)];
+  return { ...w, exercises, currentIndex: Math.min(at, exercises.length - 1), restEndsAt: null };
+}
+
+/** Remove an exercise from the workout (the session keeps at least one). */
+export function removeExercise(w: ActiveWorkout, exIndex: number): ActiveWorkout {
+  if (w.exercises.length <= 1) return w;
+  const exercises = w.exercises.filter((_, i) => i !== exIndex);
+  return { ...w, exercises, currentIndex: Math.min(w.currentIndex, exercises.length - 1) };
 }
 
 export const skipRest = (w: ActiveWorkout): ActiveWorkout => ({ ...w, restEndsAt: null });

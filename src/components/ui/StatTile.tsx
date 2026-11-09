@@ -16,11 +16,13 @@ export function StatTile({
   unit?: string;
   caption?: string;
 }) {
+  // "—" means no data: a unit next to it ("— kg") reads like a value.
+  const showUnit = !!unit && value !== '—';
   return (
     <Card style={styles.tile}>
       <View
         accessible
-        accessibilityLabel={`${label}: ${value}${unit ? ` ${unit}` : ''}${caption ? `. ${caption}` : ''}`}
+        accessibilityLabel={`${label}: ${value}${showUnit ? ` ${unit}` : ''}${caption ? `. ${caption}` : ''}`}
       >
         <Text variant="small" color="textSecondary">
           {label}
@@ -29,7 +31,7 @@ export function StatTile({
           <Text variant="display" numeric>
             {value}
           </Text>
-          {unit ? (
+          {showUnit ? (
             <Text variant="small" color="textSecondary">
               {unit}
             </Text>

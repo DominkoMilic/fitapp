@@ -18,6 +18,15 @@ export function OccurrenceRow({ w, highlight }: { w: ScheduledWorkout; highlight
   ) : w.kind === 'rest' ? (
     <Moon size={20} color={colors.textSecondary} />
   ) : null;
+  // Rest days have no time or length: no empty second line.
+  const meta = [
+    w.scheduled_time?.slice(0, 5),
+    w.estimated_duration_minutes ? `${w.estimated_duration_minutes} min` : null,
+    STATUS_LABEL[w.status] || null,
+    w._pending ? 'not synced yet' : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
   return (
     <Card
       onPress={() => router.push({ pathname: '/training/workout/[id]', params: { id: w.id } })}
@@ -34,16 +43,11 @@ export function OccurrenceRow({ w, highlight }: { w: ScheduledWorkout; highlight
           >
             {w.title}
           </Text>
-          <Text variant="small" color="textSecondary">
-            {[
-              w.scheduled_time?.slice(0, 5),
-              w.estimated_duration_minutes ? `${w.estimated_duration_minutes} min` : null,
-              STATUS_LABEL[w.status] || null,
-              w._pending ? 'not synced yet' : null,
-            ]
-              .filter(Boolean)
-              .join(' · ')}
-          </Text>
+          {meta ? (
+            <Text variant="small" color="textSecondary">
+              {meta}
+            </Text>
+          ) : null}
         </View>
       </View>
     </Card>

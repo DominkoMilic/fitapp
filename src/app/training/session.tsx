@@ -1,17 +1,20 @@
 import { randomUUID } from 'expo-crypto';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { Banner, ConfirmDialog, EmptyState, ErrorState, LoadingState } from '@/components/feedback';
-import { Button, Card, NumberField, Screen, Text } from '@/components/ui';
+import { Button, Card, Screen, Text } from '@/components/ui';
 import {
+  addExercise,
   addSet,
   createActiveWorkout,
   elapsedS,
   goTo,
   isPaused,
   pause,
+  removeExercise,
+  removeSet,
   reportPain,
   restRemainingS,
   resume,
@@ -30,8 +33,9 @@ import { useLastSets } from '@/features/training/last-performance';
 import { useScheduledWorkout } from '@/features/training/schedule-api';
 import { useSessions } from '@/features/training/session-api';
 import { useBuiltWorkout } from '@/features/training/useBuiltWorkout';
-import { radius, spacing, TOUCH_TARGET, useTheme } from '@/theme';
-import { KG_PER_LB } from '@/domain/calculations/units';
+import { ExercisePicker } from '@/features/training/ExercisePicker';
+import { SetRow } from '@/features/training/SetRow';
+import { haptics, spacing } from '@/theme';
 import { announce } from '@/services/a11y/announce';
 
 /** Starts (or resumes) a workout and runs it set by set. */
@@ -137,20 +141,20 @@ export default function WorkoutSession() {
 }
 
 function Runner() {
-  const { colors } = useTheme();
   const userId = useAuth().session?.user.id;
   const w = useActiveWorkout(userId)!;
   const update = useActiveWorkoutStore((s) => s.update);
   const { data: profile } = useProfile();
   const { lastSets, lastRpeBySlug } = useLastSets();
   const paused = isPaused(w);
-  const now = useNow(1000, !paused || w.restEndsAt !== null);
+  /** A running hold for a timed set: which set and when it ends. */
+  const [hold, setHold] = useState<{ ex: number; set: number; endsAt: number } | null>(null);
+  const now = useNow(1000, !paused || w.restEndsAt !== null || hold !== null);
   const [showHow, setShowHow] = useState(false);
   const [confirmPain, setConfirmPain] = useState(false);
+  const [confirmFinish, setConfirmFinish] = useState(false);
+  const [picking, setPicking] = useState(false);
   const metric = (profile?.unit_system ?? 'metric') === 'metric';
-  const toDisp = (kg: number | null) =>
-    kg === null ? null : metric ? kg : Math.round((kg / KG_PER_LB) * 10) / 10;
-  const fromDisp = (v: number | null) => (v === null ? null : metric ? v : v * KG_PER_LB);
 
   const i = w.currentIndex;
   const ex = w.exercises[i]!;
@@ -163,6 +167,32 @@ function Runner() {
     if (wasResting.current && !resting) announce('Rest over. Time for your next set.');
     wasResting.current = resting;
   }, [resting]);
+  const holdLeft = hold ? Math.max(0, Math.ceil((hold.endsAt - now) / 1000)) : null;
+  // A hold ends with a timer started from the tap; it marks the set done (once).
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (holdTimer.current) clearTimeout(holdTimer.current);
+    },
+    [],
+  );
+  const startHold = (exIndex: number, setIndex: number, seconds: number, at: number) => {
+    if (holdTimer.current) clearTimeout(holdTimer.current);
+    setHold({ ex: exIndex, set: setIndex, endsAt: at + seconds * 1000 });
+    holdTimer.current = setTimeout(() => {
+      update((x) =>
+        x.exercises[exIndex]?.sets[setIndex]?.completed
+          ? x
+          : toggleSetDone(x, exIndex, setIndex, Date.now()),
+      );
+      haptics.success();
+      announce('Hold done.');
+      setHold(null);
+    }, seconds * 1000);
+  };
+  const remaining = w.exercises.filter(
+    (e) => !e.skipped && e.sets.some((s) => !s.completed),
+  ).length;
   const last = lastSets[ex.slug];
   const suggestion =
     last && ex.phase === 'main'
@@ -177,8 +207,9 @@ function Runner() {
           heavierWeightAvailableKg: null,
         })
       : null;
-  const target =
-    ex.tracking === 'time'
+  const target = ex.added
+    ? 'Added by you'
+    : ex.tracking === 'time'
       ? `${ex.targetSets} × ${ex.durationS} s`
       : `${ex.targetSets} × ${ex.repsMin}${ex.repsMax !== ex.repsMin ? `–${ex.repsMax}` : ''} reps`;
 
@@ -210,6 +241,22 @@ function Runner() {
         </View>
       }
     >
+      <Stack.Screen
+        options={{
+          title: w.title,
+          headerRight: () => (
+            <Button
+              title="Finish"
+              variant="ghost"
+              fullWidth={false}
+              accessibilityLabel="Finish the workout now"
+              onPress={() =>
+                remaining > 0 ? setConfirmFinish(true) : router.push('/training/summary')
+              }
+            />
+          ),
+        }}
+      />
       <View style={styles.topRow}>
         <Text variant="small" color="textSecondary">
           {i + 1} / {w.exercises.length} ·{' '}
@@ -291,63 +338,24 @@ function Runner() {
       ) : null}
 
       {ex.sets.map((s, k) => (
-        <View
+        <SetRow
           key={k}
-          style={[
-            styles.setRow,
-            {
-              borderColor: s.completed ? colors.accent : colors.border,
-              backgroundColor: colors.surface,
-            },
-          ]}
-        >
-          <Text variant="bodyStrong" style={styles.setNo}>
-            {k + 1}
-          </Text>
-          {ex.tracking === 'time' ? (
-            <View style={styles.flex}>
-              <NumberField
-                label={`Set ${k + 1} seconds`}
-                suffix="s"
-                decimal={false}
-                precision={0}
-                value={s.durationS}
-                onChangeValue={(v) => update((x) => updateSet(x, i, k, { durationS: v }))}
-              />
-            </View>
-          ) : (
-            <>
-              <View style={styles.flex}>
-                <NumberField
-                  label={`Set ${k + 1} reps`}
-                  decimal={false}
-                  precision={0}
-                  value={s.reps}
-                  onChangeValue={(v) => update((x) => updateSet(x, i, k, { reps: v }))}
-                />
-              </View>
-              {ex.tracking === 'reps_weight' ? (
-                <View style={styles.flex}>
-                  <NumberField
-                    label={`Set ${k + 1} weight`}
-                    suffix={metric ? 'kg' : 'lb'}
-                    value={toDisp(s.weightKg)}
-                    onChangeValue={(v) =>
-                      update((x) => updateSet(x, i, k, { weightKg: fromDisp(v) }))
-                    }
-                  />
-                </View>
-              ) : null}
-            </>
-          )}
-          <Button
-            title={s.completed ? '✓' : 'Done'}
-            variant={s.completed ? 'primary' : 'secondary'}
-            fullWidth={false}
-            accessibilityLabel={`Set ${k + 1} ${s.completed ? 'completed, tap to undo' : 'mark as done'}`}
-            onPress={() => update((x) => toggleSetDone(x, i, k, Date.now()))}
-          />
-        </View>
+          index={k}
+          set={s}
+          tracking={ex.tracking}
+          metric={metric}
+          onChange={(patch) => update((x) => updateSet(x, i, k, patch))}
+          onToggle={() => update((x) => toggleSetDone(x, i, k, Date.now()))}
+          onRemove={
+            ex.sets.length > 1 && !s.completed ? () => update((x) => removeSet(x, i, k)) : undefined
+          }
+          onStartHold={
+            ex.tracking === 'time' && s.durationS
+              ? () => startHold(i, k, s.durationS ?? 0, Date.now())
+              : undefined
+          }
+          holdRemainingS={hold && hold.ex === i && hold.set === k ? holdLeft : null}
+        />
       ))}
       <View style={styles.footerRow}>
         <Button
@@ -356,14 +364,55 @@ function Runner() {
           fullWidth={false}
           onPress={() => update((x) => addSet(x, i))}
         />
-        <Button
-          title="Skip exercise"
-          variant="ghost"
-          fullWidth={false}
-          onPress={() => update((x) => skipExercise(x, i))}
-        />
+        {ex.added ? (
+          <Button
+            title="Remove exercise"
+            variant="ghost"
+            fullWidth={false}
+            onPress={() => update((x) => removeExercise(x, i))}
+          />
+        ) : (
+          <Button
+            title="Skip exercise"
+            variant="ghost"
+            fullWidth={false}
+            onPress={() => update((x) => skipExercise(x, i))}
+          />
+        )}
       </View>
-      <Button title="It hurts" variant="destructive" onPress={() => setConfirmPain(true)} />
+      {picking ? (
+        <ExercisePicker
+          onPick={(e) => {
+            update((x) => addExercise(x, e, lastSets, i));
+            setPicking(false);
+          }}
+          onCancel={() => setPicking(false)}
+        />
+      ) : (
+        <Button
+          title="+ Add an exercise"
+          variant="secondary"
+          accessibilityHint="Add something the plan didn't include, such as push-ups"
+          onPress={() => setPicking(true)}
+        />
+      )}
+      <Button
+        title="It hurts"
+        variant="secondary"
+        accessibilityHint="Stops this exercise and marks it"
+        onPress={() => setConfirmPain(true)}
+      />
+      <ConfirmDialog
+        visible={confirmFinish}
+        title="Finish now?"
+        message={`${remaining === 1 ? '1 exercise isn’t' : `${remaining} exercises aren’t`} finished yet. Unfinished sets are saved as not done.`}
+        confirmLabel="Finish workout"
+        onCancel={() => setConfirmFinish(false)}
+        onConfirm={() => {
+          setConfirmFinish(false);
+          router.push('/training/summary');
+        }}
+      />
       <ConfirmDialog
         visible={confirmPain}
         title="Stop this exercise?"
@@ -382,14 +431,4 @@ function Runner() {
 const styles = StyleSheet.create({
   topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   footerRow: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.xs },
-  setRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: spacing.xs,
-    padding: spacing.xs,
-    borderWidth: 1.5,
-    borderRadius: radius.card,
-  },
-  setNo: { width: 20, textAlign: 'center', marginBottom: spacing.sm },
-  flex: { flex: 1, minWidth: TOUCH_TARGET * 1.5 },
 });

@@ -7,11 +7,13 @@ import { ErrorState, LoadingState } from '@/components/feedback';
 import { Button, Card, ListItem, Screen, SectionHeader, StatTile, Text } from '@/components/ui';
 import { kgToLb, type UnitSystem } from '@/domain/calculations/units';
 import { GoalReachedCard } from '@/features/milestones/GoalReachedCard';
+import { useFeatures } from '@/features/profile/features';
 import { useProfile } from '@/features/profile/api';
 import { useWeightStats } from '@/features/weight/useWeightStats';
 import { spacing } from '@/theme';
 
 export default function Progress() {
+  const features = useFeatures();
   const s = useWeightStats('30D');
   const { data: profile } = useProfile();
   const unit = (profile?.unit_system ?? 'metric') as UnitSystem;
@@ -86,7 +88,9 @@ export default function Progress() {
       <ListItem title="Body measurements" onPress={() => router.push('/progress/measurements')} />
       <ListItem title="Milestones" onPress={() => router.push('/progress/milestones')} />
       <ListItem title="Weekly report" onPress={() => router.push('/reports')} />
-      <ListItem title="2-week target review" onPress={() => router.push('/coach/review')} />
+      {features.nutrition ? (
+        <ListItem title="2-week target review" onPress={() => router.push('/coach/review')} />
+      ) : null}
       <ListItem
         title="Daily check-in"
         subtitle="Sleep, tiredness, soreness, pain"

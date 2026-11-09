@@ -117,7 +117,16 @@ export default function Training() {
       <ListItem title="Workout history" onPress={() => router.push('/training/history')} />
       <ListItem title="Personal records" onPress={() => router.push('/training/records')} />
       <ListItem title="Month calendar" onPress={() => router.push('/training/calendar')} />
-      <ListItem title="Add a workout" onPress={() => router.push('/training/add-workout')} />
+      <ListItem
+        title="Log a past workout"
+        subtitle="Did it without the app? Add the sets and the time"
+        onPress={() => router.push('/training/log-workout')}
+      />
+      <ListItem
+        title="Plan a workout"
+        subtitle="Add a workout to your calendar"
+        onPress={() => router.push('/training/add-workout')}
+      />
       <ListItem title="Log a game or activity" onPress={() => router.push('/training/log-event')} />
       <ListItem
         title="Exercise library"

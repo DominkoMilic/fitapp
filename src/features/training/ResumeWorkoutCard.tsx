@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 
 import { Button, Card, Text } from '@/components/ui';
+import { plural } from '@/domain/format';
 import { elapsedS } from '@/domain/training/active-workout';
 import { formatClock, useNow } from '@/hooks/useNow';
 import { useAuth } from '@/features/auth/AuthProvider';
@@ -20,7 +21,7 @@ export function ResumeWorkoutCard() {
       </Text>
       <Text variant="title">{w.title}</Text>
       <Text variant="small" color="textSecondary">
-        {formatClock(elapsedS(w, now))} · {done} sets done{w.pausedAt ? ' · paused' : ''}
+        {formatClock(elapsedS(w, now))} · {plural(done, 'set')} done{w.pausedAt ? ' · paused' : ''}
       </Text>
       <Button title="Resume workout" onPress={() => router.push('/training/session')} />
     </Card>

@@ -490,10 +490,18 @@ Week view (default) and month view. Users can: view, drag or "Move to…" a work
 
 - Shows current exercise, instructions, target sets × reps (or time), suggested weight, rest timer.
 - Per set: record reps, weight (hidden for bodyweight), duration (timed exercises), completed checkbox. Pre-filled with last session's values.
-- Actions: skip exercise, swap to alternative, add note, pause/resume, "Pain" button, finish early.
+- Actions: skip exercise, swap to alternative, add note, pause/resume, "It hurts" (pain) button, **finish at any time** (header "Finish"; if exercises are unfinished, a confirmation says how many and that unfinished sets are saved as not done).
+- **Add an exercise the plan didn't include** (e.g. push-ups): search the library (system and custom; exercises that clash with an injury say "not for your current injury"), inserted after the current exercise and marked "Added by you". Sets are pre-filled from the last time it was done, else its defaults. Added exercises have `targetSets = 0`, so extra work never lowers the completion rate; they can be removed. Any set can be added (max 10) or removed while not done (an exercise keeps ≥ 1 set).
+- **Timed sets** have a "Start" countdown for the hold; when it ends the set is marked done (haptic + "Hold done" announcement).
+- The workout title is shown in the header; a planned workout that is running shows "Resume workout" instead of "Start workout".
 - Rest timer uses absolute timestamps (survives backgrounding) and schedules a local notification for rest end.
 - Draft is persisted to SQLite after every set; reopening the app offers "Resume workout".
 - Finish: total duration (excluding pauses), exercises completed, sets, volume (Σ reps × weight for weighted sets), RPE 0–10, feeling 1–5, notes. Status = completed if ≥ 1 set completed, else "abandoned" (not counted for milestones).
+- **Duration to save**: Timer (default) · Planned (the planned minutes) · Enter time (date, start time, minutes; saved with `source = 'manual'`). When the timer ran under 5 minutes or over 4 hours, a hint suggests entering the real time. Calories are always estimated from the duration that is saved.
+- **Log a past workout** (Training → "Log a past workout", or "I already did this" on a planned workout dated today or earlier): choose a template or "Something else" (with a name), a day (today / yesterday / earlier), start time and minutes, then the exercises: planned sets start ticked with their planned values (untick what you skipped), exercises you add start ticked, and sets can be edited, added or removed. Saved with `source = 'manual'`; from a planned workout it completes that occurrence.
+- **Edit a saved workout** (history → "Edit workout"): name, date, start time, minutes, every set (reps, weight, seconds, done), add or remove sets and exercises, RPE, feeling and notes. The session keeps its id and its link to the planned workout (without completing it again); old sets are deleted and the new ones written through the outbox. A completed planned workout links to what was done ("See what you did").
+- **Time rules for logged and edited workouts** (`manualTiming`): 1–300 minutes; up to 60 days back; a workout cannot start or end more than 5 minutes in the future.
+- History shows one card per exercise **as it was done**: the same exercise in the warm-up and the main part stays two cards (a new group starts when the exercise changes or the set number restarts).
 - Sport events (match/practice) are logged via a quick form: duration, RPE, notes. They count for training load and minutes.
 
 ### 10.5 Progression for light equipment (domain/training/progression.ts)
@@ -759,6 +767,7 @@ Offline read: cached plan, scheduled workouts, templates, exercise library, rece
 - Sync engine runs on app foreground, network regain, after each write (debounced 2 s) and every 5 min while foregrounded. FIFO per entity, parents before children (meal_log before items, session before sets, activity row before route upload).
 - Server writes are `upsert` on the client UUID (idempotent). Conflict resolution: last-write-wins by `client_updated_at`, tie-break by device id; append-only logs (weights, water, sets) never conflict.
 - Ops are collapsed: create + delete before sync → nothing sent; multiple updates → last one.
+- After an op reaches the server it stays applied to local reads for 15 s (or until the refetch lands), so a just-saved change never flashes the old values. It never counts as pending in the sync status.
 - Errors: network/5xx → exponential backoff (2 s → 5 min cap); 401 → refresh session and retry; validation/RLS (4xx) → status `failed`, shown in Sync status with Retry, Edit or Delete. Never dropped automatically.
 - Outbox and local caches are scoped to `user_id`. Sign-out with pending items shows a warning; the data of user A is never synced under user B. Sign-out clears local caches after confirmation.
 - Sync status indicator: synced / syncing / N pending / N failed.

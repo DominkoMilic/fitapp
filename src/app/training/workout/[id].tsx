@@ -17,6 +17,9 @@ import {
   useScheduledWorkouts,
 } from '@/features/training/schedule-api';
 import { useBuiltWorkout } from '@/features/training/useBuiltWorkout';
+import { useAuth } from '@/features/auth/AuthProvider';
+import { useActiveWorkout } from '@/features/training/active-workout-store';
+import { useSessions } from '@/features/training/session-api';
 import { useGuardedAction } from '@/hooks/useSubmit';
 import { parseSportCategory } from '@/domain/sports/catalogue';
 
@@ -35,6 +38,11 @@ export default function WorkoutDetail() {
   const showToast = useToast((s) => s.show);
   const guard = useGuardedAction();
   const built = useBuiltWorkout(w?.template_slug);
+  const userId = useAuth().session?.user.id;
+  const active = useActiveWorkout(userId);
+  const running = !!active && active.scheduledId === id;
+  const { sessions } = useSessions();
+  const doneSession = sessions.find((x) => x.scheduled_workout_id === id);
   const [moving, setMoving] = useState(false);
   const [moveDate, setMoveDate] = useState<string | null>(null);
   const [confirmMove, setConfirmMove] = useState<string[] | null>(null);
@@ -149,9 +157,19 @@ export default function WorkoutDetail() {
         <>
           {built && w.kind !== 'rest' ? (
             <Button
-              title="Start workout"
+              title={running ? 'Resume workout' : 'Start workout'}
               onPress={() =>
                 router.push({ pathname: '/training/session', params: { scheduledId: w.id } })
+              }
+            />
+          ) : null}
+          {built && w.kind !== 'rest' && !running && w.scheduled_date <= today ? (
+            <Button
+              title="I already did this"
+              variant="secondary"
+              accessibilityHint="Log this workout with the time you did it, without running the timer"
+              onPress={() =>
+                router.push({ pathname: '/training/log-workout', params: { scheduledId: w.id } })
               }
             />
           ) : null}
@@ -214,6 +232,14 @@ export default function WorkoutDetail() {
             />
           ) : null}
         </>
+      ) : w.status === 'completed' && doneSession ? (
+        <Button
+          title="See what you did"
+          variant="secondary"
+          onPress={() =>
+            router.push({ pathname: '/training/history/[id]', params: { id: doneSession.id } })
+          }
+        />
       ) : w.status === 'skipped' ? (
         <Button title="Restore" variant="secondary" onPress={() => guard(actions.restore(w))} />
       ) : null}

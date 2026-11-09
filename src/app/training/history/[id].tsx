@@ -1,8 +1,9 @@
 import { randomUUID } from 'expo-crypto';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { groupSavedSets } from '@/domain/training/workout-log';
 import { goBack } from '@/navigation/back';
 import { ConfirmDialog, ErrorState, LoadingState } from '@/components/feedback';
 import { Button, Card, Screen, StatTile, Text } from '@/components/ui';
@@ -34,15 +35,8 @@ export default function SessionDetail() {
         <ErrorState title="Not found" message="This workout no longer exists." />
       </Screen>
     );
-  const own = sets
-    .filter((x) => x.workout_session_id === s.id)
-    .sort((a, b) => a.created_at?.localeCompare(b.created_at ?? '') || a.set_number - b.set_number);
-  const groups: { name: string; rows: typeof own }[] = [];
-  for (const r of own) {
-    const g = groups.find((x) => x.name === r.exercise_name);
-    if (g) g.rows.push(r);
-    else groups.push({ name: r.exercise_name, rows: [r] });
-  }
+  // One card per exercise as it was done (the warm-up and main glute bridge stay separate).
+  const groups = groupSavedSets(sets.filter((x) => x.workout_session_id === s.id));
   const w = (kg: number) => (metric ? `${kg} kg` : `${Math.round((kg / KG_PER_LB) * 10) / 10} lb`);
 
   return (
@@ -83,8 +77,14 @@ export default function SessionDetail() {
           <Text>{s.notes}</Text>
         </Card>
       ) : null}
-      {groups.map((g) => (
-        <Card key={g.name}>
+      <Button
+        title="Edit workout"
+        variant="secondary"
+        accessibilityHint="Change the time, duration, sets and exercises"
+        onPress={() => router.push({ pathname: '/training/history/edit', params: { id: s.id } })}
+      />
+      {groups.map((g, gi) => (
+        <Card key={`${g.name}-${gi}`}>
           <Text variant="bodyStrong">
             {g.name}
             {g.rows.some((r) => r.pain_flag) ? ' · pain reported' : ''}

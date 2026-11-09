@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 
 import { applyPending } from '@/domain/sync/outbox';
 import { useAuth } from '@/features/auth/AuthProvider';
-import { syncKeys, useOutbox, useSyncActions } from '@/features/sync/SyncProvider';
+import { syncKeys, usePendingOverlay, useSyncActions } from '@/features/sync/SyncProvider';
 import { requireSupabase } from '@/integrations/supabase/client';
 import { fetchAllPages } from '@/integrations/supabase/paging';
 import type { Tables } from '@/integrations/supabase/database.types';
@@ -16,6 +16,8 @@ export type ExerciseSet = Tables<'exercise_sets'> & { _pending?: boolean; _faile
 
 export interface NewSession {
   scheduled: ScheduledWorkout | null;
+  /** Keeps the link to a planned workout when editing (without completing it again). */
+  scheduledWorkoutId?: string | null;
   templateSlug: string | null;
   title: string;
   category: string;
@@ -45,21 +47,37 @@ export interface NewSession {
   }[];
 }
 
-/** Saves a session + its sets (outbox: parent before children) and completes the occurrence. */
+/**
+ * Saves a session + its sets (outbox: parent before children) and completes the occurrence.
+ * With `existing`, replaces a saved session: same id, its old sets deleted, the new ones written.
+ */
 export function useSaveSession() {
   const { write } = useSyncActions();
   const schedule = useScheduleActions();
-  return async (s: NewSession): Promise<string> => {
-    const id = randomUUID();
+  return async (
+    s: NewSession,
+    existing?: { id: string; onServer: boolean; setIds: readonly string[] },
+  ): Promise<string> => {
+    const id = existing?.id ?? randomUUID();
+    for (const setId of existing?.setIds ?? []) {
+      await write({
+        id: randomUUID(),
+        entity: 'exercise_sets',
+        recordKey: setId,
+        kind: 'delete',
+        payload: null,
+        createdOffline: !existing?.onServer,
+      });
+    }
     await write({
       id: randomUUID(),
       entity: 'workout_sessions',
       recordKey: id,
       kind: 'upsert',
-      createdOffline: true,
+      createdOffline: !existing?.onServer,
       payload: {
         id,
-        scheduled_workout_id: s.scheduled?.id ?? null,
+        scheduled_workout_id: s.scheduled?.id ?? s.scheduledWorkoutId ?? null,
         template_slug: s.templateSlug,
         title: s.title.slice(0, 80),
         category: s.category,
@@ -109,7 +127,7 @@ export function useSaveSession() {
 /** Recent sessions (last 400) with their sets, server rows + offline writes. */
 export function useSessions() {
   const userId = useAuth().session?.user.id;
-  const queue = useOutbox();
+  const queue = usePendingOverlay();
   const sessions = useQuery({
     queryKey: syncKeys.entity(userId ?? 'anonymous', 'workout_sessions'),
     enabled: !!userId,
