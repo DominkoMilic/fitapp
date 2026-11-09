@@ -136,6 +136,28 @@ export type Database = {
         };
         Relationships: [];
       };
+      edge_rate_limits: {
+        Row: {
+          bucket: string;
+          hits: number;
+          user_id: string;
+          window_start: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          bucket: string;
+          hits?: number;
+          user_id: string;
+          window_start: string;
+        };
+        Update: {
+          bucket?: string;
+          hits?: number;
+          user_id?: string;
+          window_start?: string;
+        };
+        Relationships: [];
+      };
       exercise_sets: {
         Row: {
           client_updated_at: string | null;
@@ -1585,6 +1607,10 @@ export type Database = {
     };
     Functions: {
       complete_onboarding: { Args: { payload: Json }; Returns: undefined };
+      hit_rate_limit: {
+        Args: { bucket_name: string; max_hits: number; uid: string; window_seconds: number };
+        Returns: boolean;
+      };
       search_foods: {
         Args: { max_results?: number; query: string };
         Returns: {

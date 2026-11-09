@@ -251,6 +251,11 @@ export default function Nutrition() {
         title="Saved meals"
         onPress={() => router.push({ pathname: '/nutrition/saved-meals', params: { date } })}
       />
+      <ListItem
+        title="Recipes"
+        subtitle="Browse, save and build your own"
+        onPress={() => router.push('/nutrition/recipes')}
+      />
 
       <ConfirmDialog
         visible={confirmWater !== null}
