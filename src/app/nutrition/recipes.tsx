@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import { ChevronRight } from 'lucide-react-native';
 import { useState } from 'react';
 import { Image, Pressable, StyleSheet, View } from 'react-native';
 
@@ -182,6 +183,7 @@ function BrowseTab() {
           <Text variant="body" style={styles.flex}>
             {r.name}
           </Text>
+          <ChevronRight size={18} color={colors.textSecondary} />
         </Pressable>
       ))}
       {results.data?.length ? (

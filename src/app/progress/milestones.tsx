@@ -7,7 +7,7 @@ import { kgToLb, type UnitSystem } from '@/domain/calculations/units';
 import { milestoneCatalogue } from '@/domain/milestones/evaluate';
 import { useGoalLike, useUnlockedMilestones } from '@/features/milestones/api';
 import { useProfile } from '@/features/profile/api';
-import { spacing, useTheme } from '@/theme';
+import { radius, spacing, useTheme } from '@/theme';
 import { formatDate } from '@/domain/format';
 
 export default function MilestonesScreen() {
@@ -46,7 +46,7 @@ export default function MilestonesScreen() {
   const row = (key: string, title: string, description: string) => {
     const u = byKey.get(key);
     return (
-      <Card key={key}>
+      <Card key={key} tone={u ? 'success' : 'muted'}>
         <View style={styles.row}>
           {u ? (
             <CircleCheck size={22} color={colors.accent} />
@@ -54,9 +54,22 @@ export default function MilestonesScreen() {
             <Lock size={20} color={colors.textSecondary} />
           )}
           <View style={styles.text}>
-            <Text variant="bodyStrong" color={u ? 'textPrimary' : 'textSecondary'}>
-              {title}
-            </Text>
+            <View style={styles.titleRow}>
+              <Text
+                variant="bodyStrong"
+                color={u ? 'textPrimary' : 'textSecondary'}
+                style={styles.title}
+              >
+                {title}
+              </Text>
+              {u ? (
+                <View style={[styles.pill, { backgroundColor: colors.accent }]}>
+                  <Text variant="caption" style={{ color: colors.onAccent }}>
+                    Unlocked
+                  </Text>
+                </View>
+              ) : null}
+            </View>
             <Text variant="small" color="textSecondary">
               {u
                 ? `Unlocked ${formatDate(String((u.metadata as { achieved_on?: string } | null)?.achieved_on ?? u.unlocked_at).slice(0, 10))}`
@@ -96,4 +109,7 @@ export default function MilestonesScreen() {
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: spacing.sm, alignItems: 'center' },
   text: { flex: 1, gap: 2 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  title: { flexShrink: 1 },
+  pill: { borderRadius: radius.pill, paddingHorizontal: spacing.xs, paddingVertical: 2 },
 });

@@ -136,9 +136,13 @@ export default function TargetsSettings() {
     <Screen edges={['bottom']}>
       <SaveState status={save.status} error={save.error} />
       {goal.data ? (
-        <Card onPress={() => router.push('/settings/goal')} accessibilityLabel="Change goal">
+        <Card
+          onPress={() => router.push('/settings/goal')}
+          accessibilityLabel="Change goal"
+          actionLabel="Change goal"
+        >
           <Text variant="small" color="textSecondary">
-            Goal · tap to change
+            Goal
           </Text>
           <Text variant="title">
             {{

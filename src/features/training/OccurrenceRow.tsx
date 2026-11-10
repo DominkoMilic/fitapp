@@ -31,6 +31,8 @@ export function OccurrenceRow({ w, highlight }: { w: ScheduledWorkout; highlight
     <Card
       onPress={() => router.push({ pathname: '/training/workout/[id]', params: { id: w.id } })}
       accessibilityLabel={`${w.title}${STATUS_LABEL[w.status] ? `, ${STATUS_LABEL[w.status]}` : ''}`}
+      tone={done ? 'success' : 'default'}
+      affordance="chevron"
       style={highlight ? { borderColor: colors.accent, borderWidth: 2 } : undefined}
     >
       <View style={styles.row}>

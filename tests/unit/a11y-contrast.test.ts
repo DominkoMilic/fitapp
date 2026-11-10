@@ -17,6 +17,9 @@ describe.each(['dark', 'light'] as const)('colour contrast, %s theme (spec 23.3)
     background: c.background,
     surface: c.surface,
     surfaceRaised: c.surfaceRaised,
+    successSurface: c.successSurface,
+    warningSurface: c.warningSurface,
+    dangerSurface: c.dangerSurface,
   };
   // Text colours used for body and small text need 4.5:1 on every surface they appear on.
   it.each(['textPrimary', 'textSecondary', 'accent', 'warning', 'danger', 'info'] as const)(

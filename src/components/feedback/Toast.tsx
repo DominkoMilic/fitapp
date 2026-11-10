@@ -1,10 +1,12 @@
 import { useEffect } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { create } from 'zustand';
 
+import { SwipeToDismiss } from '@/components/ui/SwipeToDismiss';
 import { Text } from '@/components/ui/Text';
-import { radius, spacing, useTheme } from '@/theme';
+import { motion, radius, spacing, useTheme } from '@/theme';
 import { announce, isScreenReaderOn } from '@/services/a11y/announce';
 
 interface ToastState {
@@ -38,7 +40,7 @@ const DURATION_MS = 5000;
 
 /** Single toast host, mounted once at the root. Supports one action (e.g. Undo, spec 6.3). */
 export function ToastHost() {
-  const { colors } = useTheme();
+  const { colors, reduceMotion } = useTheme();
   const insets = useSafeAreaInsets();
   const { message, actionLabel, onAction, key, hide } = useToast();
 
@@ -53,33 +55,45 @@ export function ToastHost() {
   if (!message) return null;
   return (
     <View pointerEvents="box-none" style={[styles.wrap, { bottom: insets.bottom + 72 }]}>
-      <View
-        accessibilityLiveRegion="polite"
-        accessibilityRole="alert"
-        style={[
-          styles.toast,
-          { backgroundColor: colors.surfaceRaised, borderColor: colors.border },
-        ]}
+      {/* Slides up in, fades down out; swipe sideways to clear it early. */}
+      <Animated.View
+        key={key}
+        style={styles.full}
+        entering={reduceMotion ? undefined : FadeInDown.duration(motion.normal)}
+        exiting={reduceMotion ? undefined : FadeOutDown.duration(motion.fast)}
       >
-        <Text variant="small" style={styles.text}>
-          {message}
-        </Text>
-        {actionLabel && onAction ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={actionLabel}
-            hitSlop={12}
-            onPress={() => {
-              onAction();
-              hide();
-            }}
-          >
-            <Text variant="bodyStrong" color="accent">
-              {actionLabel}
-            </Text>
-          </Pressable>
-        ) : null}
-      </View>
+        <SwipeToDismiss onDismiss={hide}>
+          {() => (
+            <View
+              accessibilityLiveRegion="polite"
+              accessibilityRole="alert"
+              style={[
+                styles.toast,
+                { backgroundColor: colors.surfaceRaised, borderColor: colors.border },
+              ]}
+            >
+              <Text variant="small" style={styles.text}>
+                {message}
+              </Text>
+              {actionLabel && onAction ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={actionLabel}
+                  hitSlop={12}
+                  onPress={() => {
+                    onAction();
+                    hide();
+                  }}
+                >
+                  <Text variant="bodyStrong" color="accent">
+                    {actionLabel}
+                  </Text>
+                </Pressable>
+              ) : null}
+            </View>
+          )}
+        </SwipeToDismiss>
+      </Animated.View>
     </View>
   );
 }
@@ -98,4 +112,5 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   text: { flex: 1 },
+  full: { width: '100%', maxWidth: 480 },
 });

@@ -29,7 +29,10 @@ export function EmptyState({
         {message}
       </Text>
       {actionLabel && onAction ? (
-        <Button title={actionLabel} onPress={onAction} fullWidth={false} />
+        // Centred like the text above (a compact button would otherwise hug the left edge).
+        <View style={styles.action}>
+          <Button title={actionLabel} onPress={onAction} fullWidth={false} />
+        </View>
       ) : null}
     </View>
   );
@@ -42,4 +45,5 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xxl,
     paddingHorizontal: spacing.lg,
   },
+  action: { alignSelf: 'center' },
 });

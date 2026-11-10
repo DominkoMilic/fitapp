@@ -26,7 +26,7 @@ export function GoalReachedCard() {
   const currentKg = Math.round(current.kg * 100) / 100;
 
   return (
-    <Card raised>
+    <Card tone="success">
       <View style={styles.row}>
         <PartyPopper size={28} color={colors.accent} />
         <View style={styles.flex}>

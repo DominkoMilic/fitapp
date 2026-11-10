@@ -1,10 +1,10 @@
 import type { PropsWithChildren } from 'react';
-import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeOutLeft, LinearTransition } from 'react-native-reanimated';
 
 import { motion, useTheme } from '@/theme';
 
 /**
- * A list row that fades in when added, fades out when removed and slides when the rows around it
+ * A list row that fades in when added, slides out to the left when removed and slides when the rows around it
  * move (spec 23.4). Plain view when "reduce motion" is on.
  */
 export function AnimatedRow({ children }: PropsWithChildren) {
@@ -13,7 +13,7 @@ export function AnimatedRow({ children }: PropsWithChildren) {
   return (
     <Animated.View
       entering={FadeIn.duration(motion.normal)}
-      exiting={FadeOut.duration(motion.fast)}
+      exiting={FadeOutLeft.duration(motion.normal)}
       layout={LinearTransition.duration(motion.normal)}
     >
       {children}

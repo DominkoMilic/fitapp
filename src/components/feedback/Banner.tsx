@@ -1,12 +1,16 @@
 import { CircleCheck, Info, TriangleAlert } from 'lucide-react-native';
 import { StyleSheet, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { Text } from '@/components/ui/Text';
-import { radius, spacing, useTheme } from '@/theme';
+import { motion, radius, spacing, useTheme } from '@/theme';
 
 export type BannerTone = 'info' | 'warning' | 'danger' | 'success';
 
-/** Inline message. Never relies on colour alone: always has an icon and text. */
+/**
+ * Inline message. Never relies on colour alone: always has an icon and text. Slides in gently
+ * when it appears (no animation with reduce motion).
+ */
 export function Banner({
   tone = 'info',
   title,
@@ -16,7 +20,7 @@ export function Banner({
   title?: string;
   message: string;
 }) {
-  const { colors } = useTheme();
+  const { colors, reduceMotion } = useTheme();
   const color = {
     info: colors.info,
     warning: colors.warning,
@@ -25,7 +29,8 @@ export function Banner({
   }[tone];
   const Icon = tone === 'success' ? CircleCheck : tone === 'info' ? Info : TriangleAlert;
   return (
-    <View
+    <Animated.View
+      entering={reduceMotion ? undefined : FadeInDown.duration(motion.normal)}
       accessibilityRole={tone === 'danger' || tone === 'warning' ? 'alert' : 'text'}
       style={[styles.banner, { borderColor: color, backgroundColor: colors.surface }]}
     >
@@ -36,7 +41,7 @@ export function Banner({
           {message}
         </Text>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 

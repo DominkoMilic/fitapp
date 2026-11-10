@@ -3,7 +3,9 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { KeyboardProvider, KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ConfigErrorScreen } from '@/components/feedback/ConfigErrorScreen';
@@ -55,21 +57,25 @@ export default function RootLayout() {
   const [queryClient] = useState(createQueryClient);
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <ThemeProvider>
-          {envResult.ok ? (
-            <QueryClientProvider client={queryClient}>
-              <AuthProvider>
-                <SyncProvider>
-                  <RootStack />
-                </SyncProvider>
-              </AuthProvider>
-            </QueryClientProvider>
-          ) : (
-            <ConfigErrorScreen />
-          )}
-        </ThemeProvider>
-      </SafeAreaProvider>
+      <KeyboardProvider>
+        <SafeAreaProvider>
+          <ThemeProvider>
+            {envResult.ok ? (
+              <QueryClientProvider client={queryClient}>
+                <AuthProvider>
+                  <SyncProvider>
+                    <RootStack />
+                  </SyncProvider>
+                </AuthProvider>
+              </QueryClientProvider>
+            ) : (
+              <ConfigErrorScreen />
+            )}
+          </ThemeProvider>
+          {/* iOS number pads have no return key: prev / next / done above the keyboard. */}
+          {Platform.OS === 'ios' ? <KeyboardToolbar /> : null}
+        </SafeAreaProvider>
+      </KeyboardProvider>
     </GestureHandlerRootView>
   );
 }

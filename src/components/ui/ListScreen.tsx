@@ -1,5 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
-import { FlatList, KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
+import { FlatList, Platform, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { type Edge, SafeAreaView } from 'react-native-safe-area-context';
 
 import { spacing, useTheme } from '@/theme';
@@ -31,10 +32,8 @@ export function ListScreen<T>({
   const { colors } = useTheme();
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: colors.background }]} edges={edges}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+      {/* Works on Android too (edge-to-edge windows no longer resize for the keyboard). */}
+      <KeyboardAvoidingView style={styles.flex} behavior="padding">
         <FlatList
           data={data}
           keyExtractor={keyExtractor}

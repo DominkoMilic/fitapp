@@ -11,7 +11,11 @@ export function SyncBanner() {
   const { pending, failed } = useSyncStatus();
   if (!pending && !failed) return null;
   return (
-    <Card onPress={() => router.push('/settings/sync')} accessibilityLabel="Open sync status">
+    <Card
+      onPress={() => router.push('/settings/sync')}
+      accessibilityLabel="Open sync status"
+      actionLabel="View"
+    >
       <Banner
         tone={failed ? 'danger' : 'info'}
         message={

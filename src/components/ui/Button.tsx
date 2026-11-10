@@ -39,6 +39,12 @@ export function Button({
     ghost: 'transparent',
     destructive: colors.danger,
   }[variant];
+  const border = {
+    primary: colors.accent,
+    secondary: colors.border,
+    ghost: colors.border,
+    destructive: colors.danger,
+  }[variant];
   const fg = {
     primary: colors.onAccent,
     secondary: colors.textPrimary,
@@ -58,7 +64,8 @@ export function Button({
         styles.base,
         {
           backgroundColor: bg,
-          borderColor: variant === 'secondary' ? colors.border : 'transparent',
+          // Every button has a visible edge so it reads as tappable (ghost = outline button).
+          borderColor: border,
           alignSelf: fullWidth ? 'stretch' : 'flex-start',
         },
       ]}

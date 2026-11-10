@@ -16,6 +16,12 @@ const monthStart = (date: string, offset: number) => {
   return d.toISOString().slice(0, 10);
 };
 
+/** Every workout or event planned that day is completed (rest days don't count either way). */
+const dayDone = (items: readonly { kind: string; status: string }[]) => {
+  const active = items.filter((i) => i.kind !== 'rest');
+  return active.length > 0 && active.every((i) => i.status === 'completed');
+};
+
 export default function MonthCalendar() {
   const { colors } = useTheme();
   const { today } = useToday();
@@ -73,7 +79,12 @@ export default function MonthCalendar() {
               style={[
                 styles.cell,
                 styles.cellW,
-                { borderColor: isSel ? colors.accent : 'transparent', opacity: inMonth ? 1 : 0.4 },
+                {
+                  borderColor: isSel ? colors.accent : 'transparent',
+                  opacity: inMonth ? 1 : 0.4,
+                  // A day whose training is all done is tinted, not just dotted.
+                  backgroundColor: dayDone(items) ? colors.successSurface : undefined,
+                },
               ]}
             >
               <Text variant="small" color={date === today ? 'accent' : 'textPrimary'}>

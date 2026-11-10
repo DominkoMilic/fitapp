@@ -12,6 +12,12 @@ export const palette = {
     textSecondary: '#A3AAB5',
     accent: '#34D399',
     onAccent: '#0B1F17',
+    /** Completed / unlocked cards: accent-tinted surface. */
+    successSurface: '#1C3430',
+    /** Change away from the goal: amber-tinted surface (never red, spec 23.4). */
+    warningSurface: '#33291C',
+    /** Field with a validation error: red-tinted input background. */
+    dangerSurface: '#352628',
     warning: '#F5A524',
     danger: '#F97066',
     info: '#60A5FA',
@@ -27,6 +33,12 @@ export const palette = {
     textSecondary: '#5A6270',
     accent: '#047857',
     onAccent: '#FFFFFF',
+    /** Completed / unlocked cards: accent-tinted surface. */
+    successSurface: '#E8F4F0',
+    /** Change away from the goal: amber-tinted surface (never red, spec 23.4). */
+    warningSurface: '#FBF1E6',
+    /** Field with a validation error: red-tinted input background. */
+    dangerSurface: '#FCEFEE',
     warning: '#A3480A',
     danger: '#C4281C',
     info: '#2563EB',
