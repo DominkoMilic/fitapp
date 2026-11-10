@@ -1,12 +1,12 @@
 import { Redirect } from 'expo-router';
 import { Tabs } from 'expo-router/js-tabs';
-import { ChartLine, Dumbbell, House, User, Utensils } from 'lucide-react-native';
+import { ChartLine, Dumbbell, House, User, Users, Utensils } from 'lucide-react-native';
 
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useRecalibrationEngine } from '@/features/coach/useRecalibrationEngine';
 import { useMilestoneEngine } from '@/features/milestones/api';
 import { useNotificationEngine } from '@/features/notifications/useNotificationEngine';
-import { useFeatures } from '@/features/profile/features';
+import { profileTabShown, useFeatures } from '@/features/profile/features';
 import { motion, useTheme } from '@/theme';
 
 function MilestoneEngine() {
@@ -71,6 +71,15 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
+          name="social"
+          options={{
+            // Shown once social is set up and switched on (spec 33.5).
+            href: features.social ? undefined : null,
+            title: 'Social',
+            tabBarIcon: ({ color, size }) => <Users color={color} size={size} />,
+          }}
+        />
+        <Tabs.Screen
           name="progress"
           options={{
             title: 'Progress',
@@ -80,6 +89,9 @@ export default function TabsLayout() {
         <Tabs.Screen
           name="profile"
           options={{
+            // At most five tabs: with nutrition and social both on, Profile opens from the Home
+            // header instead.
+            href: profileTabShown(features) ? undefined : null,
             title: 'Profile',
             tabBarIcon: ({ color, size }) => <User color={color} size={size} />,
           }}

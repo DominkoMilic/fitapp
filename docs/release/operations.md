@@ -32,3 +32,10 @@ What keeps PACE running after launch. Supabase is the only backend: Postgres, Au
 - **Recipe search failing:** the app shows "Recipes need a connection", and food logging still works. Check the function logs and TheMealDB status.
 - **Sync failures:** users see "N changes couldn't be saved" with Retry. Nothing is lost on the phone. Check the API logs for 4xx/5xx errors on the affected table.
 - **Suspected data exposure:** RLS isolates every table (pgTAP `10_rls_isolation`). Check the policies with `select * from pg_policies` and the auth logs, then follow your GDPR breach process (notify within 72 hours if personal data was affected).
+
+## Social moderation (spec 33.7)
+
+- **Reports** arrive in `public.reports` (status `open`). Review them at least daily (the app promises 24 hours) in the Supabase dashboard, newest first: `select * from reports where status = 'open' order by created_at;`. Look at the target (`social_profiles` for a profile) and decide.
+- **Act:** set the report to `actioned` or `dismissed`. To suspend someone's social features, set `social_profiles.banned_at = now()`: they disappear from search, profiles and friend lists, and their social actions are refused. Clear it to lift the suspension. Offensive handles or names can be edited directly by the service role.
+- **Emergency stop:** `update app_config set value = 'false' where key = 'social_enabled';` stops all new social actions (requests, searches, new profiles) at once; viewing existing friends still works. Set it back to `'true'` to resume.
+- **Word list:** `social_blocked_words` and `social_reserved_handles` must stay identical to `src/domain/social/filter.ts` (a unit test compares them with the migration); change both in a new migration.

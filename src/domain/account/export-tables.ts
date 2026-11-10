@@ -1,5 +1,6 @@
 /**
- * Every table holding a user's data, with the column that identifies the owner (spec 19 data
+ * Every table holding a user's data, with the column (or columns, any of which may match) that
+ * identifies the owner (spec 19 data
  * export, 27 #18). A unit test checks this against the generated database types so a new user
  * table can't be forgotten.
  */
@@ -34,6 +35,12 @@ export const EXPORT_TABLES = [
   ['meal_plan_entries', 'user_id'],
   ['shopping_lists', 'user_id'],
   ['shopping_list_items', 'user_id'],
+  ['social_profiles', 'user_id'],
+  ['social_settings', 'user_id'],
+  // A friendship row belongs to both people; either column can hold the user.
+  ['friendships', ['user_low', 'user_high']],
+  ['blocks', 'blocker'],
+  ['reports', 'reporter'],
 ] as const;
 
 /** Tables with a user column that aren't personal data (technical rate-limit counters). */
@@ -42,12 +49,26 @@ export const NOT_EXPORTED = ['edge_rate_limits'] as const;
 export type ExportTable = (typeof EXPORT_TABLES)[number][0];
 
 /** Unique per-user sort key for stable paging (tables without an `id` column). */
-export const EXPORT_ORDER_KEY: Partial<Record<ExportTable, string>> = {
+export const EXPORT_ORDER_KEY: Partial<Record<ExportTable, string | readonly string[]>> = {
+  blocks: 'blocked',
   daily_checkins: 'local_date',
   day_log_status: 'local_date',
+  friendships: ['user_low', 'user_high'],
   saved_recipes: 'recipe_id',
+  social_profiles: 'user_id',
+  social_settings: 'user_id',
   user_preferences: 'user_id',
 };
+
+/** The PostgREST `or` filter for owner columns, or null for a single column. */
+export function ownerFilter(owner: string | readonly string[], userId: string): string | null {
+  return typeof owner === 'string' ? null : owner.map((c) => `${c}.eq.${userId}`).join(',');
+}
+
+export function orderColumns(table: ExportTable): readonly string[] {
+  const key = EXPORT_ORDER_KEY[table] ?? 'id';
+  return typeof key === 'string' ? [key] : key;
+}
 
 export const EXPORT_PAGE = 1000;
 export const EXPORT_FORMAT_VERSION = 1;

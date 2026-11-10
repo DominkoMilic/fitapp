@@ -5,6 +5,7 @@ import { Banner, ConfirmDialog } from '@/components/feedback';
 import { Card, ListItem, Screen, SectionHeader, Text } from '@/components/ui';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useFeatures } from '@/features/profile/features';
+import { useMySocialProfile } from '@/features/social/api';
 import { useProfile } from '@/features/profile/api';
 import { useSyncActions, useSyncStatus } from '@/features/sync/SyncProvider';
 import { plural } from '@/domain/format';
@@ -12,6 +13,7 @@ import { plural } from '@/domain/format';
 export default function ProfileTab() {
   const { session, signOut } = useAuth();
   const features = useFeatures();
+  const social = useMySocialProfile();
   const profile = useProfile();
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -64,9 +66,16 @@ export default function ProfileTab() {
       />
       <ListItem
         title="App features"
-        subtitle={features.nutrition ? 'Nutrition is on' : 'Nutrition is off'}
+        subtitle={`Nutrition ${features.nutrition ? 'on' : 'off'} · Social ${features.social ? 'on' : 'off'}`}
         onPress={() => router.push('/settings/features')}
       />
+      {social.data ? (
+        <ListItem
+          title="Social and privacy"
+          subtitle={`@${social.data.handle} · what friends see, blocked people`}
+          onPress={() => router.push('/settings/social')}
+        />
+      ) : null}
       <ListItem title="Reminders" onPress={() => router.push('/settings/notifications')} />
       <ListItem title="Appearance" onPress={() => router.push('/settings/appearance')} />
 

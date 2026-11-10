@@ -19,6 +19,8 @@ const TITLES: Record<string, string> = {
   password: 'Change password',
   sports: 'Your sports',
   features: 'App features',
+  social: 'Social and privacy',
+  blocked: 'Blocked people',
   'delete-account': 'Delete account',
 };
 

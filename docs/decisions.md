@@ -238,3 +238,13 @@ Long lists render 20 rows per page (next page near the end of the scroll, or "Sh
 4. **Five tabs at most:** when nutrition and social are both on, Profile leaves the tab bar (it opens from the Home header).
 5. **Staged delivery 8A–8D** (friends and safety → feed, cheers, push → clubs → challenges and leaderboards), each a reviewed phase.
 6. **Daily caps** on counted effort (240 active minutes, 60 km on foot, 150 km cycling) guard against cheating and against overtraining for a ranking.
+
+## 2026-11-17: Phase 8A implementation decisions
+
+1. **Handles are `text` with a check constraint**, always stored lower-case, instead of `citext`: no extension needed and the rule is the same in the app and the database.
+2. **New `app_config` table** for the social kill switch (none existed). Signed-in users can read it; only the service role can change it.
+3. **Friendships, blocks and reports are written only through security-definer functions.** RLS alone can't express "not blocked, not banned, accepts requests, under 500 friends, rate-limited" cleanly; the functions do, and the tables grant no direct writes.
+4. **A block never reveals itself:** the blocked person gets `not_found`, sees no block row and can't open the blocker's profile.
+5. **"Delete my social profile" keeps the blocks you made**, so people you blocked can't reach you if you come back. Account deletion removes everything (cascade).
+6. **Rate-limit counters roll back when an action fails** (it runs in one transaction). Accepted: repeated failing requests are cheap and have no effect.
+7. **The social consent is recorded on setup and on each switch on or off**, with the legal version, which is bumped to 2026-11-17 (privacy: Social features; terms: Community rules). There is no re-acceptance prompt; the version is recorded with each consent.

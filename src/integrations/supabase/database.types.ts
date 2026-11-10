@@ -82,6 +82,44 @@ export type Database = {
         };
         Relationships: [];
       };
+      app_config: {
+        Row: {
+          key: string;
+          updated_at: string;
+          value: NonNullable<Json>;
+        };
+        ComputedFields: never;
+        Insert: {
+          key: string;
+          updated_at?: string;
+          value: NonNullable<Json>;
+        };
+        Update: {
+          key?: string;
+          updated_at?: string;
+          value?: NonNullable<Json>;
+        };
+        Relationships: [];
+      };
+      blocks: {
+        Row: {
+          blocked: string;
+          blocker: string;
+          created_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          blocked: string;
+          blocker: string;
+          created_at?: string;
+        };
+        Update: {
+          blocked?: string;
+          blocker?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       body_measurements: {
         Row: {
           client_updated_at: string | null;
@@ -462,6 +500,34 @@ export type Database = {
           search?: never;
           source?: string;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+      friendships: {
+        Row: {
+          accepted_at: string | null;
+          created_at: string;
+          requested_by: string;
+          status: string;
+          user_high: string;
+          user_low: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          accepted_at?: string | null;
+          created_at?: string;
+          requested_by: string;
+          status?: string;
+          user_high: string;
+          user_low: string;
+        };
+        Update: {
+          accepted_at?: string | null;
+          created_at?: string;
+          requested_by?: string;
+          status?: string;
+          user_high?: string;
+          user_low?: string;
         };
         Relationships: [];
       };
@@ -960,6 +1026,40 @@ export type Database = {
           },
         ];
       };
+      reports: {
+        Row: {
+          created_at: string;
+          id: string;
+          note: string | null;
+          reason: string;
+          reporter: string;
+          status: string;
+          target_id: string;
+          target_type: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          id?: string;
+          note?: string | null;
+          reason: string;
+          reporter: string;
+          status?: string;
+          target_id: string;
+          target_type: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          note?: string | null;
+          reason?: string;
+          reporter?: string;
+          status?: string;
+          target_id?: string;
+          target_type?: string;
+        };
+        Relationships: [];
+      };
       saved_meals: {
         Row: {
           archived_at: string | null;
@@ -1212,6 +1312,109 @@ export type Database = {
           status?: string;
           updated_at?: string;
           user_id?: string;
+        };
+        Relationships: [];
+      };
+      social_blocked_words: {
+        Row: {
+          word: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          word: string;
+        };
+        Update: {
+          word?: string;
+        };
+        Relationships: [];
+      };
+      social_profiles: {
+        Row: {
+          avatar_color: string;
+          banned_at: string | null;
+          bio: string | null;
+          created_at: string;
+          discoverable: boolean;
+          display_name: string;
+          handle: string;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          avatar_color?: string;
+          banned_at?: string | null;
+          bio?: string | null;
+          created_at?: string;
+          discoverable?: boolean;
+          display_name: string;
+          handle: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          avatar_color?: string;
+          banned_at?: string | null;
+          bio?: string | null;
+          created_at?: string;
+          discoverable?: boolean;
+          display_name?: string;
+          handle?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      social_reserved_handles: {
+        Row: {
+          handle: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          handle: string;
+        };
+        Update: {
+          handle?: string;
+        };
+        Relationships: [];
+      };
+      social_settings: {
+        Row: {
+          activities_audience: string;
+          challenge_results_audience: string;
+          created_at: string;
+          friend_requests_from: string;
+          in_leaderboards: boolean;
+          milestones_audience: string;
+          share_volume: boolean;
+          updated_at: string;
+          user_id: string;
+          workouts_audience: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          activities_audience?: string;
+          challenge_results_audience?: string;
+          created_at?: string;
+          friend_requests_from?: string;
+          in_leaderboards?: boolean;
+          milestones_audience?: string;
+          share_volume?: boolean;
+          updated_at?: string;
+          user_id: string;
+          workouts_audience?: string;
+        };
+        Update: {
+          activities_audience?: string;
+          challenge_results_audience?: string;
+          created_at?: string;
+          friend_requests_from?: string;
+          in_leaderboards?: boolean;
+          milestones_audience?: string;
+          share_volume?: boolean;
+          updated_at?: string;
+          user_id?: string;
+          workouts_audience?: string;
         };
         Relationships: [];
       };
@@ -1470,6 +1673,7 @@ export type Database = {
           preferred_cuisines: string[];
           preferred_training_days: number[];
           preferred_training_time: string | null;
+          social_enabled: boolean;
           sports: string[];
           training_days_per_week: number | null;
           training_environment: string | null;
@@ -1493,6 +1697,7 @@ export type Database = {
           preferred_cuisines?: string[];
           preferred_training_days?: number[];
           preferred_training_time?: string | null;
+          social_enabled?: boolean;
           sports?: string[];
           training_days_per_week?: number | null;
           training_environment?: string | null;
@@ -1515,6 +1720,7 @@ export type Database = {
           preferred_cuisines?: string[];
           preferred_training_days?: number[];
           preferred_training_time?: string | null;
+          social_enabled?: boolean;
           sports?: string[];
           training_days_per_week?: number | null;
           training_environment?: string | null;
@@ -1819,17 +2025,61 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      accept_friend_request: { Args: { other: string }; Returns: string };
       accept_target_adjustment: {
         Args: { p_adjustment_id: string; p_target: Json };
         Returns: string;
       };
+      are_friends: { Args: { a: string; b: string }; Returns: boolean };
+      block_user: { Args: { other: string }; Returns: undefined };
       complete_onboarding: { Args: { payload: Json }; Returns: undefined };
+      delete_social_profile: { Args: Record<PropertyKey, never>; Returns: undefined };
+      get_social_profile: {
+        Args: { p_handle: string };
+        Returns: {
+          avatar_color: string;
+          bio: string;
+          display_name: string;
+          friend_count: number;
+          handle: string;
+          relationship: string;
+          user_id: string;
+        }[];
+      };
       hit_rate_limit: {
         Args: { bucket_name: string; max_hits: number; uid: string; window_seconds: number };
         Returns: boolean;
       };
+      is_banned: { Args: { u: string }; Returns: boolean };
+      is_blocked: { Args: { a: string; b: string }; Returns: boolean };
       is_own_user_request: { Args: { owner: string }; Returns: boolean };
       is_user_request: { Args: Record<PropertyKey, never>; Returns: boolean };
+      list_blocked: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          avatar_color: string;
+          blocked_at: string;
+          display_name: string;
+          handle: string;
+          user_id: string;
+        }[];
+      };
+      list_friendships: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          avatar_color: string;
+          display_name: string;
+          handle: string;
+          relationship: string;
+          since: string;
+          user_id: string;
+        }[];
+      };
+      remove_friend: { Args: { other: string }; Returns: undefined };
+      report_content: {
+        Args: { p_note: string; p_reason: string; p_target_id: string; p_target_type: string };
+        Returns: string;
+      };
       safety_sex_floor: { Args: { sex: string }; Returns: number };
       search_foods: {
         Args: { max_results?: number; query: string };
@@ -1863,6 +2113,30 @@ export type Database = {
           isSetofReturn: true;
         };
       };
+      search_social_profiles: {
+        Args: { q: string };
+        Returns: {
+          avatar_color: string;
+          display_name: string;
+          handle: string;
+          relationship: string;
+        }[];
+      };
+      send_friend_request: { Args: { p_handle: string }; Returns: string };
+      social_caller: { Args: { active: boolean }; Returns: string };
+      social_friend_count: { Args: { u: string }; Returns: number };
+      social_handle_available: { Args: { p_handle: string }; Returns: boolean };
+      social_limit: {
+        Args: { bucket: string; max_hits: number; me: string; window_seconds: number };
+        Returns: undefined;
+      };
+      social_normalise: { Args: { t: string }; Returns: string };
+      social_on: { Args: Record<PropertyKey, never>; Returns: boolean };
+      social_reachable: { Args: { u: string }; Returns: boolean };
+      social_related: { Args: { a: string; b: string }; Returns: boolean };
+      social_relationship: { Args: { me: string; other: string }; Returns: string };
+      social_text_ok: { Args: { t: string }; Returns: boolean };
+      unblock_user: { Args: { other: string }; Returns: undefined };
     };
     Enums: {
       [_ in never]: never;

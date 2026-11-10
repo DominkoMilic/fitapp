@@ -260,8 +260,11 @@ docs/
 | Home | Greeting and date (tapping opens Profile), coach cards, **Quick log** (two actions with tinted icon circles), **Your progress** (Start · Now · Goal with the progress bar and "2.7 kg down · 15.3 kg to go"), **Daily check-in** prompt, today's plan card (with the next fixed event as one "Next: …" line), today's nutrition bars when nutrition is on |
 | Training | "+ Add" button, today, this week (prev/next), then only three links: History (workouts, games and activities together, with the month calendar), Personal records, Exercise library |
 | Nutrition | Day selector, remaining kcal, macro bars, meal sections (breakfast, lunch, dinner, snacks), water, "Mark day complete", recipes, planner, shopping list |
+| Social | Only when social is on (33). Friends: Add friends (handle search), Invite, requests (Accept / Decline), friends, sent requests. Feed, clubs and challenges arrive in 8B–8D |
 | Progress | Weight chart + stats, Log weight, then Weight history, Body measurements, Milestones, Weekly report |
-| Profile | You: personal info, goal and targets (or Goal when nutrition is off), health and injuries. Preferences: Training setup (sports, schedule, equipment), App features, Reminders, Appearance. Account: Data and privacy (export, delete, legal documents), Sync status (only while changes are waiting or failed), Sign out |
+| Profile | You: personal info, goal and targets (or Goal when nutrition is off), health and injuries. Preferences: Training setup (sports, schedule, equipment), App features, Social and privacy (once social is set up), Reminders, Appearance. Account: Data and privacy (export, delete, legal documents), Sync status (only while changes are waiting or failed), Sign out |
+
+**At most five tabs.** With nutrition and social both on, Profile leaves the tab bar and opens from the Home header (33.5).
 
 **One main action per screen.** Rarely used screens sit one level deeper, never on the tab itself: the 2-week target review is opened from its coach card on Home (W2) or from Goal and targets; food preferences from App features; the four legal documents from Data and privacy. Screens that were removed from a tab keep their routes so notifications and deep links still work.
 
@@ -291,6 +294,8 @@ Other: Daily check-in, Sync status, Legal (privacy policy, terms, disclaimer, da
 - links or old notifications that open a nutrition screen show "Nutrition is turned off" with a button to turn it on.
 
 Nothing is deleted. Calorie targets are still calculated and saved, so turning nutrition back on shows exactly the same targets. Weight tracking, the goal and training are unaffected.
+
+**Social** (`user_preferences.social_enabled`, default **off**). Turning it on the first time opens the social setup (33.1); afterwards it switches social on or off. Off hides the Social tab and makes you unfindable; your profile and friends are kept. See Section 33.
 
 ---
 
@@ -1890,7 +1895,29 @@ Friends, a feed of shared training, clubs, challenges and effort-only leaderboar
 - Privacy policy and terms gain a social section (what others can see, community rules, reporting); legal version bump; store forms updated for user-generated content and other users seeing activity.
 - Export includes the user's own social rows. Account deletion cascades social data; clubs the user owns pass to the longest-standing admin, then member; empty clubs are deleted.
 
-### 33.8 Testing
+### 33.8 Phase 8A as built
+
+- **Migration** `20261117000100_social_friends.sql`. Handles are `text` with the check `^[a-z0-9_.]{3,20}$`, always lower-case (no citext). `app_config` (key/value, read by signed-in users, written only by the service role) holds the kill switch `social_enabled`.
+- **Who sees a profile:** yourself; a person with a friendship row with you (friends or a pending request), unless either blocked the other or the profile is banned. Everyone else only through the functions below.
+- **Functions (security definer; the only way to write friendships, blocks and reports):**
+
+| Function | Rules |
+|---|---|
+| `search_social_profiles(q)` | ≥ 3 characters, handle prefix, ≤ 20 rows; only discoverable people with social on, not banned, not blocking you; 60/hour |
+| `get_social_profile(handle)` | Card + relationship + friend count; hidden if they blocked you, are banned, or are unrelated and not findable |
+| `social_handle_available(handle)` | Taken or reserved → false; shares the search limit |
+| `send_friend_request(handle)` | Not to yourself, blocked, social-off or banned people (`not_found`, never revealing a block); `requests_closed`; `friend_limit` (500); answering an incoming request accepts it; 30/day |
+| `accept_friend_request(user)` / `remove_friend(user)` | Remove also declines and cancels |
+| `block_user(user)` / `unblock_user(user)` | Block ends the friendship and hides both people from each other |
+| `list_friendships()` / `list_blocked()` | Your friends and requests / the people you blocked |
+| `report_content(type, id, reason, note)` | Reasons spam, harassment, inappropriate, other; note ≤ 500; 20/day |
+| `delete_social_profile()` | Profile, settings and friendships removed; social switched off; your blocks kept |
+
+- Every action except removing, blocking, reporting and deleting requires social on, a profile, no ban and the kill switch on (`social_off`, `no_profile`, `banned`, `social_disabled`). Errors are plain codes the app maps to messages.
+- **App:** setup at `social/setup` (handle suggested from your name, availability checked; sharing all off; "Never shared" list; leaderboards off; friend requests on), Social tab (Friends), `social/search`, `social/user/<handle>` (Add · Cancel · Accept/Decline · Unblock, and ⋯ Remove friend / Block / Report), invite link `pace://add/<handle>` (after sign-in and, if needed, setup), Settings → Social and privacy and Blocked people. Writes are online-only; offline, buttons are disabled with "Social needs a connection".
+- The sharing choices are saved but nothing is shown to anyone until the feed (8B).
+
+### 33.9 Testing
 
 - pgTAP per table group (`supabase/tests/database/93_social_*.test.sql`): visibility for owner / friend / stranger / blocked / club member / banned; feed triggers; snapshot whitelist; caps and freezing; ownership transfer.
 - Unit (`src/domain/social`): handle rules and filter, audience resolution, snapshot builder, ranking (ties, opt-out), challenge progress (caps, windows, time zones), push batching text.

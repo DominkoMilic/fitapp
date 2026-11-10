@@ -6,15 +6,24 @@ import { requireSupabase } from '@/integrations/supabase/client';
 import { profileKeys, usePreferences } from './api';
 
 /**
- * Optional parts of PACE the user can switch off (Settings → App features). While preferences
- * load, everything counts as on, so nothing flickers away for the default (on) case.
+ * Optional parts of PACE the user can switch on or off (Settings → App features). While
+ * preferences load, each counts as its default (nutrition on, social off), so nothing flickers.
  */
 export function useFeatures() {
   const prefs = usePreferences();
   return {
     nutrition: prefs.data?.nutrition_enabled ?? true,
+    social: prefs.data?.social_enabled ?? false,
     loaded: prefs.isSuccess,
   };
+}
+
+/**
+ * At most five tabs (spec 33.5): with nutrition and social both on, Profile leaves the tab bar and
+ * opens from the Home header instead.
+ */
+export function profileTabShown(f: { nutrition: boolean; social: boolean }): boolean {
+  return !(f.nutrition && f.social);
 }
 
 /** Switch nutrition on or off. Nothing is deleted; targets keep being calculated. */

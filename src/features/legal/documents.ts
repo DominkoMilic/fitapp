@@ -7,7 +7,7 @@ import { envResult } from '@/config/env';
 
 export type LegalDocId = 'privacy' | 'terms' | 'disclaimer' | 'licences';
 
-export const LEGAL_UPDATED = '9 November 2026';
+export const LEGAL_UPDATED = '17 November 2026';
 
 const supportEmail = envResult.ok ? envResult.env.supportEmail : undefined;
 /** How to reach the operator; the store listings always carry a support contact too. */
@@ -42,12 +42,16 @@ export const LEGAL_DOCS: Record<LegalDocId, Doc> = {
         body: 'PACE reads your location only while you record a walk, run or ride. With your permission it keeps recording while the screen is locked, and your phone shows that it is in use. Routes are stored privately in your account, are never public, and are never sent to analytics or logs. You can delete a route (keeping the distance and time) or the whole activity. To show a route on a map, your phone loads map tiles from Apple Maps or Google Maps, which sees the map area requested.',
       },
       {
+        heading: 'Social features (optional)',
+        body: 'Social is off until you turn it on. When you do, people can find you by your handle and see your name, handle, colour, short bio and number of friends. Your friends will see only the types of activity you choose to share (all off at first). Weight, body measurements, goals, food, water, check-ins, pain, injuries, health, notes, GPS routes and the time of day you train are never shared. When you send a friend request, block someone or report something, we store that so the feature works and to keep people safe; reports are reviewed by us within 24 hours. You can turn social off (your friends are kept) or delete your social profile (handle, friends and requests are removed) at any time in Settings → Social and privacy, and deleting your account removes all of it.',
+      },
+      {
         heading: 'Where your data is stored and who processes it',
         body: 'Your data is stored by Supabase (database, sign-in and file storage) in the European Union, acting as our processor. Recipe searches go through our server to TheMealDB; only the search words are sent, never your identity. Recipe photos are copied to our own storage and shown from there, so your phone never contacts TheMealDB. Reminders are local notifications created on your phone; no notification service receives your data.',
       },
       {
         heading: 'Security',
-        body: 'Connections are encrypted. Every table is protected so that only your account can read or change your data, and route files are kept in a private folder per account. Notifications never show weight or health details on the lock screen.',
+        body: 'Connections are encrypted. Every table is protected so that only your account can read or change your data (apart from the social profile and friend requests you choose to create, see Social features), and route files are kept in a private folder per account. Notifications never show weight or health details on the lock screen.',
       },
       {
         heading: 'How long we keep it',
@@ -94,6 +98,10 @@ export const LEGAL_DOCS: Record<LegalDocId, Doc> = {
       {
         heading: 'Acceptable use',
         body: 'Do not misuse PACE: no attempts to access other people’s data, overload or interfere with the service, or use it for anything unlawful.',
+      },
+      {
+        heading: 'Community rules',
+        body: 'If you use social features: be kind and respectful. No harassment, hate, threats, sexual content, spam, impersonation or sharing other people’s private information, and no offensive handles, names or bios. Do not pressure anyone to train through pain or to lose weight. You can block or report anyone; we review reports within 24 hours and may remove content, suspend social features for an account, or end an account that breaks these rules.',
       },
       {
         heading: 'Third-party content',

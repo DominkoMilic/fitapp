@@ -1,8 +1,9 @@
 import {
   EXPORT_FORMAT_VERSION,
-  EXPORT_ORDER_KEY,
   EXPORT_PAGE,
   EXPORT_TABLES,
+  orderColumns,
+  ownerFilter,
 } from '@/domain/account/export-tables';
 import { requireSupabase } from '@/integrations/supabase/client';
 import { fetchAllPages } from '@/integrations/supabase/paging';
@@ -29,14 +30,14 @@ export async function buildExport(
     onProgress({ done, total, label: table.replace(/_/g, ' ') });
     try {
       tables[table] = await fetchAllPages<unknown>(
-        (from, to) =>
-          db
-            .from(table)
-            .select('*')
-            // The table list is a union, so the column type can't be narrowed per table.
-            .eq(ownerColumn as never, user.id as never)
-            .order((EXPORT_ORDER_KEY[table] ?? 'id') as never)
-            .range(from, to),
+        (from, to) => {
+          const base = db.from(table).select('*');
+          const or = ownerFilter(ownerColumn, user.id);
+          // The table list is a union, so the column type can't be narrowed per table.
+          let q = or ? base.or(or) : base.eq(ownerColumn as never, user.id as never);
+          for (const col of orderColumns(table)) q = q.order(col as never);
+          return q.range(from, to);
+        },
         { pageSize: EXPORT_PAGE },
       );
     } catch (e) {

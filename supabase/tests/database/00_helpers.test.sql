@@ -38,6 +38,20 @@ begin
 end;
 $$;
 
+-- A user with social set up (as the superuser, before authenticating).
+create or replace function tests.social_user(uid uuid, h text, is_discoverable boolean default true,
+                                             social_on boolean default true) returns void
+language plpgsql as $$
+begin
+  perform tests.create_user(uid, h || '@example.com');
+  insert into public.user_preferences (user_id, social_enabled) values (uid, social_on)
+    on conflict (user_id) do update set social_enabled = excluded.social_enabled;
+  insert into public.social_profiles (user_id, handle, display_name, discoverable)
+    values (uid, h, initcap(h), is_discoverable);
+  insert into public.social_settings (user_id) values (uid);
+end;
+$$;
+
 grant usage on schema tests to anon, authenticated;
 grant execute on all functions in schema tests to anon, authenticated;
 
