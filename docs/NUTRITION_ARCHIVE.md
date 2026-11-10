@@ -8,7 +8,7 @@ Nutrition (food logging, calorie and macro targets, water, recipes from TheMealD
 2. The database tables were **dropped** (`20261118000100_remove_nutrition.sql` on `master`). Add one new migration that recreates them. Its body is these old migrations, concatenated in order (they stay in history and can't be re-run under their own versions):
    - `20261111000100_nutrition.sql`
    - `20261111000200_usda_foods_seed.sql` (food catalogue; or regenerate with `npm run db:seed-usda`)
-   - `20261111000300_food_search.sql`, `20261112000100_food_search_ranking.sql`
+   - `20261111000300_food_search.sql`, `20261111000500_food_search_ranking.sql`
    - `20261114000200_recipe_images.sql`, `20261115000300_own_recipes.sql`
    - `20261116000100_nutrition_toggle.sql`
    - and the targets parts of `complete_onboarding` / `server_side_safety` (floor guard, `accept_target_adjustment`).
