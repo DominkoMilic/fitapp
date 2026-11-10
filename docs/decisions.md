@@ -174,3 +174,50 @@ Clarifications of, and deviations from, `docs/PACE_SPEC.md`. Newest first.
 5. **Progress**: the check-in link duplicated Home. The 2-week review link is gone because the W2 coach card already appears on Home when a review is waiting; past reviews are under Goal and targets.
 6. **Profile: "Training setup" is a short page linking Sports, Schedule and Equipment**, not one combined form. Each of the three has its own Save, and three Save buttons on one screen would be more confusing than one extra tap. The four legal documents moved into "Data and privacy". Sync status is only listed while changes are waiting or failed (the Home sync banner uses the same check).
 7. **Onboarding 9 → 7 steps.** Activity level is part of "About you"; equipment is part of "Your week". Each screen validates both of its forms at once and still saves them to the separate draft keys, so the payload and drafts saved by older versions are unchanged.
+
+## 2026-11-10: UX polish from real-device testing
+
+1. **`react-native-keyboard-controller` for all keyboard handling.** Android 15+ forces edge-to-edge (Expo SDK 58 enables it by default), so `adjustResize` no longer resizes the window and the old `KeyboardAvoidingView` (no behaviour on Android) let the keyboard cover inputs. The library's `KeyboardAwareScrollView` scrolls the focused field into view on both platforms, `KeyboardStickyView` keeps the footer on the keyboard, and `KeyboardController.setFocusTo('next')` gives "Return → next field" in every form without wiring each one. It needs a native rebuild (new dev/preview builds).
+2. **Keyboard defaults live in `TextField`** (`keyboardDefaults`), so every field gets them; callers can still override. Destructive forms (delete account) never submit on Return.
+3. **All buttons have a border.** Ghost buttons were easy to miss (e.g. Cancel in the sign-out dialog); a visible edge makes every tappable thing obvious.
+4. **Completed state is a card tone, not only an icon** (`Card tone="success"`), with a new `successSurface` token that keeps every text colour ≥ 4.5:1 (contrast test extended). The spec's token table was also brought in line with the code (accent/warning/danger had drifted).
+5. **One `SwipeToDismiss` component** for coach cards and toasts: slide out, then collapse height so the layout doesn't jump. Reduce motion removes the item at once.
+
+## 2026-11-10: Weight chart shows the ups and downs
+
+1. **Daily weights are a connected line**, with the 7-day average kept on top (decided with the user): seeing the daily line go down is motivating, and the average keeps day-to-day water swings from looking like the trend.
+2. **Gaps of more than 7 days are dashed**, so a stretch without weigh-ins is never shown as measured data (consistent with the average line breaking over gaps).
+3. **Calendar ranges (Week · Month · Year · All) replace the rolling 7D…1Y on the weight screen** (decided with the user): they match how people think about progress. The overview cards keep the rolling 30 days, so no other numbers change.
+4. **Dots only while ≤ 45 days are in view**; with long histories the line alone stays readable.
+5. **`Screen` corrects the scroll position when its content shrinks.** Android keeps the old offset, which left a blank area on Home after turning nutrition off.
+
+## 2026-11-10: Quieter chart, goal-aware stats, visible tap targets
+
+1. **No lines across the weight chart.** Grid lines and full-width Start/Target lines made the data hard to read (user feedback). Start and Target are tags on the y-axis instead, and the y-range spans target → start, expanding when a weight passes either.
+2. **Change tiles are goal-aware and amber, not red** (decided with the user): green when moving toward the goal (down for lose weight, up for build muscle), amber when moving away, neutral for maintenance. Red would contradict spec 23.4 (weight changes are reported neutrally, never shaming) and would be wrong for muscle-gain goals.
+3. **Every tappable card shows an affordance** ("Details ›" or a specific label; a chevron for list-like cards), because several Home and Progress cards weren't recognisable as tappable.
+4. **Chart scrubbing uses gesture-handler** (pan + tap) instead of RN responders, which the scroll view could take over mid-drag.
+
+## 2026-11-10: Field errors, stricter new passwords, Change password
+
+1. **Validation messages belong on the field** (red border + message under it, cleared on edit). Banners stay only for errors that aren't about one field, and now animate in.
+2. **New passwords need an uppercase letter, a lowercase letter, a number and 8+ characters**, with a live checklist (user request). Applied to sign-up, reset and change password only; sign-in accepts any existing password. The hosted Supabase project must use the same `lower_upper_letters_digits` policy (release checklist).
+3. **Change password re-checks the current password** with a sign-in before updating, which also satisfies Supabase's "secure password change" if enabled. Its forgot link sends the reset email directly, because the auth screens redirect signed-in users away.
+4. **Chart scale is back** (grid + round numbers on the right) alongside the Start/Target tags on the left: the grid wasn't the readability problem, the full-width reference lines were.
+
+## 2026-11-10: Calendar date picker, Start · Now · Goal on Home
+
+1. **A calendar sheet replaces typing day / month / year** (user request). One tap picks a day; the year and month lists make a date of birth quick. Ranges are enforced in the picker (and still validated), so impossible dates can't be chosen.
+2. **The sheet has its own `GestureHandlerRootView`**: on Android a Modal is outside the app's gesture root, so the month swipe would otherwise crash.
+3. **Home shows Start · Now · Goal** with "x down · y to go", so the direction of travel is clear at a glance.
+
+## 2026-11-10: Sheets no longer jump when opening
+
+1. **Cause (measured from a screen recording, 60 fps):** an Android Modal window was laid out above the navigation bar and then grew under it, so the calendar sheet overshot its final place by ~68 px (the gesture-bar height) for a frame as it finished sliding in.
+2. **Fix:** `ModalShell` uses a full-screen (status- and navigation-bar translucent) window, no native animation, and only mounts its content once the window has its final size (250 ms fallback). The sheet now rises monotonically and stops exactly in place. `ConfirmDialog` uses the same shell.
+
+## 2026-11-10: App logo and icon set
+
+1. **Logo: "Pace ring"** (chosen by the product owner from five concepts): a running stick figure inside an open mint progress ring on the app's dark background. The ring echoes goal progress; the gap ahead means "keep going". The head rests on the shoulders (no neck).
+2. **One source, one folder.** `scripts/gen-brand-assets.mjs` draws everything from the same geometry into `assets/brand/`: master SVGs (`pace-logo`, `pace-mark`, `pace-mono`), the iOS icon (full bleed, no transparency), the Android adaptive foreground and Android 13+ monochrome icon (inside the 66 dp safe zone, on the `#121417` background colour), the splash tile, the favicon and the notification small icon. `app.config.ts` points only at that folder; `expo prebuild` generates the native sizes. Old default icons and the concept files were removed.
+3. **Notification small icon** is a white, bolder-stroke silhouette (Android uses only its alpha and tints it with `#34D399`); iOS uses the app icon.

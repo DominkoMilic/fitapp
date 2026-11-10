@@ -247,7 +247,7 @@ docs/
 
 | Tab | Primary content |
 |---|---|
-| Home | Greeting, date, coach cards, two quick actions, current weight (7-day average) vs goal, check-in prompt, today's plan card (with the next fixed event as one "Next: …" line), today's nutrition bars when nutrition is on |
+| Home | Greeting and date (tapping opens Profile), coach cards, **Quick log** (two actions with tinted icon circles), **Your progress** (Start · Now · Goal with the progress bar and "2.7 kg down · 15.3 kg to go"), **Daily check-in** prompt, today's plan card (with the next fixed event as one "Next: …" line), today's nutrition bars when nutrition is on |
 | Training | "+ Add" button, today, this week (prev/next), then only three links: History (workouts, games and activities together, with the month calendar), Personal records, Exercise library |
 | Nutrition | Day selector, remaining kcal, macro bars, meal sections (breakfast, lunch, dinner, snacks), water, "Mark day complete", recipes, planner, shopping list |
 | Progress | Weight chart + stats, Log weight, then Weight history, Body measurements, Milestones, Weekly report |
@@ -261,7 +261,7 @@ Home has two: **Log weight** and **Check-in**. Everything you can add on the Tra
 
 ### 6.4 V1 screen inventory
 
-Auth: Welcome, Sign in, Sign up, Forgot password, Reset password (deep link), Verify email.
+Auth: Welcome, Sign in (with "Forgot your password?"), Sign up, Forgot password, Reset password (deep link), Verify email. Profile → Account → **Change password** (current password re-checked, then the new one; "Forgot your current password?" sends a reset link).
 Onboarding: About you (incl. activity level), Goals, Your week (incl. equipment), Food tracking, Health, Consent, Plan preview.
 Training: Add (record/log/plan), Week/month calendar, Workout detail, Active workout, Workout summary, Exercise library, Exercise detail, Custom exercise form, Template detail, History (workouts and activities combined).
 Activity: Activity type picker, Live tracking, Activity summary, Manual activity form, Activity detail.
@@ -644,13 +644,17 @@ Validation: 30–350 kg; not in the future; not before date of birth. If the val
 
 ### 13.2 Chart
 
-- Points: daily values. Line: 7-day rolling average = mean of daily values within [d−6, d], shown only when ≥ 3 daily values in the window.
-- Reference lines: starting weight (goal start), target weight (dashed), secondary target (dotted, if set).
-- Ranges: 7D, 30D, 90D, 6M, 1Y, All. Tap/scrub shows date, value, average.
+- Daily values are joined into a thin line (with a dot per day while ≤ 45 days are in view), so the ups and downs are visible; a stretch of more than 7 days without data is joined with a **dashed** segment, never drawn as if it were measured. On top: the 7-day rolling average = mean of daily values within [d−6, d], shown only when ≥ 3 daily values in the window (thicker, accent).
+- **Scale:** faint grid lines at round values (`niceDomain`: steps of 1/2/5/10, e.g. 85 · 90 · … · 110 for target 87 and start 108), numbers on the right edge; no reference lines across the plot. The y-axis runs from the target (bottom) to about the start (top), with little padding, and grows automatically when a weight goes below the target or above the start (`weightYDomain`; a muscle-gain goal simply flips it). The left axis carries only two-line tags: "Start / 108.0" and "Target / 90.0" (and "2nd" for a secondary target), each with a short tick at its height, nudged apart if they would overlap; without a goal, "High"/"Low" of the data in view.
+- Ranges (calendar periods): **Week · Month · Year · All**, default Month. The axis runs from the first weigh-in inside the period (week start from the profile; at least one week shown) to today, so the data always fills the chart. The overview cards (Home, Progress) keep a rolling 30-day window.
+- Time axis labels follow the span: weekdays ("Mon") within one week, dates ("4 Nov") up to 3 weeks, Mondays ("3 Nov") up to ~2 months, months ("Feb", "Jan 2027" at a new year) up to 2 years, then years; never more labels than fit.
+- Tap or drag along the chart: a guide line and highlighted dot show the date, value and 7-day average. A horizontal drag owns the gesture once started (gesture handler), so it can't stop halfway; a vertical drag scrolls the screen. The chart fades in when the range changes.
 - Gaps > 7 days: average line breaks (no interpolation).
 - Projection band (Section 8.8) shown for future dates when available.
 
 ### 13.3 Statistics
+
+**Tiles.** Progress tab, under the chart: Current weight (latest day), 7-day average, Start, Total change. Weight details adds Target, Last 7 days and Last 30 days. Change tiles show an arrow and a goal-aware tint (`changeTone`): toward the goal (down for lose weight, up for build muscle) = green (successSurface + accent); away from it = **amber** (warningSurface + warning, never red: 23.4); maintain, general fitness or |change| < 0.1 kg = neutral. The spoken label says "toward / away from your goal".
 
 Change since start (from goal starting weight to current 7-day average), change last 7 days and last 30 days (difference of 7-day averages, needs data at both ends), % of goal completed = (start − current_avg) / (start − target), clamped to 0–100%, estimated target date range (Section 8.8; shown only with a downward trend and enough data, otherwise "Not enough data yet"). Display to 1 decimal place; percentages to whole numbers.
 
@@ -1144,10 +1148,13 @@ External API failure shows cached data or an error with retry. Manual logging al
 | border | #2E333B | #E1E4E8 |
 | textPrimary | #F2F4F7 | #101318 |
 | textSecondary | #A3AAB5 | #5A6270 |
-| accent (progress/positive) | #34D399 | #059669 |
+| accent (progress/positive) | #34D399 | #047857 |
 | onAccent | #0B1F17 | #FFFFFF |
-| warning | #F5A524 | #B45309 |
-| danger | #F04438 | #D92D20 |
+| successSurface (done / unlocked cards, change toward the goal) | #1C3430 | #E8F4F0 |
+| dangerSurface (field with a validation error) | #352628 | #FCEFEE |
+| warningSurface (change away from the goal) | #33291C | #FBF1E6 |
+| warning | #F5A524 | #A3480A |
+| danger | #F97066 | #C4281C |
 | info | #60A5FA | #2563EB |
 | chart series | weight points #A3AAB5, average #34D399, target #60A5FA (dashed), projection band accent at 15% opacity | same hues, light variants |
 
@@ -1156,6 +1163,23 @@ Spacing scale 4, 8, 12, 16, 20, 24, 32, 40. Radius 8 (inputs), 12 (buttons), 16 
 ### 23.2 Components (src/components/ui)
 
 Button (primary, secondary, ghost, destructive; loading, disabled), IconButton, TextField, NumberField (unit-aware, locale decimal comma support), Select, SegmentedControl, Chip/ChipGroup, Toggle, Slider (RPE), DatePicker, TimePicker, Card, StatTile, ProgressRing, ProgressBar, ListItem, SectionHeader, BottomSheet, ConfirmDialog, Toast (with Undo), EmptyState, ErrorState, Skeleton, Badge (confidence, sync), Banner (warning/info), Tabs, ChartContainer (range selector + accessible summary).
+
+**Every button has a visible border** (primary: accent, secondary and ghost: border, destructive: danger), so it always reads as tappable; ghost is an outline button.
+
+**Dates are picked from a calendar.** `DateField` looks like the other inputs ("Tue, 10 Nov 2026" plus a calendar icon) and opens `CalendarSheet`, a bottom sheet:
+- ‹ month › arrows or a sideways swipe change the month, and the grid slides.
+- Tapping the month title jumps to a year list, then a month list (date of birth opens on the years).
+- The week starts per profile. Today is outlined and the selected day filled.
+- Days outside the allowed range are dimmed and can't be tapped. One tap picks a day and closes; there is also a "Today" shortcut.
+- Allowed ranges: logs up to today; workout times up to 60 days back; date of birth for ages 18–100; planning or moving a workout from today.
+
+**Validation errors appear on the field.** A field that is wrong eases (200 ms) into a red-tinted background (`dangerSurface`) with a red border, and the message drops in right under it (`FieldError`; no animation with reduce motion) (e.g. Log weight → Save without a weight: "Enter your weight" under Weight); the message disappears as soon as that field is edited (`useFieldErrors`). Banners are only for problems that aren't about one field (save failed, "Add at least one exercise"), and they slide in rather than pop.
+
+**Tappable cards say so.** A card with `onPress` shows a small accent "Details ›" footer, or a specific label ("Weight details", "Start check-in", "Open training", "Open nutrition", "Change goal", "View"); list-like cards (scheduled workouts) show a trailing chevron instead, like list rows. Recipe rows have a chevron too.
+
+**Card tones.** `success` = done / unlocked (completed workouts, unlocked milestones, goal reached, fully done calendar days): successSurface fill, accent border and a 5 px accent bar on the left, so it is recognisable mid-scroll and not only by its icon. `muted` = locked / not yet available: background fill and a dashed border.
+
+**Text fields and the keyboard.** The focused field is always scrolled above the keyboard and a screen's footer (Save/Continue) rides on top of it (`react-native-keyboard-controller`; Android edge-to-edge windows no longer resize for the keyboard). Return moves to the next field and keeps the keyboard open; a form's last field shows "done" and submits (never on destructive forms: there it only closes the keyboard). iOS shows a prev/next/done bar above the keyboard because number pads have no return key. Password and email fields are never auto-capitalised or auto-corrected, and password fields have a show/hide button.
 
 Labels (buttons, segments, chips) never break inside a word: a one-word label stays on one line and shrinks to at most 85% on native if space is tight; longer labels wrap between words, at most two lines. Segments share their row by label length ("Breakfast" gets more room than "Any"). Checked at 360–384 dp widths.
 
@@ -1180,7 +1204,13 @@ All values live in `motion` (`src/theme/tokens.ts`); components never hard-code 
 | Modal screens (check-in) | slide up from the bottom | 140 ms fade |
 | Onboarding steps | 200 ms cross-fade | 140 ms fade |
 | Tabs | subtle `shift` | none |
-| List rows in editors, saved meals, weekly events | fade in 200 ms when added, fade out 140 ms when removed, slide 200 ms when others move (`AnimatedRow`, keyed by name so rows keep their animation when reordered) | no animation |
+| List rows in editors, saved meals, weekly events | fade in 200 ms when added, slide out to the left with a fade (200 ms) when removed, slide 200 ms when others move (`AnimatedRow`, keyed by name so rows keep their animation when reordered) | no animation |
+| Coach cards | swipe sideways to dismiss (or tap Dismiss): slides out 200 ms, then its height collapses 200 ms so the content below glides up; a short swipe springs back (`SwipeToDismiss`). The "Coach" header collapses with the last card | removed at once |
+| Sheets and dialogs (calendar, confirmations) | `ModalShell`: no native Modal animation; a full-screen window (under status and navigation bars) whose content only appears once the window has its final size, then the backdrop fades in and the sheet slides up (dialogs zoom in), 260 ms; closing slides/fades out before unmounting | appear / disappear at once |
+| Segmented controls | the selected highlight slides to the new option (200 ms) instead of jumping | jumps |
+| Weight chart range change | chart fades in (200 ms) | none |
+| Content getting shorter while scrolled down (e.g. a section hidden by a setting) | scroll glides back to the new end, so no blank area is left | same, instant |
+| Toasts | fade/slide up in 200 ms, fade down out 140 ms; swipe sideways to clear | no animation |
 
 Haptics (`src/theme/haptics.ts`, expo-haptics): a selection tick for chips, new segments and toggles; a light tap for primary and destructive buttons; a success pulse after a save completes (`useSubmit`). Off on web and when reduce motion is on; failures are ignored.
 
@@ -1482,7 +1512,7 @@ Each item: situation → required behaviour. (T) = must have an automated test.
 6. Sign out with pending outbox items → warning "N changes not synced yet" with Sync now / Sign out anyway.
 7. Different user signs in on the same device → previous user's local caches and outbox are not visible or synced (T).
 8. Account deleted on another device → next request returns 401/user not found → sign out locally and clear data.
-9. Weak password → zod rule: ≥ 8 chars, and Supabase policy; show requirements inline.
+9. Weak password → zod rule: ≥ 8 characters with an uppercase letter, a lowercase letter and a number (Supabase `lower_upper_letters_digits`); a live checklist under the field ticks each rule off as it is met (sign-up, reset, change password). Signing in only checks a password was entered, so older passwords keep working.
 
 ### 28.2 Onboarding and profile
 
