@@ -229,3 +229,12 @@ User feedback after using the quieter chart: numbers belong on the left axis, an
 ## 2026-11-10: Paged history lists
 
 Long lists render 20 rows per page (next page near the end of the scroll, or "Show more"). FlatList already virtualises, but the weight-details screen puts a large header (chart and tiles) above its history; paging keeps first render and scrolling light as history grows. Data loading is unchanged (the queries already cap and cache); pagination is in the shared `ListScreen`, so every long list gets it.
+
+## 2026-11-10: Social (Phase 8) design decisions
+
+1. **Effort-only leaderboards among friends and clubs, opt-in** (decided with the product owner). Replaces the blanket "no competitive leaderboards" rule: ranking sessions, active minutes, distance or active days motivates; ranking weight, body or food is still out of scope (spec 2.3, 3.4).
+2. **Private by default.** Nothing is shared until the user chooses per type; weight, food, health, notes, routes and clock times are never shareable. Other people only read sanitised snapshots and server aggregates; source tables keep owner-only RLS.
+3. **Online-only social writes**, not the offline outbox: permissions are checked on the server, and replaying a queued friend request or cheer later would surprise people.
+4. **Five tabs at most:** when nutrition and social are both on, Profile leaves the tab bar (it opens from the Home header).
+5. **Staged delivery 8A–8D** (friends and safety → feed, cheers, push → clubs → challenges and leaderboards), each a reviewed phase.
+6. **Daily caps** on counted effort (240 active minutes, 60 km on foot, 150 km cycling) guard against cheating and against overtraining for a ranking.

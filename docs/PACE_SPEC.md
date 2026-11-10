@@ -54,7 +54,8 @@ The original PRD was strong on vision but mixed V1 and V2 scope, left several te
 | Elevation gain | V2 | Phone GPS altitude is unreliable. Raw altitude is stored so it can be computed later. |
 | Training-day carbohydrate cycling | V1.1 (off by default) | Nice-to-have; same daily target is simpler and adequate. |
 | HealthKit / Health Connect, AI coach, always-on background location | V2 | As in PRD. |
-| Social features, subscriptions | Future | As in PRD. |
+| Social features (friends, feed, clubs, challenges, leaderboards) | V1.2 (Phase 8) | Private by default; leaderboards rank effort only, never weight, body or food (Section 33). |
+| Subscriptions | Future | As in PRD. |
 
 ### 1.3 Ambiguities resolved (one choice each)
 
@@ -106,11 +107,12 @@ PACE is a personal fitness coach that turns a user's profile, schedule, equipmen
 | **V1 (MVP)** | Auth, onboarding, plan preview, dashboard, weight + measurements, goals, milestones, PRs, exercise library, templates, calendar, recurring events, workout execution + history, nutrition logging, food catalogue, custom foods, saved meals, water, TheMealDB browser, user recipes, servings scaling, simple meal planner, shopping list, GPS walk/run/cycle (foreground + background during active session), manual activities, daily check-in, rule-based coach, target recalibration, weekly report, local notifications, offline outbox, data export, account deletion. |
 | **V1.1** | Barcode scanning + Open Food Facts search, progress photos, monthly report, training-day carb adjustment, GPX export, best-split PRs (fastest 1 km / 5 km within a run). |
 | **V2** | HealthKit / Health Connect, AI coach (backend adapter, read-only suggestions), elevation, privacy zones for routes, light theme polish, Apple Watch / Wear OS. |
-| **Future** | Social, subscriptions, coaching marketplace. |
+| **V1.2 — Social (Phase 8A–8D)** | Friends and social profiles, activity feed with cheers and comments, push notifications, private clubs, challenges and effort-only leaderboards (Section 33). |
+| **Future** | Subscriptions, coaching marketplace, discoverable public clubs. |
 
 ### 2.3 Out of scope (explicitly)
 
-Medical diagnosis, rehabilitation programmes, meal prescriptions for medical conditions, competitive leaderboards, public route sharing, sale or sharing of user data.
+Medical diagnosis, rehabilitation programmes, meal prescriptions for medical conditions, leaderboards or challenges on weight, body measurements, calories or food, public profiles, public route sharing, contact-book upload, sale or sharing of user data. (Effort-only leaderboards among friends and clubs are in scope from V1.2, Section 33.)
 
 ---
 
@@ -142,6 +144,14 @@ Medical diagnosis, rehabilitation programmes, meal prescriptions for medical con
 2. No invented recipe quantities or nutrition. "Nutrition unavailable" is a valid, expected state.
 3. No placeholder features that appear to work. Unfinished items are hidden or labelled "Coming soon".
 4. No fake success: every backend write shows real success or real failure.
+
+### 3.4 Social (from V1.2, Section 33)
+
+1. **Private by default, per-type opt-in.** Nothing is visible to anyone until the user chooses; visibility is enforced by RLS on the server, never only in the UI.
+2. **Never shareable:** weight, body measurements, goal numbers, food and water, check-ins and pain, injuries and health, notes, GPS routes and start/end locations, exact start times (shared items carry date and duration only).
+3. **Encourage, never shame:** no weight, body or calorie competition; no "X passed you" or other comparison notifications; leaderboards are effort-only and opt-in; daily caps discourage overtraining; users with an active injury restriction get no challenge nudges.
+4. **User-generated content is moderated:** report, block, word filter, removal, owner/admin removal of members, a published contact, review within 24 h.
+5. **18+ only; no contact-book upload;** people are found by handle or invite link.
 
 ---
 
@@ -1472,6 +1482,17 @@ Scope: data export, account deletion function, privacy policy/terms content, acc
 
 Then V1.1: barcode + OFF, progress photos, monthly report, carb adjustment, GPX export, split PRs.
 
+### Phase 8 — Social (V1.2), in four reviewed stages
+
+Each stage follows the same rules as earlier phases (plan, implementation, tests incl. pgTAP, Phase Report, approval before the next). Design: Section 33.
+
+| Stage | Scope | Acceptance |
+|---|---|---|
+| **8A Friends and safety** | Migrations `social_profiles`, `social_settings`, `friendships`, `blocks`, `reports`, `consents` gains `social`; RLS helpers (`are_friends`, `is_blocked`); handle validation and word filter (client + DB). Social setup sheet, App features switch, Friends screen (requests, list, handle search, invite link `pace://add/<handle>`), other-user profile, block / report, Settings → Social & privacy, privacy policy + terms update (legal version bump), export and deletion. | Two test accounts can find, request, accept, remove and block each other; blocked users are invisible to each other everywhere; nothing is visible without an opt-in; pgTAP proves isolation for owner / friend / stranger / blocked. |
+| **8B Feed, cheers, comments, push** | `feed_items` with triggers on `workout_sessions`, `activities`, `user_milestones` and the snapshot whitelist; `cheers`; `comments`; `push_tokens`; Edge Function `social-push` (pg_net webhooks, batching, preferences, quiet hours, rate limits); Feed UI (paged), cheer and comment UI, notification settings, deep links. Security review before release. | A finished workout reaches a friend's feed only when shared, with no weight, route or clock time; deleting or abandoning the source removes it; ten cheers arrive as one push; quiet hours respected; no health detail in push payloads. |
+| **8C Clubs** | `clubs`, `club_members`, invite codes (rotatable), roles owner / admin / member, limit 50; club home (Feed · Members · Board · Challenges), create / join / leave / remove / promote / delete; club audience `friends_and_clubs`; ownership transfer on account deletion. | Joining only by invite; non-members see nothing; the limit is enforced; owner removal and leaving work; deleting the owner's account transfers or removes the club. |
+| **8D Challenges and leaderboards** | `challenges`, `challenge_participants`; server functions `leaderboard()` and `challenge_progress()` (aggregates only, daily caps, frozen results); challenge templates and UI; friends and club leaderboards (This week / This month; Sessions · Active minutes · Distance · Active days); `challenge_done` feed item and milestone. | Only opted-in users are ranked; caps apply (a 10 h manual activity counts as 4 h); results freeze at the end; injury-restricted users get no challenge nudges; no weight, body or food metric anywhere. |
+
 ---
 
 ## 27. Acceptance criteria (V1)
@@ -1799,6 +1820,82 @@ Do not fake authentication or backend success.
 At completion run typecheck, lint, unit tests and RLS tests, then deliver the Phase Report (Section 31).
 Do not start Phase 2 until Phase 1 is reviewed and approved.
 ```
+
+---
+
+## 33. Social (V1.2, Phase 8)
+
+Friends, a feed of shared training, clubs, challenges and effort-only leaderboards. The goal is accountability and encouragement around training, never comparison of bodies. The principles in 3.4 are binding.
+
+### 33.1 Concepts and defaults
+
+- **Social is off until turned on** (Settings → App features → Social, like nutrition; plus a server kill switch `app_config.social_enabled`). Turning it on opens the setup sheet: (1) handle and display name, (2) what friends and clubs see, per type, **all off by default**, with the "never shared" list shown, (3) leaderboard opt-in; then the `social` consent is recorded with the policy version.
+- **Audiences** per type (workouts, activities, milestones, challenge results): `private` · `friends` · `friends_and_clubs`. A single shared item can be changed or hidden afterwards.
+- **Friends** are mutual (request → accept). Up to 500. Requests can be limited to nobody.
+- **Clubs** are private and invite-only (link or code), up to 50 members, roles owner / admin / member.
+- **Social writes are online-only** (not the offline outbox): permissions must be checked on the server and a queued request or cheer replayed later would be confusing. Reads are cached; offline shows a clear state.
+
+### 33.2 Data model (all tables RLS-protected, pgTAP-tested)
+
+| Table | Key columns |
+|---|---|
+| `social_profiles` | `user_id` pk · `handle` citext unique (3–20, `[a-z0-9_.]`, reserved words and word filter) · `display_name` · `avatar_color` · `bio` ≤ 140 · `discoverable` · `banned_at` |
+| `social_settings` | `user_id` pk · audience per type · `friend_requests_from` (everyone / nobody) · `in_leaderboards` · `share_volume` · notification types (cheers, comments, requests, clubs, challenges); quiet hours reuse the reminder settings |
+| `friendships` | canonical pair `(user_low, user_high)` · `requested_by` · `status` pending / accepted · timestamps; declining deletes the row |
+| `blocks` | `(blocker, blocked)`; a block removes the friendship and hides both users from each other everywhere |
+| `feed_items` | `owner` · `kind` workout / activity / milestone / challenge_done / club_joined · `source_id` · `snapshot` jsonb (whitelist only) · `audience` · `local_date` · `created_at` |
+| `cheers` | `(feed_item_id, user_id)` unique · `kind` 👏 🔥 💪 ⭐ |
+| `comments` | `feed_item_id` · `author` · `body` ≤ 280 (filtered) · `deleted_at` |
+| `clubs` | `name` (filtered) · `description` · `avatar_color` · `owner` · `invite_code` · `member_limit` 50 · `week_start` |
+| `club_members` | `(club_id, user_id)` · `role` · `joined_at` |
+| `challenges` | `scope` friends / club · `club_id` · `creator` · `title` · `metric` sessions / active_minutes / distance_km / active_days · `mode` team_goal / personal_target / ranking · `target` · `starts_on` / `ends_on` (≤ 31 days) · `status` |
+| `challenge_participants` | `(challenge_id, user_id)` · `joined_at` · `final_value` (frozen at the end) |
+| `reports` | `reporter` · `target_type` profile / feed_item / comment / club · `target_id` · `reason` · `status`; service role only |
+| `push_tokens` | `user_id` · Expo token · platform · `updated_at`; deleted on sign-out and account deletion |
+
+### 33.3 Access rules
+
+- Security-definer helpers used by RLS: `are_friends(a, b)`, `is_blocked(a, b)`, `share_club(a, b)`, `can_view_feed_item(viewer, item)` (owner; accepted friend when the audience includes friends; club co-member when it includes clubs; never across a block; never for banned users).
+- **Source tables keep owner-only RLS unchanged.** Other people only ever read `feed_items` snapshots and server aggregates.
+- **Feed creation by trigger** on `workout_sessions`, `activities`, `user_milestones` (insert / update / delete): created only when that type's audience isn't private; skipped for abandoned sessions; updated on edit; deleted with the source.
+- **Snapshot whitelist:** workout → title, category, duration, set count, volume (only with `share_volume`); activity → type, distance, moving time, average pace; milestone → title (weight milestones are never shared). Tested to contain no other keys.
+
+### 33.4 Leaderboards and challenges
+
+- Computed on the server (`leaderboard(scope, scope_id, metric, period)`, `challenge_progress(challenge_id)`) and returned as aggregates only.
+- Metrics: sessions (completed or partial), active minutes, distance (walk / run / cycle), active days. **Never** weight, body, calories or food.
+- **Daily caps** (anti-cheat and anti-overtraining): at most 240 active minutes, 60 km on foot and 150 km cycling counted per day. Manual activities count and are marked as manual.
+- Periods: this week (club week start, or the user's for friends) and this month. Ties share a rank. Only users with `in_leaderboards` are ranked; others show as "not ranked". No notifications about rank changes.
+- Challenge modes: **team goal** (the group's total reaches a target), **personal target** (each participant's own target), **ranking** (effort ranking among participants). Templates: "Move 150 minutes this week", "10 workouts in 30 days", "Club walks 200 km this month". Values freeze when the challenge ends; finishing creates a `challenge_done` feed item (if shared) and a milestone. Users with an active injury restriction (9.x) get no challenge nudges.
+
+### 33.5 Screens
+
+- **Tab bar stays at five tabs at most:** Home, Training, Social, Progress, and Nutrition or Profile. When nutrition and social are both on, Profile leaves the tab bar (it opens from the Home header avatar).
+- **Social tab:** Feed · Friends · Clubs · Challenges. Feed cards (paged): avatar, name, summary ("Strength A · 45 min · 9 sets"), date, cheers (tap; long-press picks a kind), comments. Friends: requests, list, handle search (≥ 3 characters), Invite (share sheet with `pace://add/<handle>`). Other user's profile: their shared items, mutual clubs, ⋯ Remove / Block / Report.
+- **Clubs:** create, join by link or code, club home Feed · Members · Board · Challenges; owners and admins rotate the invite, remove, promote, edit and delete; members leave.
+- **Challenges:** templates, progress rings / bars, days left, participants, ranks in ranking mode.
+- **Settings → Social & privacy:** audiences, `share_volume`, leaderboard opt-in, notification types, blocked users, Turn social off (hides the tab, deletes your feed items, removes you from leaderboards, keeps friends), Delete my social profile.
+- **Safety menu on every person, item, comment and club:** Report (reasons), Block, Remove (own content). A report confirms "Thanks, we'll review within 24 h" and shows the support email.
+
+### 33.6 Push notifications
+
+- `expo-notifications` push token stored in `push_tokens` after permission (EAS `projectId` required).
+- Edge Function `social-push`, called by database webhooks (pg_net) on friend requests / accepts, cheers, comments, club joins and challenge events. It batches ("Ana and 3 others cheered your run"), respects per-type settings and quiet hours, is rate-limited per recipient, sends through the Expo Push API (`EXPO_ACCESS_TOKEN` secret) and never puts health detail in a payload. Tapping opens the item (`pace://social/item/<id>`).
+
+### 33.7 Moderation, privacy and accounts
+
+- Word filter for handles, club names, bios and comments, shared between app and database (`src/domain/social/filter.ts`, synced by `scripts/sync-shared.mjs`), enforced by database triggers.
+- Rate limits (`edge_rate_limits`): friend requests 30/day, comments 60/hour, club creation 5/day, handle search 60/hour.
+- Reports queue reviewed in the Supabase dashboard per the runbook in `docs/release/operations.md`; bans set `social_profiles.banned_at` (hidden everywhere, social writes refused).
+- Privacy policy and terms gain a social section (what others can see, community rules, reporting); legal version bump; store forms updated for user-generated content and other users seeing activity.
+- Export includes the user's own social rows. Account deletion cascades social data; clubs the user owns pass to the longest-standing admin, then member; empty clubs are deleted.
+
+### 33.8 Testing
+
+- pgTAP per table group (`supabase/tests/database/93_social_*.test.sql`): visibility for owner / friend / stranger / blocked / club member / banned; feed triggers; snapshot whitelist; caps and freezing; ownership transfer.
+- Unit (`src/domain/social`): handle rules and filter, audience resolution, snapshot builder, ranking (ties, opt-out), challenge progress (caps, windows, time zones), push batching text.
+- Component: setup sheet defaults off, feed card shows no forbidden fields, cheer toggle, safety menus.
+- E2E: web Playwright with a mocked two-user store; Maestro on a device with two test accounts (the second driven through Supabase as that user). Security review of RLS helpers and `social-push` before 8B ships.
 
 ---
 
