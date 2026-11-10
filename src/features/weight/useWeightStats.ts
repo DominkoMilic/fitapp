@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 
-import { addDays } from '@/domain/calculations/dates';
 import {
   averageChange,
   currentWeight,
@@ -9,31 +8,25 @@ import {
   goalProgressPct,
   trendLast21Days,
 } from '@/domain/weight/trend';
+import { type RangeKey, rangeStart } from '@/domain/weight/ranges';
 import { useToday } from '@/features/dashboard/useToday';
-import { useActiveGoal } from '@/features/profile/api';
+import { useActiveGoal, useProfile } from '@/features/profile/api';
 
 import { useWeightEntries } from './api';
 
-export type RangeKey = '7D' | '30D' | '90D' | '6M' | '1Y' | 'All';
-export const RANGE_DAYS: Record<RangeKey, number | null> = {
-  '7D': 7,
-  '30D': 30,
-  '90D': 90,
-  '6M': 183,
-  '1Y': 365,
-  All: null,
-};
+export { CHART_RANGES, type RangeKey } from '@/domain/weight/ranges';
 
 /** Everything the weight screens need, derived from entries + goal by domain functions. */
 export function useWeightStats(range: RangeKey = '30D') {
   const { today } = useToday();
   const weights = useWeightEntries();
   const goal = useActiveGoal();
+  const weekStartsOn = useProfile().data?.week_start === 7 ? 7 : 1;
   return useMemo(() => {
     const daily = dailyValues(weights.entries);
-    const days = RANGE_DAYS[range];
-    const inRange =
-      days === null ? daily : daily.filter((d) => d.date >= addDays(today, -(days - 1)));
+    /** First day of the selected period (null = all history). */
+    const rangeFrom = rangeStart(range, today, weekStartsOn);
+    const inRange = rangeFrom === null ? daily : daily.filter((d) => d.date >= rangeFrom);
     const current = currentWeight(daily);
     const g = goal.data;
     const startKg = g ? Number(g.starting_weight_kg) : null;
@@ -44,6 +37,7 @@ export function useWeightStats(range: RangeKey = '30D') {
       goal,
       daily,
       inRange,
+      rangeFrom,
       current,
       startKg,
       targetKg,
@@ -63,5 +57,5 @@ export function useWeightStats(range: RangeKey = '30D') {
       trend,
       today,
     };
-  }, [weights, goal, range, today]);
+  }, [weights, goal, range, today, weekStartsOn]);
 }

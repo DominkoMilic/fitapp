@@ -17,7 +17,8 @@ import {
 } from '@/components/ui';
 import { kgToLb, type UnitSystem } from '@/domain/calculations/units';
 import { useProfile } from '@/features/profile/api';
-import { RANGE_DAYS, type RangeKey, useWeightStats } from '@/features/weight/useWeightStats';
+import { changeTone } from '@/domain/weight/tone';
+import { CHART_RANGES, type RangeKey, useWeightStats } from '@/features/weight/useWeightStats';
 import { spacing } from '@/theme';
 import { formatDate } from '@/domain/format';
 
@@ -25,7 +26,7 @@ const monthYear = (iso: string) =>
   new Date(`${iso}T12:00:00Z`).toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
 
 export default function WeightScreen() {
-  const [range, setRange] = useState<RangeKey>('30D');
+  const [range, setRange] = useState<RangeKey>('Month');
   const s = useWeightStats(range);
   const { data: profile } = useProfile();
   const unit = (profile?.unit_system ?? 'metric') as UnitSystem;
@@ -51,6 +52,8 @@ export default function WeightScreen() {
     );
   }
 
+  const latest = s.daily.length ? s.daily[s.daily.length - 1]!.kg : null;
+  const goalType = s.goal.data?.goal_type;
   const refs: ReferenceLine[] = [];
   if (s.startKg !== null) refs.push({ kind: 'start', kg: s.startKg, label: 'Start' });
   if (s.targetKg !== null) refs.push({ kind: 'target', kg: s.targetKg, label: 'Target' });
@@ -58,7 +61,7 @@ export default function WeightScreen() {
     refs.push({ kind: 'secondary', kg: s.secondaryKg, label: '2nd target' });
 
   const summary = s.current
-    ? `Weight chart, ${range}. Current ${s.current.basis === 'average' ? '7-day average' : 'weight'} ${fmt(s.current.kg)} ${u}. ${
+    ? `Weight chart, this ${range === 'All' ? 'whole history' : range.toLowerCase()}. Current ${s.current.basis === 'average' ? '7-day average' : 'weight'} ${fmt(s.current.kg)} ${u}. ${
         s.change30 !== null ? `Change over 30 days ${fmt(s.change30, true)} ${u}.` : ''
       }`
     : 'Weight chart, no data';
@@ -88,7 +91,7 @@ export default function WeightScreen() {
           ) : null}
           <SegmentedControl<RangeKey>
             accessibilityLabel="Date range"
-            options={(Object.keys(RANGE_DAYS) as RangeKey[]).map((k) => ({ value: k, label: k }))}
+            options={CHART_RANGES.map((k) => ({ value: k, label: k }))}
             value={range}
             onChange={setRange}
           />
@@ -102,6 +105,8 @@ export default function WeightScreen() {
               <WeightChart
                 daily={s.inRange}
                 allDaily={s.daily}
+                from={s.rangeFrom}
+                to={s.today}
                 references={refs}
                 toDisplay={toDisplay}
                 unitLabel={u}
@@ -111,26 +116,40 @@ export default function WeightScreen() {
           )}
 
           <View style={styles.row}>
+            <StatTile label="Current weight" value={fmt(latest)} unit={u} />
             <StatTile
-              label={s.current?.basis === 'average' ? '7-day average' : 'Latest'}
-              value={fmt(s.current?.kg ?? null)}
+              label="7-day average"
+              value={s.current?.basis === 'average' ? fmt(s.current.kg) : '—'}
               unit={u}
-              caption={s.current?.basis === 'single' ? 'Log 3+ days for an average' : undefined}
+              caption={s.current?.basis === 'average' ? undefined : 'Log 3+ days'}
             />
-            <StatTile label="Since start" value={fmt(s.changeSinceStart, true)} unit={u} />
           </View>
           <View style={styles.row}>
+            <StatTile label="Start" value={fmt(s.startKg)} unit={u} />
+            <StatTile label="Target" value={fmt(s.targetKg)} unit={u} />
+          </View>
+          <View style={styles.row}>
+            <StatTile
+              label="Total change"
+              value={fmt(s.changeSinceStart, true)}
+              unit={u}
+              trend={changeTone(s.changeSinceStart, goalType)}
+            />
             <StatTile
               label="Last 7 days"
               value={fmt(s.change7, true)}
               unit={u}
               caption={s.change7 === null ? 'Not enough data' : undefined}
+              trend={changeTone(s.change7, goalType)}
             />
+          </View>
+          <View style={styles.row}>
             <StatTile
               label="Last 30 days"
               value={fmt(s.change30, true)}
               unit={u}
               caption={s.change30 === null ? 'Not enough data' : undefined}
+              trend={changeTone(s.change30, goalType)}
             />
           </View>
           {s.progressPct !== null ? (

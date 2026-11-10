@@ -2,10 +2,11 @@ import { router } from 'expo-router';
 import { useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { WeightChart } from '@/components/charts/WeightChart';
+import { type ReferenceLine, WeightChart } from '@/components/charts/WeightChart';
 import { ErrorState, LoadingState } from '@/components/feedback';
 import { Button, Card, ListItem, Screen, SectionHeader, StatTile, Text } from '@/components/ui';
 import { kgToLb, type UnitSystem } from '@/domain/calculations/units';
+import { changeTone } from '@/domain/weight/tone';
 import { GoalReachedCard } from '@/features/milestones/GoalReachedCard';
 import { useProfile } from '@/features/profile/api';
 import { useWeightStats } from '@/features/weight/useWeightStats';
@@ -19,6 +20,11 @@ export default function Progress() {
   const u = unit === 'metric' ? 'kg' : 'lb';
   const fmt = (kg: number | null, signed = false) =>
     kg === null ? '—' : `${signed && kg > 0 ? '+' : ''}${toDisplay(kg).toFixed(1)}`;
+
+  const latest = s.daily.length ? s.daily[s.daily.length - 1]!.kg : null;
+  const references: ReferenceLine[] = [];
+  if (s.startKg !== null) references.push({ kind: 'start', kg: s.startKg, label: 'Start' });
+  if (s.targetKg !== null) references.push({ kind: 'target', kg: s.targetKg, label: 'Target' });
 
   if (s.weights.isPending || s.goal.isPending)
     return (
@@ -46,27 +52,15 @@ export default function Progress() {
       <Card
         onPress={() => router.push('/progress/weight')}
         accessibilityLabel="Open weight details"
+        actionLabel="Weight details"
       >
-        <View style={styles.row}>
-          <StatTile
-            label={s.current?.basis === 'average' ? '7-day average' : 'Latest weight'}
-            value={fmt(s.current?.kg ?? null)}
-            unit={u}
-          />
-          <StatTile
-            label="Last 30 days"
-            value={fmt(s.change30, true)}
-            unit={u}
-            caption={s.change30 === null ? 'Not enough data' : undefined}
-          />
-        </View>
         {s.inRange.length > 1 ? (
           <WeightChart
             daily={s.inRange}
             allDaily={s.daily}
-            references={
-              s.targetKg !== null ? [{ kind: 'target', kg: s.targetKg, label: 'Target' }] : []
-            }
+            from={s.rangeFrom}
+            to={s.today}
+            references={references}
             toDisplay={toDisplay}
             unitLabel={u}
             summary={`Weight over the last 30 days. Current ${fmt(s.current?.kg ?? null)} ${u}.`}
@@ -77,6 +71,27 @@ export default function Progress() {
           </Text>
         )}
       </Card>
+      {/* Where you are at a glance: now, the trend, where you began and how far you've come. */}
+      <View style={styles.grid}>
+        <View style={styles.row}>
+          <StatTile label="Current weight" value={fmt(latest)} unit={u} />
+          <StatTile
+            label="7-day average"
+            value={s.current?.basis === 'average' ? fmt(s.current.kg) : '—'}
+            unit={u}
+            caption={s.current?.basis === 'average' ? undefined : 'Log 3+ days'}
+          />
+        </View>
+        <View style={styles.row}>
+          <StatTile label="Start" value={fmt(s.startKg)} unit={u} />
+          <StatTile
+            label="Total change"
+            value={fmt(s.changeSinceStart, true)}
+            unit={u}
+            trend={changeTone(s.changeSinceStart, s.goal.data?.goal_type)}
+          />
+        </View>
+      </View>
       <Button title="Log weight" onPress={() => router.push('/weight/log')} />
       <SectionHeader title="More" />
       <ListItem title="Weight history" onPress={() => router.push('/progress/weight')} />
@@ -87,4 +102,7 @@ export default function Progress() {
   );
 }
 
-const styles = StyleSheet.create({ row: { flexDirection: 'row', gap: spacing.xs } });
+const styles = StyleSheet.create({
+  grid: { gap: spacing.xs },
+  row: { flexDirection: 'row', gap: spacing.xs },
+});
