@@ -31,7 +31,7 @@ import { SyncBanner } from '@/features/sync/SyncBanner';
 import { useWeightStats } from '@/features/weight/useWeightStats';
 import { ResumeWorkoutCard } from '@/features/training/ResumeWorkoutCard';
 import { radius, spacing, TOUCH_TARGET, useTheme } from '@/theme';
-import { intensityLabel } from '@/domain/format';
+import { formatLongWeekday, intensityLabel } from '@/domain/format';
 import { goalJourney } from '@/domain/weight/tone';
 
 const WEEKDAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -145,11 +145,7 @@ export default function Home() {
     stats.startKg !== null && stats.current
       ? goalJourney(stats.startKg, stats.current.kg, stats.targetKg)
       : null;
-  const dateLabel = new Date(`${today}T12:00:00Z`).toLocaleDateString(undefined, {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  });
+  const dateLabel = formatLongWeekday(today);
 
   return (
     <Screen edges={['top']}>

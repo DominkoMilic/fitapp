@@ -16,6 +16,7 @@ import { ResumeWorkoutCard } from '@/features/training/ResumeWorkoutCard';
 import { ResumeActivityCard } from '@/features/activity/ResumeActivityCard';
 import { spacing } from '@/theme';
 import { EXERCISES } from '@/domain/training/catalogue';
+import { formatDateRange } from '@/domain/format';
 import { LoadErrorBanner } from '@/components/feedback/LoadErrorBanner';
 
 export default function Training() {
@@ -84,7 +85,9 @@ export default function Training() {
           onPress={() => setOffset(offset - 1)}
         />
         <Text variant="bodyStrong">
-          {offset === 0 ? 'This week' : `${dayLabel(weekStart, '')} – ${dayLabel(weekEnd, '')}`}
+          {offset === 0
+            ? 'This week'
+            : formatDateRange(weekStart, weekEnd, undefined, { year: false })}
         </Text>
         <Button
           title="Next ›"

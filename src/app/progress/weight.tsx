@@ -20,10 +20,9 @@ import { useProfile } from '@/features/profile/api';
 import { changeTone } from '@/domain/weight/tone';
 import { CHART_RANGES, type RangeKey, useWeightStats } from '@/features/weight/useWeightStats';
 import { spacing } from '@/theme';
-import { formatDate } from '@/domain/format';
+import { formatDate, formatMonthYear } from '@/domain/format';
 
-const monthYear = (iso: string) =>
-  new Date(`${iso}T12:00:00Z`).toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
+const monthYear = (iso: string) => formatMonthYear(iso, true);
 
 export default function WeightScreen() {
   const [range, setRange] = useState<RangeKey>('Month');

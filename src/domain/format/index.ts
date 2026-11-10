@@ -7,7 +7,9 @@ import type { IsoDate } from '../calculations/dates';
 import { sportEventLabel } from '../sports/catalogue';
 
 const at = (iso: IsoDate) => new Date(`${iso.slice(0, 10)}T12:00:00Z`);
-const fmt = (opts: Intl.DateTimeFormatOptions, locale?: string) =>
+/** Dates read day-month everywhere ("9 Nov"), whatever the phone's locale (user decision). */
+export const DATE_LOCALE = 'en-GB';
+const fmt = (opts: Intl.DateTimeFormatOptions, locale: string = DATE_LOCALE) =>
   new Intl.DateTimeFormat(locale, { ...opts, timeZone: 'UTC' });
 
 /** "9 Nov 2026" (or the locale's equivalent). */
@@ -18,8 +20,28 @@ export const formatDate = (iso: IsoDate, locale?: string) =>
 export const formatShortDate = (iso: IsoDate, locale?: string) =>
   fmt({ weekday: 'short', day: 'numeric', month: 'short' }, locale).format(at(iso));
 
-/** "9 – 15 Nov 2026", "30 Oct – 5 Nov 2026", "29 Dec 2026 – 4 Jan 2027". */
-export function formatDateRange(from: IsoDate, to: IsoDate, locale?: string): string {
+/** "9 Nov" */
+export const formatDayMonth = (iso: IsoDate, locale?: string) =>
+  fmt({ day: 'numeric', month: 'short' }, locale).format(at(iso));
+
+/** "Tuesday 10 November" */
+export const formatLongWeekday = (iso: IsoDate, locale?: string) =>
+  fmt({ weekday: 'long', day: 'numeric', month: 'long' }, locale).format(at(iso));
+
+/** "November 2026" (or "Nov 2026" with `short`). */
+export const formatMonthYear = (iso: IsoDate, short = false, locale?: string) =>
+  fmt({ month: short ? 'short' : 'long', year: 'numeric' }, locale).format(at(iso));
+
+/**
+ * "9 – 15 Nov 2026", "30 Oct – 5 Nov 2026", "29 Dec 2026 – 4 Jan 2027".
+ * With `year: false`: "9 – 15 Nov", "30 Oct – 5 Nov", "29 Dec – 4 Jan" (e.g. a week heading).
+ */
+export function formatDateRange(
+  from: IsoDate,
+  to: IsoDate,
+  locale?: string,
+  { year = true }: { year?: boolean } = {},
+): string {
   const a = at(from);
   const b = at(to);
   const sameYear = a.getUTCFullYear() === b.getUTCFullYear();
@@ -27,12 +49,12 @@ export function formatDateRange(from: IsoDate, to: IsoDate, locale?: string): st
   const left = fmt(
     sameMonth
       ? { day: 'numeric' }
-      : sameYear
+      : sameYear || !year
         ? { day: 'numeric', month: 'short' }
         : { day: 'numeric', month: 'short', year: 'numeric' },
     locale,
   ).format(a);
-  return `${left} – ${formatDate(to, locale)}`;
+  return `${left} – ${year ? formatDate(to, locale) : formatDayMonth(to, locale)}`;
 }
 
 /** "Week of 2 Nov" */

@@ -35,9 +35,9 @@ import {
 } from '@/features/onboarding/payload';
 import { useAsOf } from '@/features/onboarding/useOnboardingContext';
 import { spacing } from '@/theme';
+import { formatMonthYear } from '@/domain/format';
 
-const monthYear = (iso: string) =>
-  new Date(`${iso}T12:00:00Z`).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+const monthYear = (iso: string) => formatMonthYear(iso);
 
 export default function PlanStep() {
   const asOf = useAsOf();

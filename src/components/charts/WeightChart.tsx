@@ -24,6 +24,7 @@ import { timeTicks } from '@/domain/charts/time';
 import type { DailyValue } from '@/domain/weight/trend';
 import { averageSeries } from '@/domain/weight/trend';
 import { motion, spacing, useTheme } from '@/theme';
+import { formatDayMonth } from '@/domain/format';
 
 export interface ReferenceLine {
   label: string;
@@ -213,7 +214,7 @@ export function WeightChart({
     <View accessible accessibilityRole="image" accessibilityLabel={summary} onLayout={onLayout}>
       <Text variant="small" color="textSecondary" style={styles.readout}>
         {sel
-          ? `${new Date(`${sel.date}T12:00:00Z`).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}: ${fmt(sel.kg)}${
+          ? `${formatDayMonth(sel.date)}: ${fmt(sel.kg)}${
               selAvg != null ? ` · 7-day avg ${fmt(selAvg)}` : ''
             }`
           : 'Tap or drag along the chart to see a day'}

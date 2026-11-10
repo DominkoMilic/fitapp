@@ -10,6 +10,7 @@ import { OccurrenceRow } from '@/features/training/OccurrenceRow';
 import { useScheduledWorkouts } from '@/features/training/schedule-api';
 import { radius, spacing, TOUCH_TARGET, useTheme } from '@/theme';
 import { LoadErrorBanner } from '@/components/feedback/LoadErrorBanner';
+import { formatMonthYear } from '@/domain/format';
 
 const monthStart = (date: string, offset: number) => {
   const d = new Date(Date.UTC(+date.slice(0, 4), +date.slice(5, 7) - 1 + offset, 1));
@@ -35,10 +36,7 @@ export default function MonthCalendar() {
     addDays(gridStart, 41),
   );
   const cells = Array.from({ length: 42 }, (_, i) => addDays(gridStart, i));
-  const title = new Date(`${first}T12:00:00Z`).toLocaleDateString(undefined, {
-    month: 'long',
-    year: 'numeric',
-  });
+  const title = formatMonthYear(first);
 
   return (
     <Screen edges={['bottom']}>

@@ -3,6 +3,9 @@ import {
   completionLabel,
   formatDate,
   formatDateRange,
+  formatDayMonth,
+  formatLongWeekday,
+  formatMonthYear,
   formatInt,
   formatShortDate,
   formatWeekOf,
@@ -21,6 +24,20 @@ describe('display formatting (audit: no raw ISO dates, enums or naive plurals)',
     expect(formatDateRange('2026-11-09', '2026-11-15', 'en-GB')).toBe('9 – 15 Nov 2026');
     expect(formatDateRange('2026-10-30', '2026-11-05', 'en-GB')).toBe('30 Oct – 5 Nov 2026');
     expect(formatDateRange('2026-12-29', '2027-01-04', 'en-GB')).toBe('29 Dec 2026 – 4 Jan 2027');
+  });
+  it('reads day before month by default, whatever the phone locale', () => {
+    expect(formatDate('2026-11-13')).toBe('13 Nov 2026');
+    expect(formatShortDate('2026-11-13')).toBe('Fri 13 Nov');
+    expect(formatDayMonth('2026-11-13')).toBe('13 Nov');
+    expect(formatLongWeekday('2026-11-10')).toBe('Tuesday 10 November');
+    expect(formatMonthYear('2026-11-10')).toBe('November 2026');
+    expect(formatMonthYear('2026-11-10', true)).toBe('Nov 2026');
+  });
+  it('week headings drop the year', () => {
+    const noYear = { year: false };
+    expect(formatDateRange('2026-11-09', '2026-11-15', undefined, noYear)).toBe('9 – 15 Nov');
+    expect(formatDateRange('2026-10-26', '2026-11-01', undefined, noYear)).toBe('26 Oct – 1 Nov');
+    expect(formatDateRange('2026-12-28', '2027-01-03', undefined, noYear)).toBe('28 Dec – 3 Jan');
   });
   it('plurals and grouping', () => {
     expect(plural(1, 'change')).toBe('1 change');
