@@ -50,6 +50,13 @@ export function usePushRegistration(socialOn: boolean) {
   const userId = useAuth().session?.user.id;
   useEffect(() => {
     if (!userId || !socialOn) return;
-    void registerPushToken(userId).catch(() => undefined);
+    registerPushToken(userId)
+      .then((result) => {
+        if (result !== 'registered') console.warn(`push registration: ${result}`);
+      })
+      // Message only: never user data (CLAUDE.md security rules).
+      .catch((e: unknown) =>
+        console.warn(`push registration failed: ${e instanceof Error ? e.message : 'unknown'}`),
+      );
   }, [userId, socialOn]);
 }

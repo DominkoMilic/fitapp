@@ -133,6 +133,9 @@ Deno.serve(async (req) => {
           body: text.body,
           data: { href },
           sound: 'default',
+          // High priority: normal priority can be held back for minutes on some Android phones.
+          priority: 'high',
+          channelId: 'social',
         })),
       ),
     });
