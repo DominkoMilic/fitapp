@@ -235,7 +235,7 @@ export default function SocialUser() {
       <ConfirmDialog
         visible={confirm === 'block'}
         title={`Block ${p.display_name}?`}
-        message="You’ll stop being friends and won’t see each other anywhere in PACE. They can’t find you or send requests. They aren’t told. You can unblock in Settings → Social and privacy."
+        message="Any friendship or request between you ends, and you won’t see each other anywhere in PACE. They can’t find you or send requests. They aren’t told. You can unblock in Settings → Social and privacy."
         confirmLabel="Block"
         destructive
         loading={block.isPending}
