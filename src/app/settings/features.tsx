@@ -1,5 +1,7 @@
 import { ErrorState, LoadingState } from '@/components/feedback';
-import { Card, Screen, Text, Toggle } from '@/components/ui';
+import { router } from 'expo-router';
+
+import { Card, ListItem, Screen, Text, Toggle } from '@/components/ui';
 import { usePreferences } from '@/features/profile/api';
 import { useSetNutritionEnabled } from '@/features/profile/features';
 import { SaveState } from '@/features/profile/SaveState';
@@ -35,6 +37,13 @@ export default function AppFeatures() {
         onChange={(v) => set.mutate(v)}
       />
       <SaveState status={set.status} error={set.error} />
+      {on ? (
+        <ListItem
+          title="Food preferences"
+          subtitle="Diet, allergies, cuisines and cooking time"
+          onPress={() => router.push('/settings/nutrition')}
+        />
+      ) : null}
       <Card>
         <Text variant="small" color="textSecondary">
           {on

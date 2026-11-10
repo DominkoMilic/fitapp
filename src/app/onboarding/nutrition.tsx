@@ -26,7 +26,7 @@ export default function NutritionStep() {
   const save = useOnboardingDraft((s) => s.save);
   const { control, handleSubmit } = useForm<NutritionValues>({
     resolver: zodResolver(nutritionSchema),
-    // Drafts saved by an older version have no trackNutrition: default it to on.
+    // Food tracking is opt-in: drafts without trackNutrition start with it off.
     defaultValues: { ...DEFAULT_NUTRITION, ...saved },
   });
   const track = useWatch({ control, name: 'trackNutrition' });
@@ -39,8 +39,8 @@ export default function NutritionStep() {
   return (
     <OnboardingStep
       step="nutrition"
-      title="How do you eat?"
-      subtitle="Used to filter recipes and suggestions. Nothing here changes your calorie target."
+      title="Track food too?"
+      subtitle="Optional. PACE works fully for training without it, and you can turn it on any time."
       onContinue={() => void onContinue()}
       onSkip={() => {
         save('nutrition', saved ?? DEFAULT_NUTRITION);
@@ -172,7 +172,8 @@ export default function NutritionStep() {
         </>
       ) : (
         <Text color="textSecondary">
-          No problem: PACE focuses on training and weight. Nothing about food will show up.
+          PACE will focus on your training and weight, and nothing about food will show up. You can
+          turn food tracking on later in Settings → App features.
         </Text>
       )}
     </OnboardingStep>
