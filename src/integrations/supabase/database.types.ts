@@ -157,6 +157,72 @@ export type Database = {
         };
         Relationships: [];
       };
+      cheers: {
+        Row: {
+          created_at: string;
+          feed_item_id: string;
+          kind: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          feed_item_id: string;
+          kind?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          feed_item_id?: string;
+          kind?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'cheers_feed_item_id_fkey';
+            columns: ['feed_item_id'];
+            isOneToOne: false;
+            referencedRelation: 'feed_items';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      comments: {
+        Row: {
+          author: string;
+          body: string | null;
+          created_at: string;
+          deleted_at: string | null;
+          feed_item_id: string;
+          id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          author: string;
+          body?: string | null;
+          created_at?: string;
+          deleted_at?: string | null;
+          feed_item_id: string;
+          id?: string;
+        };
+        Update: {
+          author?: string;
+          body?: string | null;
+          created_at?: string;
+          deleted_at?: string | null;
+          feed_item_id?: string;
+          id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'comments_feed_item_id_fkey';
+            columns: ['feed_item_id'];
+            isOneToOne: false;
+            referencedRelation: 'feed_items';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       consents: {
         Row: {
           consent_type: string;
@@ -405,6 +471,46 @@ export type Database = {
         };
         Relationships: [];
       };
+      feed_items: {
+        Row: {
+          audience: string;
+          created_at: string;
+          hidden_at: string | null;
+          id: string;
+          kind: string;
+          local_date: string;
+          owner: string;
+          snapshot: NonNullable<Json>;
+          source_id: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          audience: string;
+          created_at?: string;
+          hidden_at?: string | null;
+          id?: string;
+          kind: string;
+          local_date: string;
+          owner: string;
+          snapshot?: NonNullable<Json>;
+          source_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          audience?: string;
+          created_at?: string;
+          hidden_at?: string | null;
+          id?: string;
+          kind?: string;
+          local_date?: string;
+          owner?: string;
+          snapshot?: NonNullable<Json>;
+          source_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       friendships: {
         Row: {
           accepted_at: string | null;
@@ -537,6 +643,69 @@ export type Database = {
           unit_system?: string;
           updated_at?: string;
           week_start?: number;
+        };
+        Relationships: [];
+      };
+      push_config: {
+        Row: {
+          key: string;
+          value: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          key: string;
+          value: string;
+        };
+        Update: {
+          key?: string;
+          value?: string;
+        };
+        Relationships: [];
+      };
+      push_log: {
+        Row: {
+          last_sent_at: string | null;
+          pending_actors: string[];
+          pending_count: number;
+          recipient: string;
+          topic: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          last_sent_at?: string | null;
+          pending_actors?: string[];
+          pending_count?: number;
+          recipient: string;
+          topic: string;
+        };
+        Update: {
+          last_sent_at?: string | null;
+          pending_actors?: string[];
+          pending_count?: number;
+          recipient?: string;
+          topic?: string;
+        };
+        Relationships: [];
+      };
+      push_tokens: {
+        Row: {
+          platform: string;
+          token: string;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          platform: string;
+          token: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          platform?: string;
+          token?: string;
+          updated_at?: string;
+          user_id?: string;
         };
         Relationships: [];
       };
@@ -793,6 +962,9 @@ export type Database = {
           friend_requests_from: string;
           in_leaderboards: boolean;
           milestones_audience: string;
+          notify_cheers: boolean;
+          notify_comments: boolean;
+          notify_requests: boolean;
           share_volume: boolean;
           updated_at: string;
           user_id: string;
@@ -806,6 +978,9 @@ export type Database = {
           friend_requests_from?: string;
           in_leaderboards?: boolean;
           milestones_audience?: string;
+          notify_cheers?: boolean;
+          notify_comments?: boolean;
+          notify_requests?: boolean;
           share_volume?: boolean;
           updated_at?: string;
           user_id: string;
@@ -818,6 +993,9 @@ export type Database = {
           friend_requests_from?: string;
           in_leaderboards?: boolean;
           milestones_audience?: string;
+          notify_cheers?: boolean;
+          notify_comments?: boolean;
+          notify_requests?: boolean;
           share_volume?: boolean;
           updated_at?: string;
           user_id?: string;
@@ -1303,10 +1481,74 @@ export type Database = {
     };
     Functions: {
       accept_friend_request: { Args: { other: string }; Returns: string };
+      activity_snapshot: { Args: { a: Json }; Returns: Json };
+      add_comment: { Args: { p_body: string; p_item: string }; Returns: string };
       are_friends: { Args: { a: string; b: string }; Returns: boolean };
       block_user: { Args: { other: string }; Returns: undefined };
+      can_view_feed: {
+        Args: { item_audience: string; item_hidden: string; item_owner: string; viewer: string };
+        Returns: boolean;
+      };
       complete_onboarding: { Args: { payload: Json }; Returns: undefined };
+      delete_comment: { Args: { p_id: string }; Returns: undefined };
       delete_social_profile: { Args: Record<PropertyKey, never>; Returns: undefined };
+      feed_row_visible: {
+        Args: { item: string; me: string };
+        Returns: {
+          audience: string;
+          created_at: string;
+          hidden_at: string | null;
+          id: string;
+          kind: string;
+          local_date: string;
+          owner: string;
+          snapshot: NonNullable<Json>;
+          source_id: string;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'feed_items';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      get_feed: {
+        Args: { p_before?: string; p_max?: number; p_owner?: string };
+        Returns: {
+          avatar_color: string;
+          cheers: Json;
+          comment_count: number;
+          created_at: string;
+          display_name: string;
+          handle: string;
+          id: string;
+          is_mine: boolean;
+          kind: string;
+          local_date: string;
+          my_cheer: string;
+          owner: string;
+          snapshot: Json;
+        }[];
+      };
+      get_feed_item: {
+        Args: { p_id: string };
+        Returns: {
+          avatar_color: string;
+          cheers: Json;
+          comment_count: number;
+          created_at: string;
+          display_name: string;
+          handle: string;
+          id: string;
+          is_mine: boolean;
+          kind: string;
+          local_date: string;
+          my_cheer: string;
+          owner: string;
+          snapshot: Json;
+        }[];
+      };
       get_social_profile: {
         Args: { p_handle: string };
         Returns: {
@@ -1319,6 +1561,7 @@ export type Database = {
           user_id: string;
         }[];
       };
+      hide_feed_item: { Args: { p_id: string }; Returns: undefined };
       hit_rate_limit: {
         Args: { bucket_name: string; max_hits: number; uid: string; window_seconds: number };
         Returns: boolean;
@@ -1327,6 +1570,7 @@ export type Database = {
       is_blocked: { Args: { a: string; b: string }; Returns: boolean };
       is_own_user_request: { Args: { owner: string }; Returns: boolean };
       is_user_request: { Args: Record<PropertyKey, never>; Returns: boolean };
+      is_weight_milestone: { Args: { m_key: string; m_metadata: Json }; Returns: boolean };
       list_blocked: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -1335,6 +1579,20 @@ export type Database = {
           display_name: string;
           handle: string;
           user_id: string;
+        }[];
+      };
+      list_comments: {
+        Args: { p_item: string };
+        Returns: {
+          author: string;
+          avatar_color: string;
+          body: string;
+          can_delete: boolean;
+          created_at: string;
+          display_name: string;
+          handle: string;
+          id: string;
+          removed: boolean;
         }[];
       };
       list_friendships: {
@@ -1348,6 +1606,7 @@ export type Database = {
           user_id: string;
         }[];
       };
+      remove_cheer: { Args: { p_item: string }; Returns: undefined };
       remove_friend: { Args: { other: string }; Returns: undefined };
       report_content: {
         Args: { p_note: string; p_reason: string; p_target_id: string; p_target_type: string };
@@ -1363,6 +1622,8 @@ export type Database = {
         }[];
       };
       send_friend_request: { Args: { p_handle: string }; Returns: string };
+      set_cheer: { Args: { p_item: string; p_kind: string }; Returns: undefined };
+      social_active: { Args: { u: string }; Returns: boolean };
       social_caller: { Args: { active: boolean }; Returns: string };
       social_friend_count: { Args: { u: string }; Returns: number };
       social_handle_available: { Args: { p_handle: string }; Returns: boolean };
@@ -1371,12 +1632,17 @@ export type Database = {
         Returns: undefined;
       };
       social_normalise: { Args: { t: string }; Returns: string };
+      social_notify: {
+        Args: { p_actor: string; p_item: string; p_recipient: string; p_type: string };
+        Returns: undefined;
+      };
       social_on: { Args: Record<PropertyKey, never>; Returns: boolean };
       social_reachable: { Args: { u: string }; Returns: boolean };
       social_related: { Args: { a: string; b: string }; Returns: boolean };
       social_relationship: { Args: { me: string; other: string }; Returns: string };
       social_text_ok: { Args: { t: string }; Returns: boolean };
       unblock_user: { Args: { other: string }; Returns: undefined };
+      workout_snapshot: { Args: { s: Json; share_volume: boolean }; Returns: Json };
     };
     Enums: {
       [_ in never]: never;

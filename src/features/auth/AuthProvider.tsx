@@ -1,6 +1,8 @@
 import type { Session } from '@supabase/supabase-js';
 import { useQueryClient } from '@tanstack/react-query';
 import * as Linking from 'expo-linking';
+
+import { forgetPushToken } from '@/features/social/push-token-store';
 import {
   createContext,
   type PropsWithChildren,
@@ -107,7 +109,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
             options: { emailRedirectTo: callbackUrl() },
           }),
         ),
-      signOut: () => guard(() => client!.auth.signOut()),
+      signOut: () =>
+        guard(async () => {
+          await forgetPushToken();
+          return client!.auth.signOut();
+        }),
       resendConfirmation: (email) =>
         guard(() =>
           client!.auth.resend({

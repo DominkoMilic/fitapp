@@ -28,6 +28,7 @@ import { ActionSheet, type SheetAction } from '@/features/social/components/Acti
 import { Avatar } from '@/features/social/components/Avatar';
 import { OfflineNote } from '@/features/social/components/OfflineNote';
 import { ReportSheet } from '@/features/social/components/ReportSheet';
+import { SharedPosts } from '@/features/social/SharedPosts';
 import { spacing, TOUCH_TARGET, useTheme } from '@/theme';
 
 type Confirm = 'remove' | 'block' | null;
@@ -205,10 +206,13 @@ export default function SocialUser() {
           {isMe
             ? 'This is how friends see you. Change it in Settings → Social and privacy.'
             : p.relationship === 'friends'
-              ? 'What they choose to share will appear here when the friends feed arrives.'
+              ? 'You see what they choose to share. Weight and health are never shared.'
               : 'Friends see only what each person chooses to share. Weight and health are never shared.'}
         </Text>
       </Card>
+      {isMe || p.relationship === 'friends' ? (
+        <SharedPosts ownerId={p.user_id} isMe={isMe} />
+      ) : null}
 
       <ActionSheet
         visible={menu}

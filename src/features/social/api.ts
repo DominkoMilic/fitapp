@@ -1,4 +1,11 @@
-import { onlineManager, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  type InfiniteData,
+  onlineManager,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { useSyncExternalStore } from 'react';
 import { z } from 'zod';
 
@@ -25,6 +32,9 @@ export const socialKeys = {
   blocked: (uid: string) => ['social', uid, 'blocked'] as const,
   profile: (uid: string, handle: string) => ['social', uid, 'profile', handle] as const,
   search: (uid: string, q: string) => ['social', uid, 'search', q] as const,
+  feed: (uid: string, owner: string | null) => ['social', uid, 'feed', owner ?? 'all'] as const,
+  item: (uid: string, id: string) => ['social', uid, 'item', id] as const,
+  comments: (uid: string, id: string) => ['social', uid, 'comments', id] as const,
 };
 
 const db = () => requireSupabase();
@@ -202,6 +212,9 @@ export interface SocialSetup {
     | 'share_volume'
     | 'in_leaderboards'
     | 'friend_requests_from'
+    | 'notify_cheers'
+    | 'notify_comments'
+    | 'notify_requests'
   >;
 }
 
@@ -329,4 +342,139 @@ export const useReport = () =>
         p_note: r.note ?? '',
       }),
     );
+  });
+
+// ---------------------------------------------------------------------------------------------
+// Feed, cheers and comments (spec 33, Phase 8B)
+// ---------------------------------------------------------------------------------------------
+
+const feedRow = z.object({
+  id: z.string(),
+  owner: z.string(),
+  handle: z.string(),
+  display_name: z.string(),
+  avatar_color: z.string(),
+  kind: z.string(),
+  snapshot: z.record(z.string(), z.unknown()),
+  local_date: z.string(),
+  created_at: z.string(),
+  cheers: z.record(z.string(), z.number()),
+  my_cheer: z.string().nullable(),
+  comment_count: z.number(),
+  is_mine: z.boolean(),
+});
+export type FeedRow = z.infer<typeof feedRow>;
+
+const commentRow = z.object({
+  id: z.string(),
+  author: z.string(),
+  handle: z.string(),
+  display_name: z.string(),
+  avatar_color: z.string(),
+  body: z.string().nullable(),
+  created_at: z.string(),
+  removed: z.boolean(),
+  can_delete: z.boolean(),
+});
+export type CommentRow = z.infer<typeof commentRow>;
+
+export const FEED_PAGE = 20;
+
+/** The feed, newest first, a page at a time (cursor = created_at of the last row). */
+export function useFeed(owner: string | null = null, enabled = true) {
+  const uid = useUid();
+  return useInfiniteQuery({
+    queryKey: socialKeys.feed(uid ?? 'anonymous', owner),
+    enabled: !!uid && enabled,
+    initialPageParam: null as string | null,
+    queryFn: async ({ pageParam }) =>
+      z.array(feedRow).parse(
+        unwrap(
+          await db().rpc('get_feed', {
+            p_before: pageParam ?? undefined,
+            p_max: FEED_PAGE,
+            p_owner: owner ?? undefined,
+          }),
+        ),
+      ),
+    getNextPageParam: (last) =>
+      last.length === FEED_PAGE ? (last[last.length - 1]?.created_at ?? null) : null,
+  });
+}
+
+export const useFeedItem = (id: string) =>
+  useSocialQuery(
+    (uid) => socialKeys.item(uid, id),
+    async () => {
+      const rows = z.array(feedRow).parse(unwrap(await db().rpc('get_feed_item', { p_id: id })));
+      return rows[0] ?? null;
+    },
+    !!id,
+  );
+
+export const useComments = (id: string) =>
+  useSocialQuery(
+    (uid) => socialKeys.comments(uid, id),
+    async () => z.array(commentRow).parse(unwrap(await db().rpc('list_comments', { p_item: id }))),
+    !!id,
+  );
+
+type FeedPages = InfiniteData<FeedRow[], string | null>;
+
+/** Applies a change to one item wherever it is cached (feeds and the item screen). */
+function patchItem(
+  qc: ReturnType<typeof useQueryClient>,
+  uid: string,
+  id: string,
+  change: (row: FeedRow) => FeedRow,
+) {
+  qc.setQueriesData<FeedPages>({ queryKey: ['social', uid, 'feed'] }, (old) =>
+    old
+      ? { ...old, pages: old.pages.map((p) => p.map((r) => (r.id === id ? change(r) : r))) }
+      : old,
+  );
+  qc.setQueryData<FeedRow | null>(socialKeys.item(uid, id), (old) => (old ? change(old) : old));
+}
+
+const withCheer = (row: FeedRow, kind: string | null): FeedRow => {
+  const cheers = { ...row.cheers };
+  if (row.my_cheer) cheers[row.my_cheer] = Math.max(0, (cheers[row.my_cheer] ?? 1) - 1);
+  if (kind) cheers[kind] = (cheers[kind] ?? 0) + 1;
+  for (const k of Object.keys(cheers)) if (!cheers[k]) delete cheers[k];
+  return { ...row, cheers, my_cheer: kind };
+};
+
+/** Cheer (or change / remove your cheer); shown at once and rolled back if it fails. */
+export function useCheer() {
+  const uid = useUid();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ row, kind }: { row: FeedRow; kind: string | null }) => {
+      if (!onlineManager.isOnline()) throw new SocialError('network');
+      if (kind) unwrap(await db().rpc('set_cheer', { p_item: row.id, p_kind: kind }));
+      else unwrap(await db().rpc('remove_cheer', { p_item: row.id }));
+    },
+    onMutate: ({ row, kind }) => {
+      if (uid) patchItem(qc, uid, row.id, (r) => withCheer(r, kind));
+      return { before: row };
+    },
+    onError: (_e, { row }, ctx) => {
+      if (uid && ctx) patchItem(qc, uid, row.id, () => ctx.before);
+    },
+  });
+}
+
+export const useAddComment = () =>
+  useSocialMutation<{ itemId: string; body: string }>(async (_uid, { itemId, body }) => {
+    unwrap(await db().rpc('add_comment', { p_item: itemId, p_body: body }));
+  });
+
+export const useDeleteComment = () =>
+  useSocialMutation<string>(async (_uid, id) => {
+    unwrap(await db().rpc('delete_comment', { p_id: id }));
+  });
+
+export const useHideFeedItem = () =>
+  useSocialMutation<string>(async (_uid, id) => {
+    unwrap(await db().rpc('hide_feed_item', { p_id: id }));
   });

@@ -428,3 +428,7 @@ enabled = true
 # signed with the new keys.
 [functions.delete-account]
 verify_jwt = false
+
+# Called only by the database (pg_net) with the PUSH_SECRET header; no user JWT (Phase 8B-2).
+[functions.social-push]
+verify_jwt = false

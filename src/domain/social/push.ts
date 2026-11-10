@@ -1,0 +1,54 @@
+/**
+ * Push notification rules for social events (spec 33.6). Pure and shared with the social-push
+ * Edge Function (copied by scripts/sync-shared.mjs). Texts never contain numbers or health details.
+ */
+
+export type PushType = 'cheer' | 'comment' | 'request' | 'accept';
+
+/** Repeated events on the same topic within this window are batched into the next push. */
+export const BATCH_WINDOW_MS = 15 * 60_000;
+export const QUIET_START_MIN = 22 * 60;
+export const QUIET_END_MIN = 7 * 60;
+
+export function inQuietHours(minuteOfDay: number): boolean {
+  return minuteOfDay >= QUIET_START_MIN || minuteOfDay < QUIET_END_MIN;
+}
+
+/** True when a push for this topic went out recently, so this event is counted, not sent. */
+export function shouldBatch(lastSentAt: number | null, now: number): boolean {
+  return lastSentAt !== null && now - lastSentAt < BATCH_WINDOW_MS;
+}
+
+const ITEM_WORD: Record<string, string> = {
+  workout: 'workout',
+  activity: 'activity',
+  milestone: 'milestone',
+};
+
+function who(names: readonly string[], total: number): string {
+  const first = names[0] ?? 'Someone';
+  const others = Math.max(0, total - 1);
+  if (others === 0) return first;
+  return `${first} and ${others} ${others === 1 ? 'other' : 'others'}`;
+}
+
+/** Title and body for one push; `count` includes batched events. */
+export function pushText(
+  type: PushType,
+  actorNames: readonly string[],
+  count: number,
+  itemKind: string | null,
+): { title: string; body: string } {
+  const thing = ITEM_WORD[itemKind ?? ''] ?? 'post';
+  const actors = who(actorNames, Math.max(count, 1));
+  switch (type) {
+    case 'cheer':
+      return { title: 'New cheer', body: `${actors} cheered your ${thing}` };
+    case 'comment':
+      return { title: 'New comment', body: `${actors} commented on your ${thing}` };
+    case 'request':
+      return { title: 'Friend request', body: `${actors} wants to be friends` };
+    case 'accept':
+      return { title: 'New friend', body: `${actors} accepted your friend request` };
+  }
+}

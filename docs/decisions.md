@@ -259,3 +259,13 @@ Long lists render 20 rows per page (next page near the end of the scroll, or "Sh
 6. **Removed with it:** coach rules S4, N1–N3, W2; the 2-week calorie review; meal and water reminders (old stored settings are ignored); nutrition in the weekly report (stored snapshots keep their old fields, which the view ignores); food and water in the logging streak.
 7. **Old devices:** queued sync operations for the removed tables are dropped when the outbox loads; onboarding drafts saved on the removed food step resume at Health. App builds from before this change can't use the nutrition screens any more and must be replaced (only test accounts were affected).
 8. **Legal:** privacy, terms, disclaimer and licences lose the food, recipe, TheMealDB and USDA parts; legal version 2026-11-18.
+
+## 2026-11-19: Phase 8B-1 (feed, cheers, comments) decisions
+
+1. **Push is split out (8B-2).** It needs the product owner's Expo and Firebase accounts; the tables, hook and function are built and tested but stay off behind `app_config.push_enabled` (`docs/release/push-setup.md`).
+2. **Existing posts keep their audience.** Switching a type off stops new posts; earlier ones stay until removed from their ⋯ menu ("Remove from feed"). Edits still update an existing post.
+3. **Never shared:** weight milestones, including `weigh_in_30` (it is about weighing), and every source field outside the whitelist (notes, start/end times, effort, feeling, calories, route).
+4. **One cheer per person**, kind changeable; no cheering your own post. **Comments** are removed softly (row kept, text gone) so threads keep their order; the author or the post owner can remove one.
+5. **Batching:** events on the same topic within 15 minutes, or during quiet hours, are counted and folded into the next push for that topic. A batched event with no later event is not sent on its own (8B-2 may add a scheduled flush).
+6. **Rows reach snapshot functions as jsonb** (`to_jsonb(new)`): functions taking a table row are exposed by the API as computed columns.
+7. **Export** gains feed items, cheers and comments; push tokens and push batching state are technical (not exported). Legal version 2026-11-19 (privacy: what friends see in a post, comments).

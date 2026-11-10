@@ -29,16 +29,23 @@ export const EXPORT_TABLES = [
   ['friendships', ['user_low', 'user_high']],
   ['blocks', 'blocker'],
   ['reports', 'reporter'],
+  ['feed_items', 'owner'],
+  ['cheers', 'user_id'],
+  ['comments', 'author'],
 ] as const;
 
-/** Tables with a user column that aren't personal data (technical rate-limit counters). */
-export const NOT_EXPORTED = ['edge_rate_limits'] as const;
+/**
+ * Tables with a user column that aren't personal data: technical rate-limit counters, device push
+ * tokens and push batching state.
+ */
+export const NOT_EXPORTED = ['edge_rate_limits', 'push_tokens', 'push_log'] as const;
 
 export type ExportTable = (typeof EXPORT_TABLES)[number][0];
 
 /** Unique per-user sort key for stable paging (tables without an `id` column). */
 export const EXPORT_ORDER_KEY: Partial<Record<ExportTable, string | readonly string[]>> = {
   blocks: 'blocked',
+  cheers: 'feed_item_id',
   daily_checkins: 'local_date',
   friendships: ['user_low', 'user_high'],
   social_profiles: 'user_id',

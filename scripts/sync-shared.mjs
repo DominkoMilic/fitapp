@@ -13,6 +13,7 @@ import { fileURLToPath } from 'node:url';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const FILES = {
   'src/domain/account/delete-account.ts': 'delete-account.ts',
+  'src/domain/social/push.ts': 'social-push.ts',
 };
 const RENAMES = {
   zod: 'npm:zod@4',

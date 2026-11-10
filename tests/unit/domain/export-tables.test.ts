@@ -18,7 +18,11 @@ function userTablesFromTypes(): string[] {
   const tables = src.slice(src.indexOf('Tables: {'), src.indexOf('Views: {'));
   const out: string[] = [];
   for (const m of tables.matchAll(/\n {6}([a-z_]+): \{\n {8}Row: \{([\s\S]*?)\n {8}\};/g)) {
-    if (/\n {10}(user_id|owner_id|user_low|user_high|blocker|reporter)\??: /.test(m[2]!))
+    if (
+      /\n {10}(user_id|owner_id|user_low|user_high|blocker|reporter|owner|author|recipient)\??: /.test(
+        m[2]!,
+      )
+    )
       out.push(m[1]!);
   }
   return out;

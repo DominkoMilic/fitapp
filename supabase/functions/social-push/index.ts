@@ -1,0 +1,155 @@
+// Social push notifications (spec 33.6), Phase 8B-2. Called only by the database (social_notify
+// through pg_net) with a shared secret. Batches repeated events, respects per-type settings and
+// quiet hours, rate-limits per recipient and never sends numbers or health details.
+import { createClient } from 'npm:@supabase/supabase-js@2';
+import { z } from 'npm:zod@4';
+
+import { inQuietHours, pushText, shouldBatch, type PushType } from '../_shared/social-push.ts';
+
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+
+const Body = z.object({
+  type: z.enum(['cheer', 'comment', 'request', 'accept']),
+  recipient: z.string().uuid(),
+  actor: z.string().uuid(),
+  itemId: z.string().uuid().nullable().optional(),
+});
+
+const SETTING: Record<PushType, 'notify_cheers' | 'notify_comments' | 'notify_requests'> = {
+  cheer: 'notify_cheers',
+  comment: 'notify_comments',
+  request: 'notify_requests',
+  accept: 'notify_requests',
+};
+
+function minuteIn(timeZone: string, now: Date): number {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(now);
+  const h = Number(parts.find((p) => p.type === 'hour')?.value ?? 0) % 24;
+  const m = Number(parts.find((p) => p.type === 'minute')?.value ?? 0);
+  return h * 60 + m;
+}
+
+Deno.serve(async (req) => {
+  if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
+  const secret = Deno.env.get('PUSH_SECRET');
+  if (!secret || req.headers.get('x-pace-push-secret') !== secret)
+    return json({ error: 'forbidden' }, 403);
+  const parsed = Body.safeParse(await req.json().catch(() => null));
+  if (!parsed.success) return json({ error: 'invalid_body' }, 400);
+  const { type, recipient, actor, itemId } = parsed.data;
+
+  const admin = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    {
+      auth: { persistSession: false },
+    },
+  );
+
+  try {
+    const [{ data: settings }, { data: profile }, { data: actorProfile }, { data: tokens }] =
+      await Promise.all([
+        admin.from('social_settings').select('*').eq('user_id', recipient).maybeSingle(),
+        admin.from('profiles').select('timezone').eq('id', recipient).maybeSingle(),
+        admin.from('social_profiles').select('display_name').eq('user_id', actor).maybeSingle(),
+        admin.from('push_tokens').select('token').eq('user_id', recipient),
+      ]);
+    if (!settings || settings[SETTING[type]] === false) return json({ skipped: 'setting' });
+    if (!tokens?.length) return json({ skipped: 'no_token' });
+
+    const now = new Date();
+    const topic = itemId ? `${type}:${itemId}` : `${type}:${actor}`;
+    const { data: log } = await admin
+      .from('push_log')
+      .select('*')
+      .eq('recipient', recipient)
+      .eq('topic', topic)
+      .maybeSingle();
+    const actorName = actorProfile?.display_name ?? 'Someone';
+    const actors = [actorName, ...((log?.pending_actors as string[] | undefined) ?? [])].slice(
+      0,
+      5,
+    );
+    const count = (log?.pending_count ?? 0) + 1;
+
+    // Batch: recently sent for this topic, or quiet hours → remember and send later.
+    const quiet = inQuietHours(minuteIn(profile?.timezone ?? 'UTC', now));
+    if (
+      quiet ||
+      shouldBatch(log?.last_sent_at ? Date.parse(log.last_sent_at) : null, now.getTime())
+    ) {
+      await admin.from('push_log').upsert({
+        recipient,
+        topic,
+        last_sent_at: log?.last_sent_at ?? null,
+        pending_count: count,
+        pending_actors: actors,
+      });
+      return json({ batched: true });
+    }
+
+    const { data: allowed } = await admin.rpc('hit_rate_limit', {
+      uid: recipient,
+      bucket_name: 'social-push',
+      max_hits: 20,
+      window_seconds: 3600,
+    });
+    if (allowed === false) return json({ skipped: 'rate_limited' });
+
+    let itemKind: string | null = null;
+    if (itemId) {
+      const { data: item } = await admin
+        .from('feed_items')
+        .select('kind')
+        .eq('id', itemId)
+        .maybeSingle();
+      if (!item) return json({ skipped: 'item_gone' });
+      itemKind = item.kind;
+    }
+    const text = pushText(type, actors, count, itemKind);
+    const href = itemId ? `/social/item/${itemId}` : '/social';
+    const res = await fetch('https://exp.host/--/api/v2/push/send', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(Deno.env.get('EXPO_ACCESS_TOKEN')
+          ? { Authorization: `Bearer ${Deno.env.get('EXPO_ACCESS_TOKEN')}` }
+          : {}),
+      },
+      body: JSON.stringify(
+        tokens.map((t) => ({
+          to: t.token,
+          title: text.title,
+          body: text.body,
+          data: { href },
+          sound: 'default',
+        })),
+      ),
+    });
+    const out = (await res.json().catch(() => ({}))) as {
+      data?: { status: string; details?: { error?: string } }[];
+    };
+    // Expo reports uninstalled apps; their tokens are removed.
+    const dead = (out.data ?? [])
+      .map((r, i) => (r.details?.error === 'DeviceNotRegistered' ? tokens[i]?.token : null))
+      .filter((t): t is string => !!t);
+    if (dead.length) await admin.from('push_tokens').delete().in('token', dead);
+    await admin.from('push_log').upsert({
+      recipient,
+      topic,
+      last_sent_at: now.toISOString(),
+      pending_count: 0,
+      pending_actors: [],
+    });
+    return json({ sent: tokens.length });
+  } catch (e) {
+    console.error('social-push failed', e instanceof Error ? e.name : 'unknown');
+    return json({ error: 'failed' }, 500);
+  }
+});

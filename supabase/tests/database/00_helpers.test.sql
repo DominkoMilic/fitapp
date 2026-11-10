@@ -52,6 +52,23 @@ begin
 end;
 $$;
 
+-- Friends (accepted), as the superuser.
+create or replace function tests.befriend(a uuid, b uuid) returns void
+language sql as $$
+  insert into public.friendships (user_low, user_high, requested_by, status, accepted_at)
+  values (least(a, b), greatest(a, b), a, 'accepted', now());
+$$;
+
+-- A finished workout for a user, as the superuser (fires the feed trigger).
+create or replace function tests.workout(uid uuid, wid uuid, status text default 'completed',
+                                         volume numeric default 1200) returns void
+language sql as $$
+  insert into public.workout_sessions (id, user_id, title, category, started_at, ended_at, local_date,
+    duration_seconds, completion_status, total_volume_kg, notes, perceived_exertion)
+  values (wid, uid, 'Strength A', 'strength', '2026-11-18 17:00+00', '2026-11-18 17:45+00', '2026-11-18',
+          2700, status, volume, 'secret note', 7);
+$$;
+
 grant usage on schema tests to anon, authenticated;
 grant execute on all functions in schema tests to anon, authenticated;
 

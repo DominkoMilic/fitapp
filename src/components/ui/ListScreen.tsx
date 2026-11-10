@@ -1,5 +1,12 @@
 import { type ReactElement, type ReactNode, useState } from 'react';
-import { FlatList, Platform, StyleSheet, View } from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  Platform,
+  RefreshControl,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { type Edge, SafeAreaView } from 'react-native-safe-area-context';
 
@@ -15,7 +22,8 @@ export const PAGE_SIZE = 20;
  * Screen whose main content is a long list (spec 26 Phase 7: list virtualisation). Only the rows
  * on screen are rendered, so years of history stay fast. Everything above the list goes in `header`.
  * Rows come in pages of `pageSize`: the next page loads when scrolling near the end, and a
- * "Showing 20 of 134 · Show more" footer does the same on a tap.
+ * "Showing 20 of 134 · Show more" footer does the same on a tap. Lists paged by the server pass
+ * `onLoadMore` (called at the end once every loaded row is shown) and `onRefresh` (pull to refresh).
  */
 export function ListScreen<T>({
   data,
@@ -27,6 +35,10 @@ export function ListScreen<T>({
   overlay,
   edges = ['bottom'],
   pageSize = PAGE_SIZE,
+  onLoadMore,
+  loadingMore = false,
+  onRefresh,
+  refreshing = false,
 }: {
   data: readonly T[];
   renderItem: (item: T, index: number) => ReactElement | null;
@@ -38,6 +50,11 @@ export function ListScreen<T>({
   overlay?: ReactNode;
   edges?: Edge[];
   pageSize?: number;
+  /** Fetches the next server page; called at the end when every loaded row is shown. */
+  onLoadMore?: () => void;
+  loadingMore?: boolean;
+  onRefresh?: () => void;
+  refreshing?: boolean;
 }) {
   const { colors } = useTheme();
   const [shown, setShown] = useState(pageSize);
@@ -45,6 +62,7 @@ export function ListScreen<T>({
   const more = data.length > visible.length;
   const nextPage = () => {
     if (more) setShown((n) => n + pageSize);
+    else if (onLoadMore && !loadingMore) onLoadMore();
   };
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: colors.background }]} edges={edges}>
@@ -58,8 +76,22 @@ export function ListScreen<T>({
           ListEmptyComponent={empty ?? undefined}
           onEndReached={nextPage}
           onEndReachedThreshold={0.5}
+          refreshControl={
+            onRefresh ? (
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={colors.accent}
+                colors={[colors.accent]}
+              />
+            ) : undefined
+          }
           ListFooterComponent={
-            more ? (
+            loadingMore ? (
+              <View style={styles.more} accessibilityLabel="Loading more">
+                <ActivityIndicator color={colors.accent} />
+              </View>
+            ) : more ? (
               <View style={styles.more}>
                 <Text variant="small" color="textSecondary">
                   Showing {visible.length} of {data.length}

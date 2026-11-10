@@ -1,6 +1,6 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 
-import SocialTab from '@/app/(tabs)/social';
+import { FriendsSection } from '@/features/social/FriendsSection';
 import SocialSetupScreen, { NEVER_SHARED } from '@/app/social/setup';
 import SocialUser from '@/app/social/user/[handle]';
 import type { FriendRow, PublicProfile, SocialSetup } from '@/features/social/api';
@@ -135,7 +135,7 @@ describe('social tab', () => {
   });
 
   it('shows an empty state with ways to add friends', async () => {
-    await renderWithTheme(<SocialTab />);
+    await renderWithTheme(<FriendsSection header={null} handle="me.handle" />);
     expect(screen.getByText('Train together')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Add friends' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Invite' })).toBeTruthy();
@@ -143,7 +143,7 @@ describe('social tab', () => {
 
   it('lists requests first and accepts them', async () => {
     mockFriends = [row('bob', 'friends'), row('cat', 'incoming'), row('dan', 'outgoing')];
-    await renderWithTheme(<SocialTab />);
+    await renderWithTheme(<FriendsSection header={null} handle="me.handle" />);
     expect(screen.getByText('Requests (1)')).toBeTruthy();
     expect(screen.getByText('Friends (1)')).toBeTruthy();
     expect(screen.getByText('Sent requests')).toBeTruthy();
@@ -156,7 +156,7 @@ describe('social tab', () => {
   it('pauses changes offline', async () => {
     mockOnline = false;
     mockFriends = [row('cat', 'incoming')];
-    await renderWithTheme(<SocialTab />);
+    await renderWithTheme(<FriendsSection header={null} handle="me.handle" />);
     expect(screen.getByText(/Social needs a connection/)).toBeTruthy();
     expect(
       screen.getByRole('button', { name: 'Accept CAT' }).props.accessibilityState,

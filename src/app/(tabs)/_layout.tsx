@@ -6,6 +6,7 @@ import { useAuth } from '@/features/auth/AuthProvider';
 import { useMilestoneEngine } from '@/features/milestones/api';
 import { useNotificationEngine } from '@/features/notifications/useNotificationEngine';
 import { useFeatures } from '@/features/profile/features';
+import { usePushRegistration } from '@/features/social/push';
 import { motion, useTheme } from '@/theme';
 
 function MilestoneEngine() {
@@ -19,6 +20,12 @@ function NotificationEngine() {
   return null;
 }
 
+/** Social push token (dormant until Phase 8B-2). */
+function PushRegistration({ socialOn }: { socialOn: boolean }) {
+  usePushRegistration(socialOn);
+  return null;
+}
+
 export default function TabsLayout() {
   const { session, initializing } = useAuth();
   const { colors, reduceMotion } = useTheme();
@@ -29,6 +36,7 @@ export default function TabsLayout() {
     <>
       <MilestoneEngine />
       <NotificationEngine />
+      <PushRegistration socialOn={features.social} />
       <Tabs
         screenOptions={{
           headerShown: false,

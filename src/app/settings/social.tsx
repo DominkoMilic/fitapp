@@ -180,7 +180,13 @@ export default function SocialSettingsScreen() {
     patch: Partial<
       Pick<
         SocialSettings,
-        AudienceKey | 'share_volume' | 'in_leaderboards' | 'friend_requests_from'
+        | AudienceKey
+        | 'share_volume'
+        | 'in_leaderboards'
+        | 'friend_requests_from'
+        | 'notify_cheers'
+        | 'notify_comments'
+        | 'notify_requests'
       >
     >,
   ) => updateSettings.mutate(patch, { onError: (e) => showToast(SOCIAL_ERRORS[errorCode(e)]) });
@@ -289,8 +295,9 @@ export default function SocialSettingsScreen() {
 
       <SectionHeader title="What friends see" />
       <Text variant="small" color="textSecondary">
-        Sharing starts when the friends feed arrives in a coming update. Weight, health, notes and
-        routes are never shared.
+        New items you share appear in your friends’ feeds. Weight, health, notes, routes and the
+        time of day are never shared. Turning a type off doesn’t remove earlier posts; remove those
+        from the post’s ⋯ menu.
       </Text>
       {AUDIENCES.map((a) => (
         <Toggle
@@ -313,6 +320,26 @@ export default function SocialSettingsScreen() {
         description="Effort only, among friends and clubs."
         value={value('in_leaderboards')}
         onChange={(v) => saveSetting({ in_leaderboards: v })}
+      />
+
+      <SectionHeader title="Notifications" />
+      <Text variant="small" color="textSecondary">
+        Push notifications arrive in a coming update. These choices are saved for when they do.
+      </Text>
+      <Toggle
+        label="Cheers"
+        value={value('notify_cheers')}
+        onChange={(v) => saveSetting({ notify_cheers: v })}
+      />
+      <Toggle
+        label="Comments"
+        value={value('notify_comments')}
+        onChange={(v) => saveSetting({ notify_comments: v })}
+      />
+      <Toggle
+        label="Friend requests"
+        value={value('notify_requests')}
+        onChange={(v) => saveSetting({ notify_requests: v })}
       />
 
       <SectionHeader title="Safety" />
