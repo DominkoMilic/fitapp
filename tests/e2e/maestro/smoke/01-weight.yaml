@@ -14,4 +14,6 @@ appId: ${APP_ID}
     commands:
       - tapOn: 'Save anyway'
 - openLink: pace://progress/weight
-- assertVisible: '99.5.*'
+# History is below the chart and stats; scroll on smaller screens
+- scrollUntilVisible:
+    element: '99.5.*'

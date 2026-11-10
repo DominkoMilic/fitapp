@@ -14,25 +14,38 @@ appId: ${APP_ID}
 - tapOn: 'Sign in'
 - assertVisible: 'About you'
 - tapOn: 'Name'
+- eraseText
 - inputText: 'Dev'
-- tapOn: 'Day'
+- tapOn: 'Date of birth, day'
+- eraseText
 - inputText: '1'
-- tapOn: 'Month'
+- tapOn: 'Date of birth, month'
+- eraseText
 - inputText: '5'
-- tapOn: 'Year'
+- tapOn: 'Date of birth, year'
+- eraseText
 - inputText: '2003'
+- hideKeyboard
 - tapOn: 'Male'
 - tapOn: 'Height'
+- eraseText
 - inputText: '187'
+- hideKeyboard
+- scrollUntilVisible:
+    element: 'Current weight'
 - tapOn: 'Current weight'
+- eraseText
 - inputText: '108'
+- hideKeyboard
 - scrollUntilVisible:
     element: 'Moderately active.*'
 - tapOn: 'Moderately active.*'
 - tapOn: 'Continue'
 - tapOn: 'Lose weight.*'
 - tapOn: 'Target weight'
+- eraseText
 - inputText: '90'
+- hideKeyboard
 - tapOn: 'Continue'
 # Your week (schedule + equipment)
 - scrollUntilVisible:
@@ -49,4 +62,7 @@ appId: ${APP_ID}
 - assertVisible: 'Your starting plan'
 - assertVisible: '2720'
 - tapOn: 'Save and start'
-- assertVisible: 'Today'
+# Home: the quick actions are always above the fold (coach cards can push 'Today' down)
+- extendedWaitUntil:
+    visible: 'Check-in'
+    timeout: 20000

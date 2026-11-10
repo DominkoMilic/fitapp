@@ -11,4 +11,6 @@ appId: ${APP_ID}
 - tapOn: 'Add'
 - assertVisible: 'Added'
 - tapOn: 'Nutrition'
-- assertVisible: 'Maestro snack'
+# Snacks is the last meal section; scroll on smaller screens
+- scrollUntilVisible:
+    element: 'Maestro snack'
