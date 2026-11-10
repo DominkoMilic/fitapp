@@ -1,6 +1,6 @@
 # Push notifications setup (Phase 8B-2)
 
-Social push notifications ("Ana cheered your run") are built but switched off. Turning them on needs a few steps in accounts only you can sign in to. Steps 1–3 are yours; tell me when they're done and I'll do 4–7 and test on the phone.
+Social push notifications ("Ana cheered your run") are built but switched off. Turning them on needs a few steps in accounts only you can sign in to. Steps 1–3 need your Expo and Firebase accounts; 4–7 finish the setup and test it.
 
 ## 1. Link the app to Expo (EAS project ID)
 
@@ -18,19 +18,28 @@ Social push notifications ("Ana cheered your run") are built but switched off. T
 
 expo.dev → Account settings → Access tokens → create one named "pace-push". In Expo project settings you can then require it for push ("enhanced security").
 
-## 4. Database (I can do this)
+## 4. Edge Function
 
-- Enable the `pg_net` extension (Database → Extensions).
-- Insert the function URL and a random shared secret: `insert into push_config values ('function_url', 'https://<project>.supabase.co/functions/v1/social-push'), ('secret', '<random>');`
+`npx supabase login` once, then `npx supabase functions deploy social-push --project-ref <project ref>` (`verify_jwt = false` comes from `supabase/config.toml`). Optional secret: `EXPO_ACCESS_TOKEN` (Edge Functions → Secrets), only needed if "enhanced security" is switched on for push in the Expo project.
 
-## 5. Edge Function
+## 5. Firebase app config in the app
 
-- Secrets: `PUSH_SECRET` (same random value) and `EXPO_ACCESS_TOKEN` (step 3).
-- Deploy: `npx supabase functions deploy social-push` (`verify_jwt = false` comes from `supabase/config.toml`).
+Firebase console → Project settings → General → Your apps → Android app → download **google-services.json** and put it in the project root (it is git-ignored; `app.config.ts` picks it up). Rebuild the app.
 
-## 6. Switch on
+## 6. Switch on (SQL editor)
 
-`update app_config set value = 'true' where key = 'push_enabled';` — the app registers each signed-in device's token when social is on (notification permission is the one reminders already ask for). Set it back to `'false'` to stop all social pushes at once.
+Enables `pg_net`, stores the function URL and a **database-generated** shared secret in `push_config` (the function reads it from there, so no one copies a secret), and sets `app_config.push_enabled = true`:
+
+```sql
+create extension if not exists pg_net with schema extensions;
+insert into public.push_config (key, value) values
+  ('function_url', 'https://<project ref>.supabase.co/functions/v1/social-push'),
+  ('secret', encode(extensions.gen_random_bytes(32), 'hex'))
+on conflict (key) do update set value = excluded.value;
+update public.app_config set value = 'true' where key = 'push_enabled';
+```
+
+To stop all social pushes at once: `update app_config set value = 'false' where key = 'push_enabled';`
 
 ## 7. Test
 

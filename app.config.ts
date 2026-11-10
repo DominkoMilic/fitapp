@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+
 import type { ConfigContext, ExpoConfig } from 'expo/config';
 
 /**
@@ -16,10 +18,15 @@ const IS_PROD = APP_ENV === 'production';
 
 const BUNDLE_ID = IS_PROD ? 'app.pace.fitness' : `app.pace.fitness.${APP_ENV}`;
 
+// Firebase app config for Android push (docs/release/push-setup.md). Kept out of git; builds
+// without it work, just without push notifications.
+const GOOGLE_SERVICES = process.env.GOOGLE_SERVICES_JSON ?? './google-services.json';
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: IS_PROD ? 'PACE' : `PACE (${APP_ENV})`,
   slug: 'pace',
+  owner: 'dominko',
   scheme: 'pace',
   version: '1.0.0',
   orientation: 'portrait',
@@ -34,6 +41,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: BUNDLE_ID,
+    ...(existsSync(GOOGLE_SERVICES) ? { googleServicesFile: GOOGLE_SERVICES } : {}),
     adaptiveIcon: {
       backgroundColor: '#121417',
       foregroundImage: './assets/brand/android-icon-foreground.png',
@@ -114,6 +122,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     typedRoutes: true,
   },
   extra: {
+    // EAS project (push notifications need it: spec 33.6, docs/release/push-setup.md).
+    eas: { projectId: '817c1302-c60c-4034-aaa6-e3c0e5fada67' },
     appEnv: APP_ENV,
     hasAndroidMapsKey: !!process.env.GOOGLE_MAPS_ANDROID_API_KEY,
   },

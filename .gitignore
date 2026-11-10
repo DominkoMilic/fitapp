@@ -29,3 +29,6 @@ npm-debug.*
 supabase/.branches
 supabase/.temp
 .e2e/
+
+# Firebase app config (Android push), see docs/release/push-setup.md
+google-services.json
