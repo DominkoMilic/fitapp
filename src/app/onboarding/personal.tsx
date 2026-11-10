@@ -4,7 +4,13 @@ import { Controller, useForm, useWatch } from 'react-hook-form';
 
 import { ControlledTextField } from '@/components/forms/ControlledTextField';
 import { SegmentedControl, Text } from '@/components/ui';
-import { personalSchema, type PersonalValues } from '@/domain/validation/onboarding';
+import {
+  activitySchema,
+  type ActivityValues,
+  personalSchema,
+  type PersonalValues,
+} from '@/domain/validation/onboarding';
+import { ActivitySection } from '@/features/onboarding/components/ActivitySection';
 import { DateField } from '@/features/onboarding/components/DateField';
 import { HeightField, WeightField } from '@/features/onboarding/components/MeasurementFields';
 import { OnboardingStep } from '@/features/onboarding/components/OnboardingStep';
@@ -14,6 +20,7 @@ import { detectTimezone, useAsOf } from '@/features/onboarding/useOnboardingCont
 export default function PersonalStep() {
   const asOf = useAsOf();
   const saved = useOnboardingDraft((s) => s.personal);
+  const savedActivity = useOnboardingDraft((s) => s.activity);
   const save = useOnboardingDraft((s) => s.save);
   const { control, handleSubmit } = useForm<PersonalValues>({
     resolver: zodResolver(personalSchema(asOf)),
@@ -27,12 +34,27 @@ export default function PersonalStep() {
       timezone: detectTimezone(),
     },
   });
+  const activity = useForm<ActivityValues>({
+    resolver: zodResolver(activitySchema),
+    defaultValues: savedActivity ?? { activityLevel: undefined, averageDailySteps: null },
+  });
   const unitSystem = useWatch({ control, name: 'unitSystem' });
 
-  const onContinue = handleSubmit((values) => {
-    save('personal', values);
+  // Validate both parts so every error shows at once, then save each to its own draft key.
+  const onContinue = async () => {
+    let personal: PersonalValues | null = null;
+    let level: ActivityValues | null = null;
+    await handleSubmit((v) => {
+      personal = v;
+    })();
+    await activity.handleSubmit((v) => {
+      level = v;
+    })();
+    if (!personal || !level) return;
+    save('personal', personal);
+    save('activity', level);
     router.replace('/onboarding/goals');
-  });
+  };
 
   return (
     <OnboardingStep
@@ -130,6 +152,7 @@ export default function PersonalStep() {
           />
         )}
       />
+      <ActivitySection control={activity.control} />
     </OnboardingStep>
   );
 }

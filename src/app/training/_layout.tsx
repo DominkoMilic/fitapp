@@ -4,6 +4,7 @@ export default function TrainingLayout() {
   return (
     <SignedInStack
       titles={{
+        add: 'Add training',
         exercises: 'Exercise library',
         'exercise/[slug]': 'Exercise',
         'exercise-new': 'New exercise',

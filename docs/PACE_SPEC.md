@@ -247,30 +247,32 @@ docs/
 
 | Tab | Primary content |
 |---|---|
-| Home | Greeting, date, current weight (7-day average) vs goal, daily rings/bars (kcal, protein, carbs, fat, water), today's plan card, up to 3 coach cards, upcoming events (next 3), quick actions |
-| Training | This week strip, today/next workout, calendar link, templates, exercise library, history, Start activity button |
+| Home | Greeting, date, coach cards, two quick actions, current weight (7-day average) vs goal, check-in prompt, today's plan card (with the next fixed event as one "Next: …" line), today's nutrition bars when nutrition is on |
+| Training | "+ Add" button, today, this week (prev/next), then only three links: History (workouts, games and activities together, with the month calendar), Personal records, Exercise library |
 | Nutrition | Day selector, remaining kcal, macro bars, meal sections (breakfast, lunch, dinner, snacks), water, "Mark day complete", recipes, planner, shopping list |
-| Progress | Weight chart + stats, measurements, milestones, personal records, weekly reports |
-| Profile | Personal info, goals and targets (with calculation breakdown), training, nutrition, equipment, health/injuries, units, notifications, privacy, export, delete account, about/licences |
+| Progress | Weight chart + stats, Log weight, then Weight history, Body measurements, Milestones, Weekly report |
+| Profile | You: personal info, goal and targets (or Goal when nutrition is off), health and injuries. Preferences: Training setup (sports, schedule, equipment), App features, Reminders, Appearance. Account: Data and privacy (export, delete, legal documents), Sync status (only while changes are waiting or failed), Sign out |
 
-### 6.3 Quick actions (Home)
+**One main action per screen.** Rarely used screens sit one level deeper, never on the tab itself: the 2-week target review is opened from its coach card on Home (W2) or from Goal and targets; food preferences from App features; the four legal documents from Data and privacy. Screens that were removed from a tab keep their routes so notifications and deep links still work.
 
-Log weight · Log meal · Add water (+250 ml default, long-press for custom) · Start workout · Start activity · Daily check-in. Each opens a bottom sheet where possible; logging must take ≤ 3 taps for repeat actions.
+### 6.3 Quick actions
+
+Home has two: **Log weight** and **Check-in**. Everything you can add on the Training side (record a walk/run/ride; log a gym or home workout, a game or practice, or a walk/run/ride without GPS; plan a workout) is behind the Training tab's **+ Add** button (`training/add`). Today's planned workout is started from its Today card. Logging must take ≤ 3 taps for repeat actions.
 
 ### 6.4 V1 screen inventory
 
 Auth: Welcome, Sign in, Sign up, Forgot password, Reset password (deep link), Verify email.
-Onboarding: Personal, Goals, Activity, Equipment, Schedule, Nutrition, Health, Consent, Plan preview.
-Training: Week/month calendar, Workout detail, Active workout, Workout summary, Exercise library, Exercise detail, Custom exercise form, Template detail, History.
+Onboarding: About you (incl. activity level), Goals, Your week (incl. equipment), Food tracking, Health, Consent, Plan preview.
+Training: Add (record/log/plan), Week/month calendar, Workout detail, Active workout, Workout summary, Exercise library, Exercise detail, Custom exercise form, Template detail, History (workouts and activities combined).
 Activity: Activity type picker, Live tracking, Activity summary, Manual activity form, Activity detail.
 Nutrition: Daily dashboard, Food search, Custom food form, Meal detail, Saved meals, Recipe browser, Recipe detail (with servings), User recipe builder, Meal planner (week), Shopping list.
 Progress: Weight, Measurements, Milestones, Personal records, Weekly report.
-Profile: all settings screens listed in 6.2.
+Profile: all settings screens listed in 6.2; Training setup links to Sports, Schedule and Equipment, each with its own Save.
 Other: Daily check-in, Sync status, Legal (privacy policy, terms, disclaimer, data sources and licences).
 
 ### 6.5 Optional features (Settings → App features)
 
-**Nutrition tracking** can be switched off (`user_preferences.nutrition_enabled`, default on; also asked in onboarding step 6). When off:
+**Nutrition tracking** can be switched off (`user_preferences.nutrition_enabled`; the column defaults to on for older app versions, but onboarding step 4 asks and pre-selects **off**, so new users start training-first). When on, App features links to the food preferences (diet, allergies, cuisines, cooking time). When off:
 
 - the Nutrition tab, Home's "Today's nutrition" card, Profile's nutrition settings and the weekly report's nutrition section are hidden; "Goal and targets" becomes "Goal" (goal and target weight);
 - coach rules S4, N1–N3 and W2 are not shown (15.2); the two-week calorie review (8.9) does not run;
@@ -287,15 +289,13 @@ Rules: progress bar, back navigation, draft saved locally after each step (resum
 
 | Step | Fields | Validation / notes |
 |---|---|---|
-| 1 Personal | display name (req.), date of birth (req.), sex for metabolic calculation (male/female, req., explained), height (req.), current weight (req.), unit system (metric/imperial), timezone (auto-detected, editable) | Name 1–50 chars. Age 18–100. Height 120–230 cm. Weight 30–350 kg. Imperial: ft 3–7, in 0–11.9, lb 66–770. |
+| 1 About you | display name (req.), date of birth (req.), sex for metabolic calculation (male/female, req., explained), height (req.), current weight (req.), unit system (metric/imperial), timezone (auto-detected, editable); **activity level** (5 options, each with plain-language description that includes exercise), optional average daily steps | Name 1–50 chars. Age 18–100. Height 120–230 cm. Weight 30–350 kg. Imperial: ft 3–7, in 0–11.9, lb 66–770. Activity: show multiplier and explain it already includes exercise. Saved to the `personal` and `activity` draft keys. |
 | 2 Goals | primary goal: lose weight / maintain / build muscle / general fitness; target weight (req. for lose/build); desired weekly rate; optional target date; focus tags (strength, sport, running, cardio, mobility); sports played (multi-select from the catalogue, max 8, or "I don't play a sport") | Lose: target < current, target BMI ≥ 18.5. Rate default 0.5%/week; range 0.25–1.0%; > 0.75% needs warning confirmation. Build: target > current; rate 0.1–0.25%/week. Optional secondary target weight (e.g. 87 kg) creates an extra milestone only. |
-| 3 Activity | activity level (5 options, each with plain-language description that includes exercise), optional average daily steps | Show multiplier and explain it already includes exercise. |
-| 4 Equipment | environment (home/gym/outdoors/mixed); equipment multi-select; per-item max weight (e.g. dumbbells 5 kg); custom entries | "No equipment" is exclusive. Max weight 0.5–200 kg. |
-| 5 Schedule | training days/week (0–7), preferred days, max session duration (15–120 min, default 45), preferred time, recurring sport commitments (title, type match/practice, weekday, time, duration), rest-day preferences | Commitments become `recurring_events`. Training days + commitments may overlap; scheduler resolves. |
-| 6 Nutrition | "Track food in PACE?" (default yes; no → the rest of the step is skipped and nutrition starts switched off, 6.5); diet type (omnivore/vegetarian/vegan/pescatarian/other), allergies, intolerances, disliked foods, preferred cuisines, meals per day (2–6, default 3 + snacks), cooking time preference (≤15/≤30/≤60/any), household servings (1–8, default 1) | Allergies are free-text chips with suggestions (peanut, tree nuts, milk, egg, fish, shellfish, soy, wheat/gluten, sesame). |
-| 7 Health (optional) | current injuries (body area, side, status, onset date, pain 0–10, notes, professional clearance), previous injuries, conditions, professional restrictions | Shown only after health-data consent. Disclaimer visible. Can skip. |
-| 8 Consent | terms + privacy (required), health data processing (required only if health info entered), notifications (optional). Location consent is asked later, at first activity. | Store in `consents` with document version. |
-| 9 Plan preview | BMR, TDEE, calorie target, macros, water, weekly schedule, rest days, milestones, projection range, calculation breakdown ("How we calculated this") | User can edit targets before confirming. Confirm writes profile completion, goal, `nutrition_targets` v1, `training_plans`, recurring events, first 8 weeks of scheduled workouts. |
+| 3 Your week | training days/week (0–7), preferred days, max session duration (15–120 min, default 45), preferred time, recurring sport commitments (title, type match/practice, weekday, time, duration), rest-day preferences; **equipment**: environment (home/gym/outdoors/mixed), equipment multi-select, per-item max weight (e.g. dumbbells 5 kg), custom entries | Commitments become `recurring_events`. Training days + commitments may overlap; scheduler resolves. "No equipment" is exclusive. Max weight 0.5–200 kg. Saved to the `schedule` and `equipment` draft keys. |
+| 4 Food tracking | "Track food too?" (optional, default **no**: training-first; no → the rest of the step is hidden and nutrition starts switched off, 6.5; yes → the questions below); diet type (omnivore/vegetarian/vegan/pescatarian/other), allergies, intolerances, disliked foods, preferred cuisines, meals per day (2–6, default 3 + snacks), cooking time preference (≤15/≤30/≤60/any), household servings (1–8, default 1) | Allergies are free-text chips with suggestions (peanut, tree nuts, milk, egg, fish, shellfish, soy, wheat/gluten, sesame). |
+| 5 Health (optional) | current injuries (body area, side, status, onset date, pain 0–10, notes, professional clearance), previous injuries, conditions, professional restrictions | Shown only after health-data consent. Disclaimer visible. Can skip. |
+| 6 Consent | terms + privacy (required), health data processing (required only if health info entered), notifications (optional). Location consent is asked later, at first activity. | Store in `consents` with document version. |
+| 7 Plan preview | BMR, TDEE, calorie target, macros, water, weekly schedule, rest days, milestones, projection range, calculation breakdown ("How we calculated this") | User can edit targets before confirming. Confirm writes profile completion, goal, `nutrition_targets` v1, `training_plans`, recurring events, first 8 weeks of scheduled workouts. |
 
 ---
 

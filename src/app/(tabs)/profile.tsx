@@ -58,48 +58,32 @@ export default function ProfileTab() {
 
       <SectionHeader title="Preferences" />
       <ListItem
-        title="Sports"
-        subtitle="The sports you play, or none"
-        onPress={() => router.push('/settings/sports')}
+        title="Training setup"
+        subtitle="Sports, schedule and equipment"
+        onPress={() => router.push('/settings/training-setup')}
       />
-      <ListItem
-        title="Training"
-        subtitle="Days, session length"
-        onPress={() => router.push('/settings/training')}
-      />
-      {features.nutrition ? (
-        <ListItem
-          title="Nutrition"
-          subtitle="Diet, allergies, meals"
-          onPress={() => router.push('/settings/nutrition')}
-        />
-      ) : null}
       <ListItem
         title="App features"
-        subtitle={features.nutrition ? 'Turn parts of PACE on or off' : 'Nutrition is off'}
+        subtitle={features.nutrition ? 'Nutrition is on' : 'Nutrition is off'}
         onPress={() => router.push('/settings/features')}
       />
-      <ListItem title="Equipment" onPress={() => router.push('/settings/equipment')} />
       <ListItem title="Reminders" onPress={() => router.push('/settings/notifications')} />
       <ListItem title="Appearance" onPress={() => router.push('/settings/appearance')} />
 
-      <SectionHeader title="Your data and privacy" />
-      <ListItem
-        title="Your data"
-        subtitle="Export, or delete your account"
-        onPress={() => router.push('/settings/data')}
-      />
-      <ListItem title="Privacy policy" onPress={() => router.push('/legal/privacy')} />
-      <ListItem title="Terms of use" onPress={() => router.push('/legal/terms')} />
-      <ListItem title="Health disclaimer" onPress={() => router.push('/legal/disclaimer')} />
-      <ListItem title="Data sources and licences" onPress={() => router.push('/legal/licences')} />
-
       <SectionHeader title="Account" />
       <ListItem
-        title="Sync status"
-        value={unsynced ? `${unsynced} waiting` : 'All synced'}
-        onPress={() => router.push('/settings/sync')}
+        title="Data and privacy"
+        subtitle="Export, delete, privacy policy and terms"
+        onPress={() => router.push('/settings/data')}
       />
+      {/* Only worth a row when something is waiting or failed. */}
+      {unsynced ? (
+        <ListItem
+          title="Sync status"
+          value={`${unsynced} waiting`}
+          onPress={() => router.push('/settings/sync')}
+        />
+      ) : null}
       <ListItem
         title="Sign out"
         destructive

@@ -105,3 +105,12 @@ export function targetFor<T extends { effective_from: string }>(
       .sort((a, b) => b.effective_from.localeCompare(a.effective_from))[0] ?? null
   );
 }
+
+/** The "Next: …" line on Home's Today card: skips an event that is already today's plan. */
+export function nextEvent(
+  upcoming: readonly UpcomingEvent[],
+  today: IsoDate,
+  sessionTitle: string | null,
+): UpcomingEvent | null {
+  return upcoming.find((e) => !(e.date === today && e.title === sessionTitle)) ?? null;
+}

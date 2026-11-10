@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Activity, ClipboardCheck, Ruler, Scale } from 'lucide-react-native';
+import { ClipboardCheck, Scale } from 'lucide-react-native';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Banner, ErrorState, LoadingState } from '@/components/feedback';
@@ -13,11 +13,11 @@ import {
   greetingFor,
   parsePattern,
   targetFor,
+  nextEvent,
   todaysSession,
   upcomingEvents,
 } from '@/features/dashboard/today';
 import { useToday } from '@/features/dashboard/useToday';
-import { useUnlockedMilestones } from '@/features/milestones/api';
 import { CoachCards } from '@/features/coach/CoachCards';
 import { GoalReachedCard } from '@/features/milestones/GoalReachedCard';
 import {
@@ -31,7 +31,6 @@ import { useWeightStats } from '@/features/weight/useWeightStats';
 import { ResumeWorkoutCard } from '@/features/training/ResumeWorkoutCard';
 import { radius, spacing, TOUCH_TARGET, useTheme } from '@/theme';
 import { intensityLabel } from '@/domain/format';
-import { MilestoneLine } from '@/features/milestones/MilestoneLine';
 
 const WEEKDAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -73,7 +72,6 @@ export default function Home() {
   const stats = useWeightStats('30D');
   const checkins = useCheckins();
   const food = useNutritionDay(today);
-  const milestones = useUnlockedMilestones();
   const features = useFeatures();
 
   const queries = [profile, targets, plan, events, stats.goal];
@@ -102,7 +100,7 @@ export default function Home() {
   const session = todaysSession(parsePattern(plan.data?.weekly_pattern), today);
   const upcoming = upcomingEvents(events.data ?? [], today);
   const checkedInToday = checkins.rows.some((c) => c.local_date === today);
-  const recent = milestones.rows.slice(0, 3);
+  const next = nextEvent(upcoming, today, session?.title ?? null);
   const dateLabel = new Date(`${today}T12:00:00Z`).toLocaleDateString(undefined, {
     weekday: 'long',
     day: 'numeric',
@@ -145,16 +143,6 @@ export default function Home() {
           label="Check-in"
           icon={<ClipboardCheck size={22} color={colors.accent} />}
           onPress={() => router.push('/check-in')}
-        />
-        <QuickAction
-          label="Measure"
-          icon={<Ruler size={22} color={colors.accent} />}
-          onPress={() => router.push('/measurements/log')}
-        />
-        <QuickAction
-          label="Progress"
-          icon={<Activity size={22} color={colors.accent} />}
-          onPress={() => router.push('/progress/weight')}
         />
       </View>
 
@@ -214,6 +202,13 @@ export default function Home() {
             {n}
           </Text>
         ))}
+        {next ? (
+          <Text variant="small" color="textSecondary">
+            Next: {next.title} ·{' '}
+            {next.date === today ? 'today' : WEEKDAY_SHORT[isoWeekday(next.date) - 1]}{' '}
+            {next.localTime}
+          </Text>
+        ) : null}
       </Card>
 
       {features.nutrition ? (
@@ -265,33 +260,6 @@ export default function Home() {
         </>
       ) : null}
 
-      {recent.length ? (
-        <>
-          <SectionHeader title="Recent milestones" />
-          <Card
-            onPress={() => router.push('/progress/milestones')}
-            accessibilityLabel="All milestones"
-          >
-            {recent.map((m) => (
-              <MilestoneLine key={m.milestone_key} title={m.title} />
-            ))}
-          </Card>
-        </>
-      ) : null}
-
-      <SectionHeader title="Coming up" />
-      {upcoming.length ? (
-        upcoming.map((e) => (
-          <Card key={`${e.date}-${e.title}`}>
-            <Text variant="bodyStrong">{e.title}</Text>
-            <Text variant="small" color="textSecondary">
-              {e.date === today ? 'Today' : WEEKDAY_SHORT[isoWeekday(e.date) - 1]} · {e.localTime}
-            </Text>
-          </Card>
-        ))
-      ) : (
-        <Text color="textSecondary">Nothing fixed in your week.</Text>
-      )}
       {stats.startKg !== null && stats.current ? (
         <Text variant="caption" color="textSecondary">
           Started at {formatWeight(stats.startKg, unit)}.

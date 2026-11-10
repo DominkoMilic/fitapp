@@ -79,8 +79,8 @@ describe('onboarding payload (profile creation)', () => {
 });
 
 describe('onboarding step order', () => {
-  it('has 9 steps ending with the plan', () => {
-    expect(ONBOARDING_STEPS).toHaveLength(9);
+  it('has 7 steps ending with the plan', () => {
+    expect(ONBOARDING_STEPS).toHaveLength(7);
     expect(nextStep('consent')).toBe('plan');
     expect(nextStep('plan')).toBeNull();
     expect(previousStep('personal')).toBeNull();

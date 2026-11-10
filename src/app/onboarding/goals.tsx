@@ -70,7 +70,7 @@ export default function GoalsStep() {
     // The 'sport' focus follows whether the user plays a sport.
     const focus = values.focusTags.filter((t) => t !== 'sport');
     save('goals', { ...values, focusTags: values.sports.length ? [...focus, 'sport'] : focus });
-    router.replace('/onboarding/activity');
+    router.replace('/onboarding/schedule');
   });
 
   return (

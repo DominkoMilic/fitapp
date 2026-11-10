@@ -1,8 +1,6 @@
 export const ONBOARDING_STEPS = [
   { id: 'personal', title: 'About you' },
   { id: 'goals', title: 'Your goal' },
-  { id: 'activity', title: 'Activity level' },
-  { id: 'equipment', title: 'Equipment' },
   { id: 'schedule', title: 'Schedule' },
   { id: 'nutrition', title: 'Nutrition' },
   { id: 'health', title: 'Health & injuries' },

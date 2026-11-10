@@ -2,7 +2,16 @@ import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 
 import { Banner, ErrorState, LoadingState } from '@/components/feedback';
-import { Button, Card, NumberField, Screen, SectionHeader, StatTile, Text } from '@/components/ui';
+import {
+  Button,
+  Card,
+  ListItem,
+  NumberField,
+  Screen,
+  SectionHeader,
+  StatTile,
+  Text,
+} from '@/components/ui';
 import { type ActivityLevel, type CalcSex } from '@/domain/calculations/energy';
 import { calculateNutritionPlan, trainingSummary } from '@/domain/calculations/plan';
 import {
@@ -274,6 +283,11 @@ export default function TargetsSettings() {
           ))}
         </>
       ) : null}
+      <ListItem
+        title="2-week target reviews"
+        subtitle="Suggestions from your weight trend and food log"
+        onPress={() => router.push('/coach/review')}
+      />
     </Screen>
   );
 }

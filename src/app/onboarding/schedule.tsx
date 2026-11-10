@@ -16,9 +16,12 @@ import {
 } from '@/components/ui';
 import {
   commitmentSchema,
+  equipmentSchema,
+  type EquipmentValues,
   scheduleSchema,
   type ScheduleValues,
 } from '@/domain/validation/onboarding';
+import { EquipmentSection } from '@/features/onboarding/components/EquipmentSection';
 import { OnboardingStep } from '@/features/onboarding/components/OnboardingStep';
 import { WEEKDAYS } from '@/features/onboarding/constants';
 import { useOnboardingDraft } from '@/features/onboarding/draft-store';
@@ -40,6 +43,7 @@ const emptyCommitment = (sports: readonly string[]): Commitment => ({
 
 export default function ScheduleStep() {
   const saved = useOnboardingDraft((s) => s.schedule);
+  const savedEquipment = useOnboardingDraft((s) => s.equipment);
   const sports = useOnboardingDraft((s) => s.goals?.sports ?? []);
   const hasSport = sports.length > 0;
   const save = useOnboardingDraft((s) => s.save);
@@ -55,12 +59,27 @@ export default function ScheduleStep() {
       commitments: [],
     },
   });
+  const equipment = useForm<EquipmentValues>({
+    resolver: zodResolver(equipmentSchema),
+    defaultValues: savedEquipment ?? { environment: 'home', items: [] },
+  });
   const commitments = useWatch({ control, name: 'commitments' });
 
-  const onContinue = handleSubmit((values) => {
-    save('schedule', values);
+  // Validate both parts so every error shows at once, then save each to its own draft key.
+  const onContinue = async () => {
+    let week: ScheduleValues | null = null;
+    let gear: EquipmentValues | null = null;
+    await handleSubmit((v) => {
+      week = v;
+    })();
+    await equipment.handleSubmit((v) => {
+      gear = v;
+    })();
+    if (!week || !gear) return;
+    save('schedule', week);
+    save('equipment', gear);
     router.replace('/onboarding/nutrition');
-  });
+  };
 
   const addCommitment = () => {
     if (!editing) return;
@@ -237,6 +256,8 @@ export default function ScheduleStep() {
           onPress={() => setEditing(emptyCommitment(sports))}
         />
       ) : null}
+
+      <EquipmentSection control={equipment.control} setValue={equipment.setValue} />
     </OnboardingStep>
   );
 }

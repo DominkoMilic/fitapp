@@ -156,3 +156,21 @@ Clarifications of, and deviations from, `docs/PACE_SPEC.md`. Newest first.
 5. **Just-synced writes stay applied locally for 15 s** (sync engine overlay), fixing a flash of old values after saving while the refetch is in flight.
 6. **No schema change**: sessions already support `source = 'manual'`, and sets can be deleted by their owner.
 
+
+## 2026-11-10: Food tracking is opt-in
+
+1. **Onboarding pre-selects "Track food too?" = no.** PACE is training-first, and the nutrition step was the most overwhelming part of onboarding. Users who want it switch it on in one tap; the detailed diet questions appear only then.
+2. **Nutrition is kept, not removed.** It is finished, tested and already switchable (6.5); a default hides it from users who don't want it without throwing that work away.
+3. **The DB default stays `true`** so older app versions behave as before (see "Nutrition can be switched off"). A submitted draft with no `trackNutrition` value (from a version before the toggle existed) is still read as on.
+4. **App features links to Food preferences when nutrition is on**, so people who turn it on later can fill in the diet questions they skipped.
+5. **Social "clubs" are the planned first post-launch feature** (small invite-only groups, shared workout feed, cheers, a shared weekly goal rather than a ranked leaderboard). They will get their own spec phase before any work starts.
+
+## 2026-11-10: Simpler navigation (reorganize, nothing removed)
+
+1. **Reorganize only.** No feature, table or domain rule was removed; screens moved one level deeper or were merged. Routes that lost their link stay, so notifications and deep links still work (`/activity`, `/training/calendar`, `/settings/sports`, `/onboarding/activity`, `/onboarding/equipment`).
+2. **Training tab: one "+ Add" button** (`training/add`) instead of four links. It lists every way to add training directly (record; log a gym/home workout, a game or practice, or a walk/run/ride without GPS; plan) instead of asking a follow-up question. It has no "start a workout" entry: today's planned workout already starts from the Today card, and there is no empty-workout mode to point at.
+3. **One History** for workouts and activities (`mergeHistory` in `src/domain/training/history.ts`, newest first by start instant). The month calendar is a button at the top of History.
+4. **Home**: two quick actions (Log weight, Check-in). "Measure" moved to Progress → Body measurements (which has Add). "Progress" duplicated a tab. "Recent milestones" left Home (milestones still celebrate and are listed in Progress). "Coming up" became one "Next: …" line on the Today card.
+5. **Progress**: the check-in link duplicated Home. The 2-week review link is gone because the W2 coach card already appears on Home when a review is waiting; past reviews are under Goal and targets.
+6. **Profile: "Training setup" is a short page linking Sports, Schedule and Equipment**, not one combined form. Each of the three has its own Save, and three Save buttons on one screen would be more confusing than one extra tap. The four legal documents moved into "Data and privacy". Sync status is only listed while changes are waiting or failed (the Home sync banner uses the same check).
+7. **Onboarding 9 → 7 steps.** Activity level is part of "About you"; equipment is part of "Your week". Each screen validates both of its forms at once and still saves them to the separate draft keys, so the payload and drafts saved by older versions are unchanged.

@@ -31,9 +31,17 @@ export default function Training() {
 
   return (
     <Screen edges={['top']}>
-      <Text variant="heading" accessibilityRole="header">
-        Training
-      </Text>
+      <View style={styles.header}>
+        <Text variant="heading" accessibilityRole="header">
+          Training
+        </Text>
+        <Button
+          title="+ Add"
+          accessibilityLabel="Add training: record, log or plan"
+          fullWidth={false}
+          onPress={() => router.push('/training/add')}
+        />
+      </View>
       <LoadErrorBanner
         visible={week.isError}
         what="your week"
@@ -112,22 +120,12 @@ export default function Training() {
       )}
 
       <SectionHeader title="More" />
-      <ListItem title="Record a walk, run or ride" onPress={() => router.push('/activity/track')} />
-      <ListItem title="Activities" onPress={() => router.push('/activity')} />
-      <ListItem title="Workout history" onPress={() => router.push('/training/history')} />
+      <ListItem
+        title="History"
+        subtitle="Workouts, games and activities"
+        onPress={() => router.push('/training/history')}
+      />
       <ListItem title="Personal records" onPress={() => router.push('/training/records')} />
-      <ListItem title="Month calendar" onPress={() => router.push('/training/calendar')} />
-      <ListItem
-        title="Log a past workout"
-        subtitle="Did it without the app? Add the sets and the time"
-        onPress={() => router.push('/training/log-workout')}
-      />
-      <ListItem
-        title="Plan a workout"
-        subtitle="Add a workout to your calendar"
-        onPress={() => router.push('/training/add-workout')}
-      />
-      <ListItem title="Log a game or activity" onPress={() => router.push('/training/log-event')} />
       <ListItem
         title="Exercise library"
         subtitle={`${EXERCISES.length} exercises with instructions`}
@@ -138,6 +136,7 @@ export default function Training() {
 }
 
 const styles = StyleSheet.create({
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   weekNav: {
     flexDirection: 'row',
     alignItems: 'center',

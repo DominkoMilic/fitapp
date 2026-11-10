@@ -77,6 +77,12 @@ export default function YourData() {
         destructive
         onPress={() => router.push('/settings/delete-account')}
       />
+
+      <SectionHeader title="Legal" />
+      <ListItem title="Privacy policy" onPress={() => router.push('/legal/privacy')} />
+      <ListItem title="Terms of use" onPress={() => router.push('/legal/terms')} />
+      <ListItem title="Health disclaimer" onPress={() => router.push('/legal/disclaimer')} />
+      <ListItem title="Data sources and licences" onPress={() => router.push('/legal/licences')} />
     </Screen>
   );
 }

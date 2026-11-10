@@ -1,5 +1,5 @@
 /**
- * Web E2E smoke test: sign-in → 9 onboarding steps → plan preview → save → Home → Training.
+ * Web E2E smoke test: sign-in → 7 onboarding steps → plan preview → save → Home → Training.
  * Supabase is replaced by Playwright route handlers, so no backend is needed; the payload the
  * app sends to complete_onboarding is captured and checked.
  *
@@ -231,53 +231,53 @@ const now = new Date().toISOString();
 
   // 1 personal
   await page.getByLabel('Name').fill('Dominko');
-  await page.getByLabel('Day').fill('1');
-  await page.getByLabel('Month').fill('5');
-  await page.getByLabel('Year').fill('2003');
+  await page.getByLabel('Date of birth, day').fill('1');
+  await page.getByLabel('Date of birth, month').fill('5');
+  await page.getByLabel('Date of birth, year').fill('2003');
   await page.getByRole('radio', { name: 'Male', exact: true }).click();
   await page.getByLabel('Height').fill('187');
   await page.getByLabel('Current weight').fill('108');
+  await page.getByRole('radio', { name: /^Moderately active/ }).click();
   await shot('10-personal');
   await cont();
   // 2 goals
   await page.getByRole('radio', { name: /^Lose weight/ }).click();
   await page.getByLabel('Target weight', { exact: true }).fill('90');
   await page.getByLabel('Secondary target (optional)').fill('87');
-  await page.getByRole('checkbox', { name: 'Football / futsal' }).click();
+  await page.getByRole('checkbox', { name: 'Football', exact: true }).click();
   await page.getByRole('checkbox', { name: 'Strength' }).click();
   await shot('11-goals');
   await cont();
-  // 3 activity
-  await page.getByRole('radio', { name: /^Moderately active/ }).click();
-  await cont();
-  // 4 equipment
-  await page.getByRole('checkbox', { name: 'Dumbbells' }).click();
-  await page.getByRole('checkbox', { name: 'Kettlebell' }).click();
-  await page.getByRole('checkbox', { name: 'Exercise mat' }).click();
-  await page.getByLabel('Heaviest dumbbells (optional)').fill('5');
-  await cont();
-  // 5 schedule
+  // 3 your week (schedule + equipment)
   await page.getByRole('radio', { name: '2', exact: true }).click();
   const pref = page.getByRole('group', { name: 'Preferred training days' });
   await pref.getByRole('checkbox', { name: 'Mon' }).click();
   await pref.getByRole('checkbox', { name: 'Thu' }).click();
-  await page.getByRole('button', { name: 'Add match or practice' }).click();
+  await page.getByRole('button', { name: 'Add a game or practice' }).click();
   await page.getByLabel('Name').fill('League match');
   await page.getByRole('button', { name: 'Add to my week' }).click();
-  await page.getByRole('button', { name: 'Add match or practice' }).click();
+  await page.getByRole('button', { name: 'Add a game or practice' }).click();
   await page.getByLabel('Name').fill('Practice match');
-  await page.getByRole('checkbox', { name: 'Futsal practice' }).click();
   await page
-    .getByRole('group', { name: 'Day of the week' })
-    .getByRole('checkbox', { name: 'Tue' })
+    .getByRole('radiogroup', { name: 'Game or practice' })
+    .getByRole('radio', { name: 'Practice', exact: true })
+    .click();
+  await page
+    .getByRole('radiogroup', { name: 'Day of the week' })
+    .getByRole('radio', { name: 'Tue' })
     .click();
   await page.getByLabel('Start time (HH:MM)').fill('20:00');
   await page.getByRole('button', { name: 'Add to my week' }).click();
+  await page.getByRole('checkbox', { name: 'Dumbbells' }).click();
+  await page.getByRole('checkbox', { name: 'Kettlebell' }).click();
+  await page.getByRole('checkbox', { name: 'Exercise mat' }).click();
+  await page.getByLabel('Heaviest dumbbells (optional)').fill('5');
   await shot('12-schedule');
   await cont();
-  // 6 nutrition (defaults)
+  // 4 food tracking: off by default; the later nutrition checks need it on
+  await page.getByRole('switch', { name: /Track food in PACE/ }).click();
   await cont();
-  // 7 health
+  // 5 health
   await page.getByRole('switch', { name: 'Store my health information' }).click();
   await page.getByRole('button', { name: 'Add an injury' }).click();
   await page
@@ -287,13 +287,13 @@ const now = new Date().toISOString();
   await page.getByRole('button', { name: 'Save injury' }).click();
   await shot('13-health');
   await cont();
-  // 8 consent
+  // 6 consent
   await cont(); // should show validation errors
   await shot('14-consent-errors');
   await page.getByRole('switch', { name: 'I accept the terms of use' }).click();
   await page.getByRole('switch', { name: 'I accept the privacy policy' }).click();
   await cont();
-  // 9 plan
+  // 7 plan
   await page.waitForTimeout(500);
   await shot('15-plan');
   await page.screenshot({ path: `${out}/15-plan-full.png`, fullPage: true });
@@ -326,9 +326,9 @@ const now = new Date().toISOString();
     await page.waitForTimeout(700);
     await page.getByLabel('Weight', { exact: true }).fill(String(kg));
     const dt = zagrebDate(offsetDays);
-    await page.getByLabel('Day', { exact: true }).fill(String(dt.d));
-    await page.getByLabel('Month', { exact: true }).fill(String(dt.m));
-    await page.getByLabel('Year', { exact: true }).fill(String(dt.y));
+    await page.getByLabel('Date, day', { exact: true }).fill(String(dt.d));
+    await page.getByLabel('Date, month', { exact: true }).fill(String(dt.m));
+    await page.getByLabel('Date, year', { exact: true }).fill(String(dt.y));
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     await page.waitForTimeout(2500); // debounce + sync
   };
@@ -341,7 +341,7 @@ const now = new Date().toISOString();
   await page.getByRole('tab', { name: /Progress/ }).click();
   await page.waitForTimeout(1000);
   await shot('21-progress');
-  await page.getByText('Weight details and history').click();
+  await page.getByText('Weight history').click();
   await page.waitForTimeout(1000);
   await shot('22-weight-detail');
   await page.goBack();
@@ -370,7 +370,9 @@ const now = new Date().toISOString();
   await page.waitForTimeout(2500); // calendar generation
   await shot('30-training-week');
   const generated = store.scheduled_workouts.filter((r) => r.occurrence_key).length;
-  await page.getByText('Add a workout').click();
+  await page.getByRole('button', { name: /^Add training/ }).click();
+  await page.waitForTimeout(700);
+  await page.getByText('Plan a workout', { exact: true }).click();
   await page.waitForTimeout(700);
   await page.getByRole('radio', { name: /^Full body 20/ }).click();
   await page.getByRole('button', { name: 'Add to calendar' }).click();
@@ -390,20 +392,20 @@ const now = new Date().toISOString();
       await page.waitForTimeout(150);
     }
     if (await page.getByRole('button', { name: 'Finish workout' }).count()) break;
-    await page.getByRole('button', { name: 'Next exercise ›' }).click();
+    await page.getByRole('button', { name: /^Next exercise/ }).click();
     await page.waitForTimeout(300);
   }
   await page.getByRole('button', { name: 'Finish workout' }).click();
   await page.waitForTimeout(1000);
   await page
-    .getByRole('group', { name: 'Effort (RPE)' })
-    .getByRole('checkbox', { name: '6', exact: true })
+    .getByRole('radiogroup', { name: 'Effort (RPE)' })
+    .getByRole('radio', { name: '6', exact: true })
     .click();
   await shot('33-summary');
   await page.getByRole('button', { name: 'Save workout' }).click();
   await page.waitForTimeout(3500);
   const trainingAfterSave = await page.locator('body').innerText();
-  await page.getByRole('button', { name: 'Workout history' }).click();
+  await page.getByRole('button', { name: /^History/ }).click();
   await page.waitForTimeout(1000);
   await shot('34-history');
   const historyText = await page.locator('body').innerText();

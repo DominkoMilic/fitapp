@@ -26,16 +26,21 @@ appId: ${APP_ID}
 - inputText: '187'
 - tapOn: 'Current weight'
 - inputText: '108'
+- scrollUntilVisible:
+    element: 'Moderately active.*'
+- tapOn: 'Moderately active.*'
 - tapOn: 'Continue'
 - tapOn: 'Lose weight.*'
 - tapOn: 'Target weight'
 - inputText: '90'
 - tapOn: 'Continue'
-- tapOn: 'Moderately active.*'
-- tapOn: 'Continue'
+# Your week (schedule + equipment)
+- scrollUntilVisible:
+    element: 'Dumbbells'
 - tapOn: 'Dumbbells'
 - tapOn: 'Continue'
-- tapOn: 'Continue'
+# Food tracking is off by default; turn it on so the plan shows calorie targets
+- tapOn: 'Track food in PACE.*'
 - tapOn: 'Continue'
 - tapOn: 'Skip for now'
 - tapOn: 'I accept the terms of use'

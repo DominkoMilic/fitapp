@@ -1,6 +1,7 @@
 import {
   greetingFor,
   hourInTimezone,
+  nextEvent,
   parsePattern,
   targetFor,
   todaysSession,
@@ -96,4 +97,26 @@ describe('target versions (spec 20.6)', () => {
     expect(targetFor(v, '2026-11-22')?.kcal).toBe(2620);
   });
   it('returns null before the first version', () => expect(targetFor(v, '2026-11-01')).toBeNull());
+});
+
+describe('nextEvent', () => {
+  const ev = (date: string, title: string) => ({
+    date,
+    title,
+    localTime: '20:00',
+    category: 'football_practice',
+  });
+  it("skips the event that is already today's plan", () => {
+    const up = [ev('2026-11-10', 'Practice match'), ev('2026-11-14', 'League match')];
+    expect(nextEvent(up, '2026-11-10', 'Practice match')?.title).toBe('League match');
+  });
+  it('keeps a different event today', () => {
+    const up = [ev('2026-11-10', 'Evening run')];
+    expect(nextEvent(up, '2026-11-10', 'Strength A')?.title).toBe('Evening run');
+  });
+  it('returns null when nothing else is coming', () => {
+    expect(nextEvent([ev('2026-11-10', 'Practice match')], '2026-11-10', 'Practice match')).toBe(
+      null,
+    );
+  });
 });
