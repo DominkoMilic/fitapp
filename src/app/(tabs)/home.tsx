@@ -1,9 +1,10 @@
 import { router } from 'expo-router';
-import { ClipboardCheck, Scale } from 'lucide-react-native';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { ChevronRight, ClipboardCheck, Scale } from 'lucide-react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Banner, ErrorState, LoadingState } from '@/components/feedback';
-import { Card, ProgressBar, Screen, SectionHeader, StatTile, Text } from '@/components/ui';
+import { Card, ProgressBar, Screen, SectionHeader, Text } from '@/components/ui';
+import { PressableScale } from '@/components/ui/PressableScale';
 import { isoWeekday } from '@/domain/calculations/dates';
 import { formatWeight, kgToLb, type UnitSystem } from '@/domain/calculations/units';
 import { useCheckins } from '@/features/checkin/api';
@@ -31,6 +32,7 @@ import { useWeightStats } from '@/features/weight/useWeightStats';
 import { ResumeWorkoutCard } from '@/features/training/ResumeWorkoutCard';
 import { radius, spacing, TOUCH_TARGET, useTheme } from '@/theme';
 import { intensityLabel } from '@/domain/format';
+import { goalJourney } from '@/domain/weight/tone';
 
 const WEEKDAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -45,20 +47,58 @@ function QuickAction({
 }) {
   const { colors } = useTheme();
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={label}
+      haptic="light"
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.quick,
-        { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.8 : 1 },
-      ]}
+      style={[styles.quick, { backgroundColor: colors.surface, borderColor: colors.border }]}
     >
-      {icon}
-      <Text variant="caption" align="center">
+      <View style={[styles.quickIcon, { backgroundColor: colors.successSurface }]}>{icon}</View>
+      <Text variant="small" align="center" style={styles.quickLabel}>
         {label}
       </Text>
-    </Pressable>
+    </PressableScale>
+  );
+}
+
+/** One labelled number in the Start · Now · Goal row. */
+function Figure({
+  label,
+  value,
+  unit,
+  disp,
+  strong,
+  note,
+}: {
+  label: string;
+  value: number | null;
+  unit: string;
+  disp: (kg: number) => number;
+  strong?: boolean;
+  /** Shown after the unit, e.g. "7-day avg". */
+  note?: string;
+}) {
+  return (
+    <View
+      style={styles.figure}
+      accessible
+      accessibilityLabel={`${label}: ${value === null ? 'no data' : `${disp(value).toFixed(1)} ${unit}`}`}
+    >
+      <Text variant="small" color="textSecondary" numberOfLines={1}>
+        {label}
+      </Text>
+      <Text
+        variant={strong ? 'display' : 'title'}
+        numeric
+        color={strong ? 'textPrimary' : 'textSecondary'}
+      >
+        {value === null ? '—' : disp(value).toFixed(1)}
+      </Text>
+      <Text variant="caption" color="textSecondary" numberOfLines={1}>
+        {note ? `${unit} · ${note}` : unit}
+      </Text>
+    </View>
   );
 }
 
@@ -101,6 +141,10 @@ export default function Home() {
   const upcoming = upcomingEvents(events.data ?? [], today);
   const checkedInToday = checkins.rows.some((c) => c.local_date === today);
   const next = nextEvent(upcoming, today, session?.title ?? null);
+  const journey =
+    stats.startKg !== null && stats.current
+      ? goalJourney(stats.startKg, stats.current.kg, stats.targetKg)
+      : null;
   const dateLabel = new Date(`${today}T12:00:00Z`).toLocaleDateString(undefined, {
     weekday: 'long',
     day: 'numeric',
@@ -109,9 +153,20 @@ export default function Home() {
 
   return (
     <Screen edges={['top']}>
-      <View style={styles.header}>
+      {/* Tapping your name opens your profile. */}
+      <PressableScale
+        feedback="row"
+        accessibilityRole="button"
+        accessibilityLabel={`${greetingFor(hour)}, ${name}. ${dateLabel}`}
+        accessibilityHint="Opens your profile"
+        onPress={() => router.push('/profile')}
+        style={styles.header}
+      >
         <View
-          style={[styles.avatar, { backgroundColor: colors.surfaceRaised }]}
+          style={[
+            styles.avatar,
+            { backgroundColor: colors.successSurface, borderColor: colors.accent },
+          ]}
           accessibilityElementsHidden
         >
           <Text variant="title" color="accent">
@@ -126,13 +181,15 @@ export default function Home() {
             {dateLabel}
           </Text>
         </View>
-      </View>
+        <ChevronRight size={20} color={colors.textSecondary} />
+      </PressableScale>
 
       <ResumeWorkoutCard />
       <SyncBanner />
       <GoalReachedCard />
       <CoachCards />
 
+      <SectionHeader title="Quick log" />
       <View style={styles.row}>
         <QuickAction
           label="Log weight"
@@ -146,22 +203,25 @@ export default function Home() {
         />
       </View>
 
-      <Card onPress={() => router.push('/progress/weight')} accessibilityLabel="Weight details">
-        <View style={styles.row}>
-          <StatTile
-            label={stats.current?.basis === 'average' ? 'Weight (7-day avg)' : 'Latest weight'}
-            value={stats.current ? disp(stats.current.kg).toFixed(1) : '—'}
+      <SectionHeader title="Your progress" />
+      <Card
+        onPress={() => router.push('/progress/weight')}
+        accessibilityLabel="Weight details"
+        actionLabel="Weight details"
+      >
+        {/* Where you started, where you are, where you're going. */}
+        <View style={styles.journey}>
+          <Figure label="Start" value={stats.startKg} unit={u} disp={disp} />
+          <Figure
+            label="Now"
+            note={stats.current?.basis === 'average' ? '7-day avg' : undefined}
+            value={stats.current?.kg ?? null}
             unit={u}
-            caption={
-              stats.change7 !== null
-                ? `${stats.change7 > 0 ? '+' : ''}${disp(stats.change7).toFixed(1)} ${u} this week`
-                : stats.current?.basis === 'single'
-                  ? 'Log 3+ days for an average'
-                  : undefined
-            }
+            disp={disp}
+            strong
           />
           {stats.targetKg !== null ? (
-            <StatTile label="Goal" value={disp(stats.targetKg).toFixed(1)} unit={u} />
+            <Figure label="Goal" value={stats.targetKg} unit={u} disp={disp} />
           ) : null}
         </View>
         {stats.progressPct !== null ? (
@@ -172,21 +232,39 @@ export default function Home() {
             unit="%"
           />
         ) : null}
+        {journey ? (
+          <Text variant="small" color="textSecondary">
+            {`${disp(journey.moved).toFixed(1)} ${u} ${journey.direction}`}
+            {journey.toGo !== null ? ` · ${disp(journey.toGo).toFixed(1)} ${u} to go` : ''}
+          </Text>
+        ) : stats.current?.basis === 'single' ? (
+          <Text variant="small" color="textSecondary">
+            Log 3+ days for an average
+          </Text>
+        ) : null}
       </Card>
 
       {!checkedInToday && checkins.isSuccess ? (
-        <Card onPress={() => router.push('/check-in')} accessibilityLabel="Do today's check-in">
-          <Text variant="bodyStrong">How are you feeling today?</Text>
-          <Text variant="small" color="textSecondary">
-            A 20-second check-in: sleep, tiredness, soreness, pain.
-          </Text>
-        </Card>
+        <>
+          <SectionHeader title="Daily check-in" />
+          <Card
+            onPress={() => router.push('/check-in')}
+            accessibilityLabel="Do today's check-in"
+            actionLabel="Start check-in"
+          >
+            <Text variant="bodyStrong">How are you feeling today?</Text>
+            <Text variant="small" color="textSecondary">
+              A 20-second check-in: sleep, tiredness, soreness, pain.
+            </Text>
+          </Card>
+        </>
       ) : null}
 
       <SectionHeader title="Today" />
       <Card
         onPress={() => router.push('/training')}
         accessibilityLabel={`Today's plan: ${session?.title ?? 'none'}`}
+        actionLabel="Open training"
       >
         <Text variant="small" color="textSecondary">
           Today&apos;s plan
@@ -215,7 +293,11 @@ export default function Home() {
         <>
           <SectionHeader title="Today's nutrition" />
           {target ? (
-            <Card onPress={() => router.push('/nutrition')} accessibilityLabel="Open nutrition">
+            <Card
+              onPress={() => router.push('/nutrition')}
+              accessibilityLabel="Open nutrition"
+              actionLabel="Open nutrition"
+            >
               <ProgressBar
                 label="Calories"
                 value={food.hasData ? food.totals.kcal : null}
@@ -275,11 +357,14 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: radius.pill,
+    borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
   flex: { flex: 1 },
   row: { flexDirection: 'row', gap: spacing.xs },
+  journey: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
+  figure: { alignItems: 'center', flex: 1, gap: 2 },
   quick: {
     flex: 1,
     minHeight: TOUCH_TARGET + 28,
@@ -287,7 +372,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.xxs,
-    padding: spacing.xs,
+    gap: spacing.xs,
+    padding: spacing.sm,
   },
+  quickIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickLabel: { fontWeight: '600' },
 });
