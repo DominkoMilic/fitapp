@@ -33,13 +33,13 @@ export interface ReferenceLine {
 }
 
 const HEIGHT = 220;
-const PAD = { left: 58, right: 30, top: 16, bottom: 26 };
+const PAD = { left: 36, right: 12, top: 18, bottom: 26 };
 /** Above this many days in view, the daily line is drawn without a dot on every day. */
 const MAX_DOTS = 45;
 /** Roughly how much room one x-axis label needs. */
 const LABEL_WIDTH = 56;
-/** Height of a two-line y-axis tag ("Start" over "108.0"). */
-const TAG_HEIGHT = 26;
+/** Height of a goal-line label ("Start 108.0"), used to keep neighbouring labels apart. */
+const TAG_HEIGHT = 14;
 
 /**
  * Weight chart, kept deliberately quiet: daily weights as a line (dashed across gaps of more than
@@ -105,23 +105,18 @@ export function WeightChart({
     const x = linearScale(d0 === d1 ? [d0 - 1, d1 + 1] : [d0, d1], [PAD.left, width - PAD.right]);
     const y = linearScale([y0, y1], [HEIGHT - PAD.bottom, PAD.top]);
 
-    // Y-axis tags: the goal's start and target (and 2nd target); without a goal, the lowest and
-    // highest weight in view.
-    const rawTags = references.length
-      ? references.map((r) => ({
-          name: r.kind === 'start' ? 'Start' : r.kind === 'target' ? 'Target' : '2nd',
-          value: toDisplay(r.kg),
-          kind: r.kind,
-        }))
-      : [
-          { name: 'High', value: Math.max(...values), kind: 'start' as const },
-          { name: 'Low', value: Math.min(...values), kind: 'target' as const },
-        ];
+    // Goal lines (start, target, 2nd target): a pale full-width line each, labelled at its right
+    // end just above the line; labels of lines that are close together are nudged apart.
+    const rawTags = references.map((r) => ({
+      name: r.kind === 'start' ? 'Start' : r.kind === 'target' ? 'Target' : '2nd target',
+      value: toDisplay(r.kg),
+      kind: r.kind,
+    }));
     const tagYs = spreadLabels(
-      rawTags.map((t) => y(t.value)),
+      rawTags.map((t) => y(t.value) - 5),
       TAG_HEIGHT,
-      PAD.top + TAG_HEIGHT / 2 - 6,
-      HEIGHT - PAD.bottom - TAG_HEIGHT / 2 + 6,
+      PAD.top - 4,
+      HEIGHT - PAD.bottom - 4,
     );
     const tags = rawTags.map((t, i) => ({ ...t, axisY: y(t.value), labelY: tagYs[i]! }));
 
@@ -229,7 +224,7 @@ export function WeightChart({
             <Svg width={width} height={HEIGHT}>
               {model ? (
                 <>
-                  {/* Grid at each round value, numbers on the right (the left holds Start/Target). */}
+                  {/* Grid at each round value, numbers on the left. */}
                   {model.yTicks.map((t) => (
                     <G key={`y-${t}`}>
                       <Line
@@ -242,11 +237,11 @@ export function WeightChart({
                         opacity={0.7}
                       />
                       <SvgText
-                        x={width - PAD.right + 4}
+                        x={PAD.left - 6}
                         y={model.y(t) + 4}
                         fontSize={10}
                         fill={colors.textSecondary}
-                        textAnchor="start"
+                        textAnchor="end"
                       >
                         {Number.isInteger(t) ? t : t.toFixed(1)}
                       </SvgText>
@@ -264,32 +259,24 @@ export function WeightChart({
                   {model.tags.map((t) => (
                     <G key={t.name}>
                       <Line
-                        x1={PAD.left - 4}
-                        x2={PAD.left + 4}
+                        x1={PAD.left}
+                        x2={width - PAD.right}
                         y1={t.axisY}
                         y2={t.axisY}
                         stroke={tagColor(t.kind)}
-                        strokeWidth={2}
-                        strokeLinecap="round"
+                        strokeWidth={1.5}
+                        strokeDasharray={t.kind === 'start' ? undefined : '6 4'}
+                        opacity={0.45}
                       />
                       <SvgText
-                        x={PAD.left - 8}
-                        y={t.labelY - 3}
+                        x={width - PAD.right}
+                        y={t.labelY}
                         fontSize={10}
-                        fill={tagColor(t.kind)}
-                        textAnchor="end"
-                      >
-                        {t.name}
-                      </SvgText>
-                      <SvgText
-                        x={PAD.left - 8}
-                        y={t.labelY + 10}
-                        fontSize={11}
                         fontWeight="600"
                         fill={tagColor(t.kind)}
                         textAnchor="end"
                       >
-                        {t.value.toFixed(1)}
+                        {`${t.name} ${t.value.toFixed(1)}`}
                       </SvgText>
                     </G>
                   ))}

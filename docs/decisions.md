@@ -221,3 +221,7 @@ Clarifications of, and deviations from, `docs/PACE_SPEC.md`. Newest first.
 1. **Logo: "Pace ring"** (chosen by the product owner from five concepts): a running stick figure inside an open mint progress ring on the app's dark background. The ring echoes goal progress; the gap ahead means "keep going". The head rests on the shoulders (no neck).
 2. **One source, one folder.** `scripts/gen-brand-assets.mjs` draws everything from the same geometry into `assets/brand/`: master SVGs (`pace-logo`, `pace-mark`, `pace-mono`), the iOS icon (full bleed, no transparency), the Android adaptive foreground and Android 13+ monochrome icon (inside the 66 dp safe zone, on the `#121417` background colour), the splash tile, the favicon and the notification small icon. `app.config.ts` points only at that folder; `expo prebuild` generates the native sizes. Old default icons and the concept files were removed.
 3. **Notification small icon** is a white, bolder-stroke silhouette (Android uses only its alpha and tints it with `#34D399`); iOS uses the app icon.
+
+## 2026-11-10: Chart scale on the left, goal lines back as pale lines
+
+User feedback after using the quieter chart: numbers belong on the left axis, and start/goal read best as full-width lines. They are now pale (45% opacity; start solid, targets dashed) and labelled at their right end, so they guide the eye without competing with the data.
