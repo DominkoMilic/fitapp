@@ -38,6 +38,7 @@ export default function ForgotPassword() {
         control={control}
         name="email"
         label="Email"
+        onSubmitEditing={() => void onSubmit()}
         autoCapitalize="none"
         autoComplete="email"
         keyboardType="email-address"

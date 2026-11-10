@@ -1,6 +1,7 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 
+import { type FieldErrors, useFieldErrors } from '@/hooks/useFieldErrors';
 import { goBack } from '@/navigation/back';
 import { Banner, ConfirmDialog, LoadingState, useToast } from '@/components/feedback';
 import { Button, Screen, Text, TextField } from '@/components/ui';
@@ -52,17 +53,20 @@ function WeightForm({
   const reference =
     currentWeight(dailyValues(entries.filter((e) => e.id !== existing?.id)))?.kg ?? null;
 
-  const validate = (): string | null => {
-    if (weightKg === null) return 'Enter your weight';
-    if (weightKg < LIMITS.weightKg.min || weightKg > LIMITS.weightKg.max)
-      return unit === 'metric'
-        ? 'Weight must be between 30 and 350 kg'
-        : 'Weight must be between 66 and 771 lb';
-    if (!date || !isValidIsoDate(date)) return 'Enter a valid date';
-    if (date > today) return "You can't log a weight in the future";
-    if (profile?.date_of_birth && date < profile.date_of_birth)
-      return 'The date is before your date of birth';
-    return null;
+  const fields = useFieldErrors<'weight' | 'date'>();
+  const validate = (): FieldErrors<'weight' | 'date'> => {
+    const e: FieldErrors<'weight' | 'date'> = {};
+    if (weightKg === null) e.weight = 'Enter your weight';
+    else if (weightKg < LIMITS.weightKg.min || weightKg > LIMITS.weightKg.max)
+      e.weight =
+        unit === 'metric'
+          ? 'Weight must be between 30 and 350 kg'
+          : 'Weight must be between 66 and 771 lb';
+    if (!date || !isValidIsoDate(date)) e.date = 'Enter a valid date';
+    else if (date > today) e.date = "You can't log a weight in the future";
+    else if (profile?.date_of_birth && date < profile.date_of_birth)
+      e.date = 'The date is before your date of birth';
+    return e;
   };
 
   const save = async () => {
@@ -87,9 +91,8 @@ function WeightForm({
   };
 
   const onSave = () => {
-    const problem = validate();
-    setError(problem);
-    if (problem) return;
+    setError(null);
+    if (!fields.show(validate())) return;
     if (isSuspiciousWeight(weightKg as number, reference)) setConfirmOutlier(true);
     else void save();
   };
@@ -107,9 +110,33 @@ function WeightForm({
       }
     >
       {error ? <Banner tone="danger" message={error} /> : null}
-      <WeightField label="Weight" unitSystem={unit} value={weightKg} onChange={setWeightKg} />
-      <DateField label="Date" value={date} onChange={setDate} />
-      <TextField label="Note (optional)" value={note} onChangeText={setNote} maxLength={500} />
+      <WeightField
+        label="Weight"
+        unitSystem={unit}
+        value={weightKg}
+        onChange={(v) => {
+          setWeightKg(v);
+          fields.clear('weight');
+        }}
+        error={fields.errors.weight}
+      />
+      <DateField
+        max={today}
+        label="Date"
+        value={date}
+        onChange={(v) => {
+          setDate(v);
+          fields.clear('date');
+        }}
+        error={fields.errors.date}
+      />
+      <TextField
+        label="Note (optional)"
+        value={note}
+        onChangeText={setNote}
+        maxLength={500}
+        onSubmitEditing={onSave}
+      />
       <Text variant="caption" color="textSecondary">
         For a reliable trend, weigh yourself in the morning, after the toilet, before eating, in
         similar clothing. Daily changes of {unit === 'metric' ? '1–2 kg' : '2–4 lb'} are normal

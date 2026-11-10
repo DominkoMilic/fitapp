@@ -89,6 +89,7 @@ function Form({
   const [feeling, setFeeling] = useState<number | null>(s.feeling);
   const [notes, setNotes] = useState(s.notes ?? '');
   const [error, setError] = useState<string | null>(null);
+  const [triedSave, setTriedSave] = useState(false);
   const result = manualTiming({
     date: timing.date,
     startTime: timing.startTime,
@@ -99,7 +100,8 @@ function Form({
   });
 
   const submit = useSubmit(async () => {
-    if (!result.ok) return setError(TIMING_ERROR_TEXT[result.error]);
+    // Shown on the time fields, not in a banner.
+    if (!result.ok) return setTriedSave(true);
     if (!workout.exercises.length) return setError('A workout needs at least one exercise.');
     setError(null);
     await save(
@@ -138,7 +140,11 @@ function Form({
         value={timing}
         onChange={setTiming}
         today={today}
-        error={!result.ok && timing.startTime.length >= 4 ? TIMING_ERROR_TEXT[result.error] : null}
+        error={
+          !result.ok && (triedSave || timing.startTime.length >= 4)
+            ? TIMING_ERROR_TEXT[result.error]
+            : null
+        }
       />
       <SectionHeader title="Exercises" />
       <WorkoutEditor workout={workout} onChange={setWorkout} metric={metric} addedDone />

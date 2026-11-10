@@ -1,10 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 
 import { Banner } from '@/components/feedback';
 import { ControlledTextField } from '@/components/forms/ControlledTextField';
+import { PasswordChecklist } from '@/components/forms/PasswordChecklist';
 import { Button, Screen, Text } from '@/components/ui';
 import { signUpSchema, type SignUpValues } from '@/domain/validation/auth';
 import { useAuth } from '@/features/auth/AuthProvider';
@@ -16,6 +17,7 @@ export default function SignUp() {
     resolver: zodResolver(signUpSchema),
     defaultValues: { email: '', password: '', confirmPassword: '' },
   });
+  const password = useWatch({ control, name: 'password' });
 
   const onSubmit = handleSubmit(async (values) => {
     setError(null);
@@ -48,15 +50,16 @@ export default function SignUp() {
         control={control}
         name="password"
         label="Password"
-        hint="At least 8 characters, with letters and numbers"
         secureTextEntry
         autoComplete="new-password"
         textContentType="newPassword"
       />
+      <PasswordChecklist password={password} showErrors={formState.isSubmitted} />
       <ControlledTextField
         control={control}
         name="confirmPassword"
         label="Confirm password"
+        onSubmitEditing={() => void onSubmit()}
         secureTextEntry
         autoComplete="new-password"
         textContentType="newPassword"

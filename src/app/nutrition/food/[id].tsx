@@ -11,6 +11,7 @@ import { goBack } from '@/navigation/back';
 import { MealPicker } from '@/features/nutrition/MealPicker';
 import { asDate, asMeal } from '@/features/nutrition/params';
 import { spacing } from '@/theme';
+import { useFieldErrors } from '@/hooks/useFieldErrors';
 import { useSubmit } from '@/hooks/useSubmit';
 
 export default function FoodAmount() {
@@ -25,6 +26,7 @@ export default function FoodAmount() {
   const [error, setError] = useState<string | null>(null);
   const [confirmLarge, setConfirmLarge] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
+  const fields = useFieldErrors<'amount'>();
   const custom = useCustomFoods();
   const date = asDate(params.date, today);
   const submit = useSubmit(
@@ -68,13 +70,21 @@ export default function FoodAmount() {
     );
   const onAdd = () => {
     const c = checkGrams(grams);
-    if (!c.ok)
-      return setError(
-        c.reason === 'too_large'
-          ? 'That is more than 5 kg. Check the amount.'
-          : 'Enter an amount above zero.',
-      );
     setError(null);
+    if (
+      !fields.show(
+        c.ok
+          ? {}
+          : {
+              amount:
+                c.reason === 'too_large'
+                  ? 'That is more than 5 kg. Check the amount'
+                  : 'Enter an amount above zero',
+            },
+      ) ||
+      !c.ok
+    )
+      return;
     if (c.confirm) setConfirmLarge(true);
     else void save();
   };
@@ -140,7 +150,11 @@ export default function FoodAmount() {
         label={chosen ? `Number of portions (${chosen.label})` : `Amount (${unit})`}
         suffix={chosen ? '×' : unit}
         value={value}
-        onChangeValue={setAmount}
+        onChangeValue={(v) => {
+          setAmount(v);
+          fields.clear('amount');
+        }}
+        error={fields.errors.amount}
       />
       <Card>
         <Text variant="small" color="textSecondary">

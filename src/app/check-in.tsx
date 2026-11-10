@@ -20,6 +20,8 @@ import { useToday } from '@/features/dashboard/useToday';
 import { stackAnimation, useTheme } from '@/theme';
 import { useSubmit } from '@/hooks/useSubmit';
 import { LoadErrorBanner } from '@/components/feedback/LoadErrorBanner';
+import { useFieldErrors } from '@/hooks/useFieldErrors';
+import { FieldError } from '@/components/ui/FieldError';
 
 const SCALE = ['1', '2', '3', '4', '5'] as const;
 
@@ -65,12 +67,19 @@ function CheckinForm({ today, existing }: { today: string; existing: Checkin | u
     note: existing?.note ?? '',
   });
   const [errors, setErrors] = useState<string[]>([]);
+  const fields = useFieldErrors<'sleep' | 'painArea'>();
   const [saved, setSaved] = useState(false);
   const guidance = checkinGuidance(v);
 
   const onSave = async () => {
-    const issues = validateCheckin(v);
-    if (issues.length) {
+    const all = validateCheckin(v);
+    const fieldOk = fields.show({
+      ...(all.includes('sleep_range') ? { sleep: 'Sleep must be between 0 and 24 hours' } : {}),
+      ...(all.includes('pain_area_missing') ? { painArea: 'Where is the pain?' } : {}),
+    });
+    // Everything else isn't tied to a single field.
+    const issues = all.filter((i) => i !== 'sleep_range' && i !== 'pain_area_missing');
+    if (issues.length || !fieldOk) {
       setErrors(
         issues.map(
           (i) =>
@@ -124,7 +133,11 @@ function CheckinForm({ today, existing }: { today: string; existing: Checkin | u
         label="Sleep last night"
         suffix="hours"
         value={v.sleepHours}
-        onChangeValue={(sleepHours) => setV({ ...v, sleepHours })}
+        onChangeValue={(sleepHours) => {
+          setV({ ...v, sleepHours });
+          fields.clear('sleep');
+        }}
+        error={fields.errors.sleep}
       />
       <Text variant="small" color="textSecondary">
         How tired are you? (1 = fresh, 5 = exhausted)
@@ -158,9 +171,13 @@ function CheckinForm({ today, existing }: { today: string; existing: Checkin | u
           accessibilityLabel="Where is the pain"
           options={BODY_AREAS.map((a) => ({ value: a, label: BODY_AREA_LABELS[a as BodyArea] }))}
           selected={v.painArea ? [v.painArea as BodyArea] : []}
-          onToggle={(painArea) => setV({ ...v, painArea })}
+          onToggle={(painArea) => {
+            setV({ ...v, painArea });
+            fields.clear('painArea');
+          }}
         />
       ) : null}
+      <FieldError message={fields.errors.painArea} />
       {guidance ? <Banner tone={guidance.tone} message={guidance.message} /> : null}
       <TextField
         label="Note (optional)"

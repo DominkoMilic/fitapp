@@ -97,6 +97,7 @@ function Form({
   const [feeling, setFeeling] = useState<number | null>(null);
   const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [triedSave, setTriedSave] = useState(false);
 
   // Start the editor from the chosen template (planned sets ticked), or empty.
   if (draft?.slug !== slug && (slug === BLANK || built)) {
@@ -137,7 +138,8 @@ function Form({
 
   const submit = useSubmit(async () => {
     if (!draft) return;
-    if (!result.ok) return setError(TIMING_ERROR_TEXT[result.error]);
+    // Shown on the time fields, not in a banner.
+    if (!result.ok) return setTriedSave(true);
     const w = {
       ...draft.workout,
       title: draft.workout.title || title || built?.title || 'Workout',
@@ -208,7 +210,11 @@ function Form({
         value={timing}
         onChange={setTiming}
         today={today}
-        error={!result.ok && timing.startTime.length >= 4 ? TIMING_ERROR_TEXT[result.error] : null}
+        error={
+          !result.ok && (triedSave || timing.startTime.length >= 4)
+            ? TIMING_ERROR_TEXT[result.error]
+            : null
+        }
       />
 
       <SectionHeader title="Exercises" />

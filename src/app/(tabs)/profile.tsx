@@ -71,6 +71,7 @@ export default function ProfileTab() {
       <ListItem title="Appearance" onPress={() => router.push('/settings/appearance')} />
 
       <SectionHeader title="Account" />
+      <ListItem title="Change password" onPress={() => router.push('/settings/password')} />
       <ListItem
         title="Data and privacy"
         subtitle="Export, delete, privacy policy and terms"

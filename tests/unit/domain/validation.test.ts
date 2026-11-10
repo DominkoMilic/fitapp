@@ -121,16 +121,16 @@ describe('consent step', () => {
 });
 
 describe('sign up', () => {
-  it('requires letters, digits and 8+ characters', () => {
-    const ok = { email: 'a@example.com', password: 'abcd1234', confirmPassword: 'abcd1234' };
+  it('requires 8+ characters with an uppercase, a lowercase letter and a number', () => {
+    const ok = { email: 'a@example.com', password: 'Abcd1234', confirmPassword: 'Abcd1234' };
     expect(signUpSchema.safeParse(ok).success).toBe(true);
-    expect(
-      signUpSchema.safeParse({ ...ok, password: 'abcdefgh', confirmPassword: 'abcdefgh' }).success,
-    ).toBe(false);
-    expect(
-      signUpSchema.safeParse({ ...ok, password: 'abc123', confirmPassword: 'abc123' }).success,
-    ).toBe(false);
-    expect(signUpSchema.safeParse({ ...ok, confirmPassword: 'other1234' }).success).toBe(false);
+    const pw = (password: string) =>
+      signUpSchema.safeParse({ ...ok, password, confirmPassword: password }).success;
+    expect(pw('abcd1234')).toBe(false); // no uppercase
+    expect(pw('ABCD1234')).toBe(false); // no lowercase
+    expect(pw('Abcdefgh')).toBe(false); // no number
+    expect(pw('Abc123')).toBe(false); // too short
+    expect(signUpSchema.safeParse({ ...ok, confirmPassword: 'Other1234' }).success).toBe(false);
     expect(signUpSchema.safeParse({ ...ok, email: 'not-an-email' }).success).toBe(false);
   });
 });

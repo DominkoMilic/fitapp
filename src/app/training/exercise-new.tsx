@@ -14,6 +14,7 @@ import {
 import type { ExerciseCategory, TrackingType } from '@/domain/training/catalogue';
 import { useCustomExerciseActions } from '@/features/training/library';
 import { useSubmit } from '@/hooks/useSubmit';
+import { useFieldErrors } from '@/hooks/useFieldErrors';
 
 const CATEGORIES: { value: ExerciseCategory; label: string }[] = [
   { value: 'strength', label: 'Strength' },
@@ -44,10 +45,18 @@ export default function NewExercise() {
   const [caution, setCaution] = useState('');
   const [unilateral, setUnilateral] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fields = useFieldErrors<'name'>();
 
   const save = async () => {
-    if (!name.trim() || name.trim().length > 80)
-      return setError('Enter a name (up to 80 characters)');
+    setError(null);
+    if (
+      !fields.show(
+        !name.trim() || name.trim().length > 80
+          ? { name: 'Enter a name (up to 80 characters)' }
+          : {},
+      )
+    )
+      return;
     const slug = await actions.create({
       name,
       category,
@@ -77,7 +86,16 @@ export default function NewExercise() {
       }
     >
       {error ? <Banner tone="danger" message={error} /> : null}
-      <TextField label="Name" value={name} onChangeText={setName} maxLength={80} />
+      <TextField
+        label="Name"
+        value={name}
+        onChangeText={(t) => {
+          setName(t);
+          fields.clear('name');
+        }}
+        maxLength={80}
+        error={fields.errors.name}
+      />
       <ChipGroup
         accessibilityLabel="Category"
         options={CATEGORIES}

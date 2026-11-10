@@ -1,10 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Redirect, router } from 'expo-router';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 
 import { Banner } from '@/components/feedback';
 import { ControlledTextField } from '@/components/forms/ControlledTextField';
+import { PasswordChecklist } from '@/components/forms/PasswordChecklist';
 import { Button, Screen, Text } from '@/components/ui';
 import { resetPasswordSchema, type ResetPasswordValues } from '@/domain/validation/auth';
 import { useAuth } from '@/features/auth/AuthProvider';
@@ -17,6 +18,7 @@ export default function ResetPassword() {
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: { password: '', confirmPassword: '' },
   });
+  const password = useWatch({ control, name: 'password' });
 
   if (!initializing && !session) return <Redirect href="/forgot-password" />;
 
@@ -37,14 +39,15 @@ export default function ResetPassword() {
         control={control}
         name="password"
         label="New password"
-        hint="At least 8 characters, with letters and numbers"
         secureTextEntry
         autoComplete="new-password"
       />
+      <PasswordChecklist password={password} showErrors={formState.isSubmitted} />
       <ControlledTextField
         control={control}
         name="confirmPassword"
         label="Confirm new password"
+        onSubmitEditing={() => void onSubmit()}
         secureTextEntry
       />
       <Button

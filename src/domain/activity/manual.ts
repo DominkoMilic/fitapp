@@ -40,10 +40,20 @@ export function manualSummary(input: {
   };
 }
 
-export function validateManual(minutes: number | null, distanceKm: number | null): string | null {
+/** Validation per field, so each message can be shown on its own field. Pure. */
+export function validateManualFields(
+  minutes: number | null,
+  distanceKm: number | null,
+): { minutes?: string; distance?: string } {
+  const e: { minutes?: string; distance?: string } = {};
   if (!minutes || minutes < 1 || minutes > MANUAL_LIMITS.maxMinutes)
-    return 'Duration must be between 1 minute and 24 hours';
+    e.minutes = 'Duration must be between 1 minute and 24 hours';
   if (distanceKm !== null && (distanceKm < 0 || distanceKm > MANUAL_LIMITS.maxKm))
-    return 'Distance must be between 0 and 1000 km';
-  return null;
+    e.distance = 'Distance must be between 0 and 1000 km';
+  return e;
+}
+
+export function validateManual(minutes: number | null, distanceKm: number | null): string | null {
+  const e = validateManualFields(minutes, distanceKm);
+  return e.minutes ?? e.distance ?? null;
 }

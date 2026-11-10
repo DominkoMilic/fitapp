@@ -8,6 +8,7 @@ import { useToday } from '@/features/dashboard/useToday';
 import { useNutritionActions } from '@/features/nutrition/api';
 import { MealPicker } from '@/features/nutrition/MealPicker';
 import { asDate, asMeal } from '@/features/nutrition/params';
+import { type FieldErrors, useFieldErrors } from '@/hooks/useFieldErrors';
 import { useSubmit } from '@/hooks/useSubmit';
 
 /** Calories (and optional macros) without a food, e.g. a restaurant meal (spec 12.2). */
@@ -23,12 +24,20 @@ export default function QuickAdd() {
   const [c, setC] = useState<number | null>(null);
   const [f, setF] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  type Field = 'kcal' | 'p' | 'c' | 'f';
+  const fields = useFieldErrors<Field>();
+  const macroError = (v: number | null) =>
+    v !== null && (v < 0 || v > 1000) ? 'Must be between 0 and 1000 g' : undefined;
 
   const save = async () => {
-    if (kcal === null || kcal <= 0 || kcal > 10000)
-      return setError('Enter calories between 1 and 10,000.');
-    if ([p, c, f].some((v) => v !== null && (v < 0 || v > 1000)))
-      return setError('Macros must be between 0 and 1000 g.');
+    setError(null);
+    const e: FieldErrors<Field> = {};
+    if (kcal === null || kcal <= 0 || kcal > 10000) e.kcal = 'Enter calories between 1 and 10,000';
+    const [ep, ec, ef] = [macroError(p), macroError(c), macroError(f)];
+    if (ep) e.p = ep;
+    if (ec) e.c = ec;
+    if (ef) e.f = ef;
+    if (!fields.show(e) || kcal === null) return;
     await actions.logItem({
       date: asDate(params.date, today),
       meal,
@@ -66,14 +75,46 @@ export default function QuickAdd() {
         decimal={false}
         precision={0}
         value={kcal}
-        onChangeValue={setKcal}
+        onChangeValue={(v) => {
+          setKcal(v);
+          fields.clear('kcal');
+        }}
+        error={fields.errors.kcal}
       />
       <Text variant="small" color="textSecondary">
         Macros (optional; leave empty if unknown)
       </Text>
-      <NumberField label="Protein" suffix="g" value={p} onChangeValue={setP} />
-      <NumberField label="Carbohydrates" suffix="g" value={c} onChangeValue={setC} />
-      <NumberField label="Fat" suffix="g" value={f} onChangeValue={setF} />
+      <NumberField
+        label="Protein"
+        suffix="g"
+        value={p}
+        onChangeValue={(v) => {
+          setP(v);
+          fields.clear('p');
+        }}
+        error={fields.errors.p}
+      />
+      <NumberField
+        label="Carbohydrates"
+        suffix="g"
+        value={c}
+        onChangeValue={(v) => {
+          setC(v);
+          fields.clear('c');
+        }}
+        error={fields.errors.c}
+      />
+      <NumberField
+        label="Fat"
+        suffix="g"
+        value={f}
+        onChangeValue={(v) => {
+          setF(v);
+          fields.clear('f');
+        }}
+        error={fields.errors.f}
+        onSubmitEditing={() => void submit.run()}
+      />
     </Screen>
   );
 }

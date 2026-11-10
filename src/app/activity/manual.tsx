@@ -2,8 +2,9 @@ import { randomUUID } from 'expo-crypto';
 import { useState } from 'react';
 
 import { Banner, useToast } from '@/components/feedback';
+import { useFieldErrors } from '@/hooks/useFieldErrors';
 import { Button, NumberField, Screen, SegmentedControl, Text, TextField } from '@/components/ui';
-import { manualSummary, validateManual } from '@/domain/activity/manual';
+import { manualSummary, validateManualFields } from '@/domain/activity/manual';
 import type { ActivityType } from '@/domain/activity/met';
 import { useActivityActions } from '@/features/activity/api';
 import { ACTIVITY_LABEL } from '@/features/activity/labels';
@@ -35,13 +36,16 @@ export default function ManualActivity() {
   const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const fields = useFieldErrors<'date' | 'minutes' | 'distance'>();
 
   const onSave = async () => {
-    if (!date || date > today) return setError('Choose today or a past date');
-    const km = distance === null ? null : unit === 'metric' ? distance : distance * 1.609344;
-    const invalid = validateManual(minutes, km);
-    if (invalid) return setError(invalid);
     setError(null);
+    const km = distance === null ? null : unit === 'metric' ? distance : distance * 1.609344;
+    const ok = fields.show({
+      ...(!date || date > today ? { date: 'Choose today or a past date' } : {}),
+      ...validateManualFields(minutes, km),
+    });
+    if (!ok || !date) return;
     setSaving(true);
     const endedAt = date === today ? Date.now() : Date.parse(`${date}T12:00:00Z`);
     const summary = manualSummary({
@@ -77,20 +81,37 @@ export default function ManualActivity() {
         onChange={setType}
         accessibilityLabel="Activity type"
       />
-      <DateField label="Date" value={date} onChange={setDate} />
+      <DateField
+        max={today}
+        label="Date"
+        value={date}
+        onChange={(v) => {
+          setDate(v);
+          fields.clear('date');
+        }}
+        error={fields.errors.date}
+      />
       <NumberField
         label="Duration"
         suffix="min"
         decimal={false}
         value={minutes}
-        onChangeValue={setMinutes}
+        onChangeValue={(v) => {
+          setMinutes(v);
+          fields.clear('minutes');
+        }}
+        error={fields.errors.minutes}
       />
       <NumberField
         label="Distance (optional)"
         suffix={unit === 'metric' ? 'km' : 'mi'}
         precision={2}
         value={distance}
-        onChangeValue={setDistance}
+        onChangeValue={(v) => {
+          setDistance(v);
+          fields.clear('distance');
+        }}
+        error={fields.errors.distance}
       />
       <TextField
         label="Notes (optional)"

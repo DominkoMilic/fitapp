@@ -2,13 +2,14 @@ import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 
 import { goBack } from '@/navigation/back';
-import { Banner, ConfirmDialog, ErrorState, LoadingState } from '@/components/feedback';
+import { ConfirmDialog, ErrorState, LoadingState } from '@/components/feedback';
 import { Button, Card, NumberField, Screen, Text } from '@/components/ui';
 import { checkGrams } from '@/domain/nutrition/totals';
 import { useToday } from '@/features/dashboard/useToday';
 import { type MealLogItem, useDayLog, useNutritionActions } from '@/features/nutrition/api';
 import { MealPicker } from '@/features/nutrition/MealPicker';
 import { asDate, asMeal } from '@/features/nutrition/params';
+import { useFieldErrors } from '@/hooks/useFieldErrors';
 import { useSubmit } from '@/hooks/useSubmit';
 
 export default function EditItem() {
@@ -39,14 +40,17 @@ function EditForm({ item, onServer }: { item: MealLogItem; onServer: boolean }) 
   const [meal, setMeal] = useState(asMeal(item.meal_type));
   const baseGrams = item.grams === null ? null : Number(item.grams);
   const [grams, setGrams] = useState<number | null>(baseGrams);
-  const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
+  const fields = useFieldErrors<'amount'>();
   const save = async () => {
     let changes: Partial<MealLogItem> = { meal_type: meal };
     if (baseGrams !== null && grams !== null && grams !== baseGrams) {
       const c = checkGrams(grams);
-      if (!c.ok) return setError('Enter an amount between 1 and 5000 g.');
+      if (!c.ok) {
+        fields.show({ amount: 'Enter an amount between 1 and 5000 g' });
+        return;
+      }
       // Scales the stored snapshot; the original food is not consulted (history stays consistent).
       const f = grams / baseGrams;
       changes = {
@@ -76,14 +80,17 @@ function EditForm({ item, onServer }: { item: MealLogItem; onServer: boolean }) 
       footer={<Button title="Save" loading={submit.busy} onPress={() => void submit.run()} />}
     >
       <Text variant="title">{item.name_snapshot}</Text>
-      {error ? <Banner tone="danger" message={error} /> : null}
       <MealPicker value={meal} onChange={setMeal} />
       {baseGrams !== null ? (
         <NumberField
           label="Amount"
           suffix={item.unit === 'ml' ? 'ml' : 'g'}
           value={grams}
-          onChangeValue={setGrams}
+          onChangeValue={(v) => {
+            setGrams(v);
+            fields.clear('amount');
+          }}
+          error={fields.errors.amount}
         />
       ) : (
         <Text color="textSecondary">

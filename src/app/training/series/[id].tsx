@@ -7,6 +7,7 @@ import { Button, ChipGroup, NumberField, Screen, Text, TextField } from '@/compo
 import { WEEKDAYS } from '@/features/onboarding/constants';
 import { type RecurringEvent, useRecurringEvents } from '@/features/profile/api';
 import { useSeriesActions } from '@/features/training/schedule-api';
+import { useFieldErrors } from '@/hooks/useFieldErrors';
 
 export default function SeriesEdit() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -34,14 +35,19 @@ function SeriesForm({ e }: { e: RecurringEvent }) {
   const [time, setTime] = useState(e.local_time.slice(0, 5));
   const [duration, setDuration] = useState<number | null>(e.duration_minutes);
   const [error, setError] = useState<string | null>(null);
+  const fields = useFieldErrors<'title' | 'time' | 'duration'>();
   const [confirmEnd, setConfirmEnd] = useState(false);
 
   const save = () => {
-    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) return setError('Use HH:MM for the time');
-    if (!duration || duration < 5 || duration > 300)
-      return setError('Duration must be 5–300 minutes');
-    if (!title.trim()) return setError('Enter a name');
     setError(null);
+    const ok = fields.show({
+      ...(!title.trim() ? { title: 'Enter a name' } : {}),
+      ...(!/^([01]\d|2[0-3]):[0-5]\d$/.test(time) ? { time: 'Use HH:MM, e.g. 18:30' } : {}),
+      ...(!duration || duration < 5 || duration > 300
+        ? { duration: 'Duration must be 5–300 minutes' }
+        : {}),
+    });
+    if (!ok || !duration) return;
     update.mutate(
       { eventId: e.id, weekday, localTime: time, durationMinutes: duration, title: title.trim() },
       { onSuccess: () => goBack('/training') },
@@ -65,7 +71,16 @@ function SeriesForm({ e }: { e: RecurringEvent }) {
       <Text color="textSecondary">
         Changes apply to future sessions. Past and completed ones stay as they were.
       </Text>
-      <TextField label="Name" value={title} onChangeText={setTitle} maxLength={80} />
+      <TextField
+        label="Name"
+        value={title}
+        onChangeText={(t) => {
+          setTitle(t);
+          fields.clear('title');
+        }}
+        maxLength={80}
+        error={fields.errors.title}
+      />
       <ChipGroup
         accessibilityLabel="Day of the week"
         options={WEEKDAYS}
@@ -75,7 +90,11 @@ function SeriesForm({ e }: { e: RecurringEvent }) {
       <TextField
         label="Start time (HH:MM)"
         value={time}
-        onChangeText={setTime}
+        onChangeText={(t) => {
+          setTime(t);
+          fields.clear('time');
+        }}
+        error={fields.errors.time}
         maxLength={5}
         keyboardType="numbers-and-punctuation"
       />
@@ -85,7 +104,11 @@ function SeriesForm({ e }: { e: RecurringEvent }) {
         decimal={false}
         precision={0}
         value={duration}
-        onChangeValue={setDuration}
+        onChangeValue={(v) => {
+          setDuration(v);
+          fields.clear('duration');
+        }}
+        error={fields.errors.duration}
       />
       <Button
         title="End this recurring session"

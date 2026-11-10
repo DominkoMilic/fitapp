@@ -12,6 +12,7 @@ import {
   useNutritionActions,
 } from '@/features/nutrition/api';
 import { goBack } from '@/navigation/back';
+import { type FieldErrors, useFieldErrors } from '@/hooks/useFieldErrors';
 import { useSubmit } from '@/hooks/useSubmit';
 
 /**
@@ -66,17 +67,31 @@ function Form({ existing, date, meal }: { existing?: Food; date?: string; meal?:
   const [portionGrams, setPortionGrams] = useState<number | null>(firstPortion?.grams ?? null);
   const [error, setError] = useState<string | null>(null);
   const u = basis === 'per_100ml' ? 'ml' : 'g';
+  type Field = 'name' | 'kcal' | 'p' | 'c' | 'f' | 'fibre' | 'portion';
+  const fields = useFieldErrors<Field>();
+  /** Sets a value and clears that field's error. */
+  const edit =
+    <T,>(k: Field, set: (v: T) => void) =>
+    (v: T) => {
+      set(v);
+      fields.clear(k);
+    };
 
   const save = async () => {
-    if (!name.trim()) return setError('Enter a name.');
-    if (kcal === null || kcal < 0 || kcal > 950)
-      return setError('Calories per 100 must be between 0 and 950.');
-    if ([p, c, f, fibre].some((v) => v !== null && (v < 0 || v > 100)))
-      return setError('Macros per 100 must be between 0 and 100 g.');
-    if ((p ?? 0) + (c ?? 0) + (f ?? 0) > 100)
-      return setError('Protein + carbs + fat cannot exceed 100 g per 100.');
+    setError(null);
+    const e: FieldErrors<Field> = {};
+    const macro = (v: number | null) => v !== null && (v < 0 || v > 100);
+    if (!name.trim()) e.name = 'Enter a name';
+    if (kcal === null || kcal < 0 || kcal > 950) e.kcal = 'Must be between 0 and 950 per 100';
+    if (macro(p)) e.p = 'Must be between 0 and 100 g';
+    if (macro(c)) e.c = 'Must be between 0 and 100 g';
+    if (macro(f)) e.f = 'Must be between 0 and 100 g';
+    if (macro(fibre)) e.fibre = 'Must be between 0 and 100 g';
+    if (!e.p && !e.c && !e.f && (p ?? 0) + (c ?? 0) + (f ?? 0) > 100)
+      e.f = 'Protein + carbs + fat cannot exceed 100 g per 100';
     if (portionLabel.trim() && !(portionGrams && portionGrams > 0))
-      return setError('Enter the grams for the portion.');
+      e.portion = 'Enter the grams for this portion';
+    if (!fields.show(e) || kcal === null) return;
     const id = await actions.saveFood(
       {
         name,
@@ -126,8 +141,9 @@ function Form({ existing, date, meal }: { existing?: Food; date?: string; meal?:
         label="Name"
         placeholder="e.g. Skyr natural"
         value={name}
-        onChangeText={setName}
+        onChangeText={edit('name', setName)}
         maxLength={200}
+        error={fields.errors.name}
       />
       <TextField label="Brand (optional)" value={brand} onChangeText={setBrand} maxLength={100} />
       <SegmentedControl
@@ -142,11 +158,41 @@ function Form({ existing, date, meal }: { existing?: Food; date?: string; meal?:
       <Text variant="small" color="textSecondary">
         Copy the values from the package label (per 100 {u}).
       </Text>
-      <NumberField label="Calories" suffix="kcal" value={kcal} onChangeValue={setKcal} />
-      <NumberField label="Protein" suffix="g" value={p} onChangeValue={setP} />
-      <NumberField label="Carbohydrates" suffix="g" value={c} onChangeValue={setC} />
-      <NumberField label="Fat" suffix="g" value={f} onChangeValue={setF} />
-      <NumberField label="Fibre (optional)" suffix="g" value={fibre} onChangeValue={setFibre} />
+      <NumberField
+        label="Calories"
+        suffix="kcal"
+        value={kcal}
+        onChangeValue={edit('kcal', setKcal)}
+        error={fields.errors.kcal}
+      />
+      <NumberField
+        label="Protein"
+        suffix="g"
+        value={p}
+        onChangeValue={edit('p', setP)}
+        error={fields.errors.p}
+      />
+      <NumberField
+        label="Carbohydrates"
+        suffix="g"
+        value={c}
+        onChangeValue={edit('c', setC)}
+        error={fields.errors.c}
+      />
+      <NumberField
+        label="Fat"
+        suffix="g"
+        value={f}
+        onChangeValue={edit('f', setF)}
+        error={fields.errors.f}
+      />
+      <NumberField
+        label="Fibre (optional)"
+        suffix="g"
+        value={fibre}
+        onChangeValue={edit('fibre', setFibre)}
+        error={fields.errors.fibre}
+      />
       {fromMacros !== null &&
       kcal !== null &&
       Math.abs(fromMacros - kcal) > Math.max(20, kcal * 0.15) ? (
@@ -169,7 +215,8 @@ function Form({ existing, date, meal }: { existing?: Food; date?: string; meal?:
         label="Portion weight"
         suffix={u}
         value={portionGrams}
-        onChangeValue={setPortionGrams}
+        onChangeValue={edit('portion', setPortionGrams)}
+        error={fields.errors.portion}
       />
     </Screen>
   );

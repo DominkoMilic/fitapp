@@ -9,6 +9,7 @@ import { useAuth } from '@/features/auth/AuthProvider';
 import { useSyncActions, useSyncStatus } from '@/features/sync/SyncProvider';
 import { requireSupabase } from '@/integrations/supabase/client';
 import { plural } from '@/domain/format';
+import { useFieldErrors } from '@/hooks/useFieldErrors';
 
 const ERRORS = {
   reauthentication_required: 'Please enter your password again.',
@@ -31,6 +32,7 @@ export default function DeleteAccount() {
   const email = session?.user.email ?? '';
   const ready = password.length > 0 && confirm === 'DELETE' && !!email;
 
+  const fields = useFieldErrors<'password'>();
   const onDelete = async () => {
     if (!ready || !session) return;
     setBusy(true);
@@ -39,11 +41,10 @@ export default function DeleteAccount() {
     const auth = await signIn(email, password);
     if (!auth.ok) {
       setBusy(false);
-      setError(
-        auth.error.kind === 'invalid_credentials'
-          ? 'That password is not correct.'
-          : auth.error.message,
-      );
+      // A wrong password belongs on the password field; anything else is a general error.
+      if (auth.error.kind === 'invalid_credentials')
+        fields.show({ password: 'That password is not correct' });
+      else setError(auth.error.message);
       return;
     }
     const res = await requestAccountDeletion();
@@ -84,7 +85,11 @@ export default function DeleteAccount() {
       <TextField
         label="Password"
         value={password}
-        onChangeText={setPassword}
+        onChangeText={(t) => {
+          setPassword(t);
+          fields.clear('password');
+        }}
+        error={fields.errors.password}
         secureTextEntry
         autoComplete="current-password"
         textContentType="password"
@@ -95,6 +100,8 @@ export default function DeleteAccount() {
         onChangeText={setConfirm}
         autoCapitalize="characters"
         autoCorrect={false}
+        // Destructive: Enter only closes the keyboard, it never deletes.
+        onSubmitEditing={() => undefined}
       />
       {error ? <Banner tone="danger" message={error} /> : null}
       <Button

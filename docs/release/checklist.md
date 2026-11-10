@@ -6,6 +6,7 @@
 - [ ] Host the privacy policy at a public URL (both stores require one) and a support page.
 - [ ] Separate Supabase projects for **preview/test** and **production**, both in an EU region. Apply all migrations to each (`npx supabase db push`), deploy `recipes-proxy` and `delete-account` with `verify_jwt = false` (see `supabase/config.toml`).
 - [ ] Production Auth settings: Site URL `pace://`, redirect URLs `pace://auth/callback`; email confirmation on; custom SMTP for auth emails (Supabase's built-in sender is rate-limited).
+- [ ] Production Auth password policy: minimum 8 characters, **Lowercase, uppercase letters and digits** (matches the in-app checklist and `supabase/config.toml`).
 - [ ] Production Auth: **remove `exp://**`** from redirect URLs (only needed for Expo Go in development); turn on **Secure password change**; keep PKCE (the app refuses raw-token links).
 - [ ] Backups/PITR and monitoring as in `operations.md`.
 - [ ] EAS environment variables per environment (`npx eas-cli@latest env:create`): `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `EXPO_PUBLIC_SUPPORT_EMAIL` (production requires it), optional `GOOGLE_MAPS_ANDROID_API_KEY` (restricted to the package and signing certificate).
