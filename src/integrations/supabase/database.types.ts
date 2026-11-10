@@ -476,6 +476,7 @@ export type Database = {
           audience: string;
           created_at: string;
           hidden_at: string | null;
+          hidden_reason: string | null;
           id: string;
           kind: string;
           local_date: string;
@@ -489,6 +490,7 @@ export type Database = {
           audience: string;
           created_at?: string;
           hidden_at?: string | null;
+          hidden_reason?: string | null;
           id?: string;
           kind: string;
           local_date: string;
@@ -501,6 +503,7 @@ export type Database = {
           audience?: string;
           created_at?: string;
           hidden_at?: string | null;
+          hidden_reason?: string | null;
           id?: string;
           kind?: string;
           local_date?: string;
@@ -1498,6 +1501,7 @@ export type Database = {
           audience: string;
           created_at: string;
           hidden_at: string | null;
+          hidden_reason: string | null;
           id: string;
           kind: string;
           local_date: string;
@@ -1561,7 +1565,9 @@ export type Database = {
           user_id: string;
         }[];
       };
+      hidden_post_count: { Args: { p_kind: string }; Returns: number };
       hide_feed_item: { Args: { p_id: string }; Returns: undefined };
+      hide_my_posts: { Args: { p_kind: string }; Returns: number };
       hit_rate_limit: {
         Args: { bucket_name: string; max_hits: number; uid: string; window_seconds: number };
         Returns: boolean;
@@ -1623,6 +1629,7 @@ export type Database = {
       };
       send_friend_request: { Args: { p_handle: string }; Returns: string };
       set_cheer: { Args: { p_item: string; p_kind: string }; Returns: undefined };
+      show_my_posts: { Args: { p_kind: string }; Returns: number };
       social_active: { Args: { u: string }; Returns: boolean };
       social_caller: { Args: { active: boolean }; Returns: string };
       social_friend_count: { Args: { u: string }; Returns: number };

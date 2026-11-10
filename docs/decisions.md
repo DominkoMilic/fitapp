@@ -269,3 +269,11 @@ Long lists render 20 rows per page (next page near the end of the scroll, or "Sh
 5. **Batching:** events on the same topic within 15 minutes, or during quiet hours, are counted and folded into the next push for that topic. A batched event with no later event is not sent on its own (8B-2 may add a scheduled flush).
 6. **Rows reach snapshot functions as jsonb** (`to_jsonb(new)`): functions taking a table row are exposed by the API as computed columns.
 7. **Export** gains feed items, cheers and comments; push tokens and push batching state are technical (not exported). Legal version 2026-11-19 (privacy: what friends see in a post, comments).
+
+## 2026-11-20: Hiding earlier posts when sharing is switched off
+
+Replaces decision 2 of 2026-11-19 ("existing posts keep their audience"), at the product owner's request.
+
+1. Switching a sharing type off stops new posts at once, then asks **"Hide your earlier … too?"** with **Hide them** / **Keep them**. Hiding sets `hidden_at` with `hidden_reason = 'sharing_off'` on all your visible posts of that type (`hide_my_posts`).
+2. Switching the type back on offers **"Show your earlier … again?"** when posts were hidden that way (`hidden_post_count`, `show_my_posts`). Posts removed one by one ("Remove from feed", `hidden_reason = 'removed'`) stay removed.
+3. Hidden posts keep their cheers and comments, so showing them again restores them as they were.

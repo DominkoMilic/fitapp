@@ -478,3 +478,21 @@ export const useHideFeedItem = () =>
   useSocialMutation<string>(async (_uid, id) => {
     unwrap(await db().rpc('hide_feed_item', { p_id: id }));
   });
+
+/** Hides all your visible posts of one kind (sharing switched off); returns how many. */
+export const useHideMyPosts = () =>
+  useSocialMutation<string, number>(async (_uid, kind) =>
+    z.number().parse(unwrap(await db().rpc('hide_my_posts', { p_kind: kind }))),
+  );
+
+/** Shows again the posts of one kind that switching sharing off hid; returns how many. */
+export const useShowMyPosts = () =>
+  useSocialMutation<string, number>(async (_uid, kind) =>
+    z.number().parse(unwrap(await db().rpc('show_my_posts', { p_kind: kind }))),
+  );
+
+export async function hiddenPostCount(kind: string): Promise<number> {
+  const { data, error } = await db().rpc('hidden_post_count', { p_kind: kind });
+  if (error) fail(error);
+  return typeof data === 'number' ? data : 0;
+}

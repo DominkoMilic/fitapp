@@ -32,7 +32,10 @@ import { useFeatures } from '@/features/profile/features';
 import {
   errorCode,
   type SocialSettings,
+  hiddenPostCount,
   useDeleteSocialProfile,
+  useHideMyPosts,
+  useShowMyPosts,
   useMySocialProfile,
   useOnline,
   useSetSocialEnabled,
@@ -50,21 +53,43 @@ type AudienceKey =
   | 'milestones_audience'
   | 'challenge_results_audience';
 
-const AUDIENCES: readonly { key: AudienceKey; label: string; description: string }[] = [
-  { key: 'workouts_audience', label: 'Workouts', description: 'Name, type, duration and sets' },
+interface Audience {
+  key: AudienceKey;
+  /** The feed item kind this setting shares. */
+  kind: string;
+  label: string;
+  /** Lower-case plural for dialogs: "your earlier workouts". */
+  noun: string;
+  description: string;
+}
+
+const AUDIENCES: readonly Audience[] = [
+  {
+    key: 'workouts_audience',
+    kind: 'workout',
+    label: 'Workouts',
+    noun: 'workouts',
+    description: 'Name, type, duration and sets',
+  },
   {
     key: 'activities_audience',
+    kind: 'activity',
     label: 'Walks, runs and rides',
+    noun: 'walks, runs and rides',
     description: 'Distance, time and pace. Never the route.',
   },
   {
     key: 'milestones_audience',
+    kind: 'milestone',
     label: 'Milestones',
+    noun: 'milestones',
     description: 'Streaks and records. Never weight milestones.',
   },
   {
     key: 'challenge_results_audience',
+    kind: 'challenge_done',
     label: 'Challenge results',
+    noun: 'challenge results',
     description: 'When you finish a challenge',
   },
 ];
@@ -89,6 +114,15 @@ export default function SocialSettingsScreen() {
   const [color, setColor] = useState('mint');
   const [errors, setErrors] = useState<{ name?: string; handle?: string; bio?: string }>({});
   const [confirm, setConfirm] = useState<'off' | 'delete' | null>(null);
+  // After switching a type off: offer to hide its earlier posts; after switching it on: offer to
+  // show again the ones hidden that way.
+  const [earlier, setEarlier] = useState<{
+    audience: Audience;
+    mode: 'hide' | 'show';
+    count: number;
+  } | null>(null);
+  const hidePosts = useHideMyPosts();
+  const showPosts = useShowMyPosts();
 
   if (me.isPending || settings.isPending)
     return (
@@ -296,8 +330,8 @@ export default function SocialSettingsScreen() {
       <SectionHeader title="What friends see" />
       <Text variant="small" color="textSecondary">
         New items you share appear in your friends’ feeds. Weight, health, notes, routes and the
-        time of day are never shared. Turning a type off doesn’t remove earlier posts; remove those
-        from the post’s ⋯ menu.
+        time of day are never shared. When you turn a type off, you can also hide what you shared
+        earlier.
       </Text>
       {AUDIENCES.map((a) => (
         <Toggle
@@ -305,7 +339,14 @@ export default function SocialSettingsScreen() {
           label={a.label}
           description={a.description}
           value={value(a.key) !== 'private'}
-          onChange={(v) => saveSetting({ [a.key]: v ? 'friends' : 'private' })}
+          onChange={(v) => {
+            saveSetting({ [a.key]: v ? 'friends' : 'private' });
+            if (!v) setEarlier({ audience: a, mode: 'hide', count: 0 });
+            else
+              void hiddenPostCount(a.kind)
+                .then((count) => count > 0 && setEarlier({ audience: a, mode: 'show', count }))
+                .catch(() => undefined);
+          }}
         />
       ))}
       {value('workouts_audience') !== 'private' ? (
@@ -374,6 +415,43 @@ export default function SocialSettingsScreen() {
         onPress={() => setConfirm('delete')}
       />
 
+      <ConfirmDialog
+        visible={earlier?.mode === 'hide'}
+        title={`Hide your earlier ${earlier?.audience.noun ?? ''} too?`}
+        message="New ones won’t be shared any more. You can also hide the ones you already shared, so friends no longer see them. They come back if you turn sharing on again and choose to show them."
+        confirmLabel="Hide them"
+        cancelLabel="Keep them"
+        loading={hidePosts.isPending}
+        onCancel={() => setEarlier(null)}
+        onConfirm={() =>
+          earlier &&
+          hidePosts.mutate(earlier.audience.kind, {
+            onSuccess: (n) =>
+              showToast(
+                n === 0 ? 'Nothing to hide' : n === 1 ? '1 post hidden' : `${n} posts hidden`,
+              ),
+            onError: (e) => showToast(SOCIAL_ERRORS[errorCode(e)]),
+            onSettled: () => setEarlier(null),
+          })
+        }
+      />
+      <ConfirmDialog
+        visible={earlier?.mode === 'show'}
+        title={`Show your earlier ${earlier?.audience.noun ?? ''} again?`}
+        message={`${earlier?.count === 1 ? '1 post was' : `${earlier?.count ?? 0} posts were`} hidden when you turned this off. Posts you removed one by one stay removed.`}
+        confirmLabel="Show them"
+        cancelLabel="Not now"
+        loading={showPosts.isPending}
+        onCancel={() => setEarlier(null)}
+        onConfirm={() =>
+          earlier &&
+          showPosts.mutate(earlier.audience.kind, {
+            onSuccess: (n) => showToast(n === 1 ? '1 post shown again' : `${n} posts shown again`),
+            onError: (e) => showToast(SOCIAL_ERRORS[errorCode(e)]),
+            onSettled: () => setEarlier(null),
+          })
+        }
+      />
       <ConfirmDialog
         visible={confirm === 'off'}
         title="Turn social off?"
