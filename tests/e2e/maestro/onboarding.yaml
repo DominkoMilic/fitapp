@@ -16,16 +16,12 @@ appId: ${APP_ID}
 - tapOn: 'Name'
 - eraseText
 - inputText: 'Dev'
-- tapOn: 'Date of birth, day'
-- eraseText
-- inputText: '1'
-- tapOn: 'Date of birth, month'
-- eraseText
-- inputText: '5'
-- tapOn: 'Date of birth, year'
-- eraseText
-- inputText: '2003'
-- hideKeyboard
+# Date of birth from the calendar sheet: years → month → day
+- tapOn: 'Date of birth:.*'
+- tapOn: 'Earlier years'
+- tapOn: '2003'
+- tapOn: 'May 2003'
+- tapOn: '1 May 2003.*'
 - tapOn: 'Male'
 - tapOn: 'Height'
 - eraseText

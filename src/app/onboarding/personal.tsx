@@ -16,6 +16,7 @@ import { HeightField, WeightField } from '@/features/onboarding/components/Measu
 import { OnboardingStep } from '@/features/onboarding/components/OnboardingStep';
 import { useOnboardingDraft } from '@/features/onboarding/draft-store';
 import { detectTimezone, useAsOf } from '@/features/onboarding/useOnboardingContext';
+import { yearsBefore } from '@/domain/calculations/calendar';
 
 export default function PersonalStep() {
   const asOf = useAsOf();
@@ -75,6 +76,9 @@ export default function PersonalStep() {
         render={({ field, fieldState }) => (
           <DateField
             label="Date of birth"
+            max={yearsBefore(asOf, 18)}
+            min={yearsBefore(asOf, 100)}
+            startOnYears
             value={field.value || null}
             onChange={(v) => field.onChange(v ?? '')}
             error={fieldState.error?.message}

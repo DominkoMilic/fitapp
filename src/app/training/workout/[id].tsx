@@ -198,7 +198,7 @@ export default function WorkoutDetail() {
           {w.kind !== 'rest' ? (
             moving ? (
               <Card raised>
-                <DateField label="Move to" value={moveDate} onChange={setMoveDate} />
+                <DateField label="Move to" value={moveDate} onChange={setMoveDate} min={today} />
                 <Button
                   title="Move"
                   disabled={!moveDate || moveDate === w.scheduled_date}

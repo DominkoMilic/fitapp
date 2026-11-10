@@ -225,15 +225,20 @@ const now = new Date().toISOString();
   await page.getByText('I already have an account').click();
   await page.waitForTimeout(800);
   await page.getByLabel('Email').fill('dev@example.com');
-  await page.getByLabel('Password').fill('abcd1234');
+  await page.getByLabel('Password', { exact: true }).fill('abcd1234');
   await page.getByRole('button', { name: 'Sign in' }).click();
   await page.waitForTimeout(2000);
 
   // 1 personal
   await page.getByLabel('Name').fill('Dominko');
-  await page.getByLabel('Date of birth, day').fill('1');
-  await page.getByLabel('Date of birth, month').fill('5');
-  await page.getByLabel('Date of birth, year').fill('2003');
+  // Date of birth from the calendar sheet: years → month → day.
+  await page.getByRole('button', { name: /^Date of birth:/ }).click();
+  await page.waitForTimeout(500);
+  await page.getByRole('button', { name: 'Earlier years' }).click();
+  await page.getByRole('button', { name: '2003', exact: true }).click();
+  await page.getByRole('button', { name: 'May 2003', exact: true }).click();
+  await page.getByRole('button', { name: /^1 May 2003/ }).click();
+  await page.waitForTimeout(500);
   await page.getByRole('radio', { name: 'Male', exact: true }).click();
   await page.getByLabel('Height').fill('187');
   await page.getByLabel('Current weight').fill('108');
@@ -326,9 +331,28 @@ const now = new Date().toISOString();
     await page.waitForTimeout(700);
     await page.getByLabel('Weight', { exact: true }).fill(String(kg));
     const dt = zagrebDate(offsetDays);
-    await page.getByLabel('Date, day', { exact: true }).fill(String(dt.d));
-    await page.getByLabel('Date, month', { exact: true }).fill(String(dt.m));
-    await page.getByLabel('Date, year', { exact: true }).fill(String(dt.y));
+    // Pick the day in the calendar sheet (opens on the current month).
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    await page.getByRole('button', { name: /^Date:/ }).click();
+    await page.waitForTimeout(500);
+    await page
+      .getByRole('button', { name: new RegExp(`^${dt.d} ${months[dt.m - 1]} ${dt.y}`) })
+      .first()
+      .click();
+    await page.waitForTimeout(400);
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     await page.waitForTimeout(2500); // debounce + sync
   };

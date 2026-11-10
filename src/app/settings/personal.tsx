@@ -17,6 +17,7 @@ import { OptionCard } from '@/features/onboarding/components/OptionCard';
 import { useProfile, useUpdateProfile, type Profile } from '@/features/profile/api';
 import { SaveState } from '@/features/profile/SaveState';
 import { spacing } from '@/theme';
+import { yearsBefore } from '@/domain/calculations/calendar';
 
 export default function PersonalSettings() {
   const profile = useProfile();
@@ -108,6 +109,9 @@ function PersonalForm({ profile }: { profile: Profile }) {
       />
       <DateField
         label="Date of birth"
+        max={yearsBefore(today, 18)}
+        min={yearsBefore(today, 100)}
+        startOnYears
         value={values.dateOfBirth || null}
         onChange={(d) => setValues({ ...values, dateOfBirth: d ?? '' })}
         error={errors.dateOfBirth}

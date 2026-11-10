@@ -55,6 +55,8 @@ export function TimingFields({
             <DateField
               key="earlier"
               label="Date"
+              min={addDays(today, -60)}
+              max={today}
               value={value.date}
               onChange={(iso) => iso && onChange({ ...value, date: iso })}
             />

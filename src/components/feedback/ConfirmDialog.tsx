@@ -1,8 +1,10 @@
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
 
 import { Button } from '@/components/ui/Button';
+import { ModalShell } from '@/components/ui/ModalShell';
 import { Text } from '@/components/ui/Text';
-import { radius, spacing, useTheme } from '@/theme';
+import { motion, radius, spacing, useTheme } from '@/theme';
 
 export function ConfirmDialog({
   visible,
@@ -25,26 +27,29 @@ export function ConfirmDialog({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
-  const { colors } = useTheme();
+  const { colors, reduceMotion } = useTheme();
   return (
-    <Modal
+    <ModalShell
       visible={visible}
-      transparent
-      animationType="fade"
       onRequestClose={() => {
         if (!loading) onCancel();
       }}
-      statusBarTranslucent
     >
       {/* The backdrop is a sibling, not a wrapper: buttons must not be nested inside a button. */}
       <View style={styles.backdrop}>
-        <Pressable
-          style={[StyleSheet.absoluteFill, { backgroundColor: colors.overlay }]}
-          onPress={loading ? undefined : onCancel}
-          accessibilityLabel="Dismiss"
-          accessibilityRole="button"
-        />
-        <View
+        <Animated.View
+          entering={reduceMotion ? undefined : FadeIn.duration(motion.normal)}
+          style={StyleSheet.absoluteFill}
+        >
+          <Pressable
+            style={[StyleSheet.absoluteFill, { backgroundColor: colors.overlay }]}
+            onPress={loading ? undefined : onCancel}
+            accessibilityLabel="Dismiss"
+            accessibilityRole="button"
+          />
+        </Animated.View>
+        <Animated.View
+          entering={reduceMotion ? undefined : ZoomIn.duration(motion.normal)}
           style={[styles.dialog, { backgroundColor: colors.surface, borderColor: colors.border }]}
           accessibilityViewIsModal
         >
@@ -63,9 +68,9 @@ export function ConfirmDialog({
             />
             <Button title={cancelLabel} variant="ghost" onPress={onCancel} disabled={loading} />
           </View>
-        </View>
+        </Animated.View>
       </View>
-    </Modal>
+    </ModalShell>
   );
 }
 
