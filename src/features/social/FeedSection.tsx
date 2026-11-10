@@ -13,7 +13,10 @@ import { FeedCard } from './components/FeedCard';
 import { OfflineNote } from './components/OfflineNote';
 import { usePostActions } from './usePostActions';
 
-/** Feed part of the Social tab (spec 33.5): your and your friends' shared training, paged. */
+/**
+ * Feed part of the Social tab (spec 33.5): your and your friends' shared training, paged. The tab
+ * draws the title, safe area and Feed · Friends switch above it.
+ */
 export function FeedSection({ header, friendCount }: { header: ReactNode; friendCount: number }) {
   const { today } = useToday();
   const feed = useFeed();
@@ -72,7 +75,7 @@ export function FeedSection({ header, friendCount }: { header: ReactNode; friend
 
   return (
     <ListScreen
-      edges={['top']}
+      edges={[]}
       data={rows}
       keyExtractor={(r) => r.id}
       header={top}

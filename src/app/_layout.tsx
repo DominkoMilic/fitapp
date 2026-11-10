@@ -1,4 +1,4 @@
-import { QueryClientProvider } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -15,7 +15,11 @@ import { AuthProvider, useAuth } from '@/features/auth/AuthProvider';
 import { useRestTimerNotification } from '@/features/notifications/useRestTimerNotification';
 import { SyncProvider } from '@/features/sync/SyncProvider';
 import '@/services/location/location-task';
-import { connectQueryOnlineState, createQueryClient } from '@/services/query-client';
+import {
+  connectQueryOnlineState,
+  createQueryClient,
+  persistOptions,
+} from '@/services/query-client';
 import { stackAnimation, ThemeProvider, useTheme } from '@/theme';
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
@@ -61,13 +65,13 @@ export default function RootLayout() {
         <SafeAreaProvider>
           <ThemeProvider>
             {envResult.ok ? (
-              <QueryClientProvider client={queryClient}>
+              <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
                 <AuthProvider>
                   <SyncProvider>
                     <RootStack />
                   </SyncProvider>
                 </AuthProvider>
-              </QueryClientProvider>
+              </PersistQueryClientProvider>
             ) : (
               <ConfigErrorScreen />
             )}

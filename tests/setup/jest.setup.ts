@@ -38,6 +38,7 @@ jest.mock('react-native-reanimated', () => {
     },
     useAnimatedStyle: () => ({}),
     withTiming: (to: unknown) => to,
+    Easing: { out: (f: unknown) => f, cubic: (t: number) => t },
     withSpring: (to: unknown) => to,
     withSequence: (...steps: unknown[]) => steps[steps.length - 1],
     interpolateColor: (v: number, _in: number[], out: string[]) => (v >= 1 ? out[1] : out[0]),

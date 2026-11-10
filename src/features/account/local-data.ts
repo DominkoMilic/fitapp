@@ -28,6 +28,8 @@ export async function clearLocalData(
     notifier.cancelAllReminders(),
     notifier.cancelRestEnd(),
     AsyncStorage.removeItem('pace.active-recording-id'),
+    // Saved reads for offline start (src/services/query-client.ts).
+    AsyncStorage.removeItem('pace.query-cache'),
     clearExportFiles(),
   ];
   useOnboardingDraft.getState().reset();

@@ -284,3 +284,10 @@ Replaces decision 2 of 2026-11-19 ("existing posts keep their audience"), at the
 2. **Deployed from the dashboard editor** as a single file (the shared push rules inlined), because the Supabase CLI isn't signed in to this account on the development Mac. The repo keeps the two-file version (`_shared/social-push.ts` generated from `src/domain/social/push.ts`).
 3. **High priority, own channel.** Normal-priority pushes were held back for minutes on the Samsung test phone, and pushes for a channel that doesn't exist yet are dropped, so pushes use `priority: 'high'` and the "Friends" (`social`) channel, created when the app starts.
 4. **Privacy:** Expo and Firebase Cloud Messaging are processors for social notifications (name, event type and in-app link only); privacy policy updated, legal version 2026-11-20. `google-services.json` stays out of git.
+
+## 2026-11-20: Phase 8B close-out fixes
+
+1. **Animated switches.** `Toggle` draws its own Reanimated switch (`AnimatedSwitch`: thumb slides, track fades, 200 ms ease-out, instant with reduce motion) instead of the native Switch, which jumped when its value changed from the row press, the optimistic value or a refetch.
+2. **Social tab without a jump.** The title and Feed · Friends switch are rendered once; both parts stay mounted and the inactive one is hidden, so switching neither rebuilds the screen nor loses scroll position.
+3. **Offline start.** The read cache is now persisted (spec 18.2 always said so; it had not been built): before, opening the app with no connection left every screen on loading placeholders. Kept 3 days, successful reads only, searches excluded, removed on sign-out.
+4. Personal information and onboarding label the field "Sex" (the calorie calculation it fed was archived with nutrition).

@@ -21,7 +21,10 @@ import { spacing, useTheme } from '@/theme';
 export const inviteMessage = (handle: string) =>
   `Train with me on PACE. Add me: @${handle}\npace://add/${handle}`;
 
-/** Friends part of the Social tab (spec 33.5): requests, friends, sent requests, invite. */
+/**
+ * Friends part of the Social tab (spec 33.5): requests, friends, sent requests, invite. The tab
+ * draws the title, safe area and Feed · Friends switch above it.
+ */
 export function FriendsSection({ header, handle }: { header: ReactNode; handle: string }) {
   const { colors } = useTheme();
   const list = useFriendships();
@@ -55,14 +58,14 @@ export function FriendsSection({ header, handle }: { header: ReactNode; handle: 
 
   if (list.isPending)
     return (
-      <Screen edges={['top']}>
+      <Screen edges={[]}>
         {header}
         <LoadingState />
       </Screen>
     );
   if (list.isError)
     return (
-      <Screen edges={['top']}>
+      <Screen edges={[]}>
         {header}
         <ErrorState
           message="Your friends couldn’t be loaded."
@@ -76,7 +79,7 @@ export function FriendsSection({ header, handle }: { header: ReactNode; handle: 
     router.push({ pathname: '/social/user/[handle]', params: { handle } });
 
   return (
-    <Screen edges={['top']}>
+    <Screen edges={[]}>
       {header}
       {!online ? <OfflineNote /> : null}
       <View style={styles.actions}>

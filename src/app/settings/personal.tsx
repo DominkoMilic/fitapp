@@ -93,10 +93,10 @@ function PersonalForm({ profile }: { profile: Profile }) {
         error={errors.dateOfBirth}
       />
       <Text variant="small" color="textSecondary">
-        Sex used for metabolic calculations
+        Sex
       </Text>
       <SegmentedControl
-        accessibilityLabel="Sex used for metabolic calculations"
+        accessibilityLabel="Sex"
         options={[
           { value: 'male', label: 'Male' },
           { value: 'female', label: 'Female' },

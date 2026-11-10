@@ -260,7 +260,7 @@ docs/
 | Progress | Weight chart + stats, Log weight, then Weight history, Body measurements, Milestones, Weekly report |
 | Profile | You: personal info, goal, health and injuries. Preferences: Training setup (sports, schedule, equipment), App features, Social and privacy (once social is set up), Reminders, Appearance. Account: Data and privacy (export, delete, legal documents), Sync status (only while changes are waiting or failed), Sign out |
 
-**Five tabs at most:** Home, Training, Social (when on), Progress, Profile.
+**Five tabs at most:** Home, Training, Social (when on), Progress, Profile. The Social tab keeps its title and Feed · Friends switch in place and both parts mounted (the hidden one with `display: none`), so switching slides the pill without the screen rebuilding.
 
 **One main action per screen.** Rarely used screens sit one level deeper, never on the tab itself: the four legal documents from Data and privacy. Screens that were removed from a tab keep their routes so notifications and deep links still work.
 
@@ -627,7 +627,7 @@ Offline read: cached plan, scheduled workouts, templates, exercise library, last
 
 ### 18.2 Mechanism
 
-- TanStack Query cache persisted to storage for reads.
+- TanStack Query cache persisted to storage for reads (`@tanstack/react-query-persist-client` with AsyncStorage, key `pace.query-cache`, kept 3 days, successful reads only, searches excluded, cleared on sign-out), so the app opens with your data while offline instead of waiting on loading placeholders.
 - Writes go to the local SQLite **outbox**: `(id, user_id, entity, record_id, op: upsert|delete, payload, created_at, attempts, last_error, status)`. The UI updates optimistically.
 - Sync engine runs on app foreground, network regain, after each write (debounced 2 s) and every 5 min while foregrounded. FIFO per entity, parents before children (session before sets, activity row before route upload). Stored operations for removed entities (the archived nutrition tables) are dropped when the queue loads.
 - Server writes are `upsert` on the client UUID (idempotent). Conflict resolution: last-write-wins by `client_updated_at`, tie-break by device id; append-only logs (weights, sets) never conflict.
