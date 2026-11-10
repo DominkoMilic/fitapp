@@ -225,3 +225,7 @@ Clarifications of, and deviations from, `docs/PACE_SPEC.md`. Newest first.
 ## 2026-11-10: Chart scale on the left, goal lines back as pale lines
 
 User feedback after using the quieter chart: numbers belong on the left axis, and start/goal read best as full-width lines. They are now pale (45% opacity; start solid, targets dashed) and labelled at their right end, so they guide the eye without competing with the data.
+
+## 2026-11-10: Paged history lists
+
+Long lists render 20 rows per page (next page near the end of the scroll, or "Show more"). FlatList already virtualises, but the weight-details screen puts a large header (chart and tiles) above its history; paging keeps first render and scrolling light as history grows. Data loading is unchanged (the queries already cap and cache); pagination is in the shared `ListScreen`, so every long list gets it.

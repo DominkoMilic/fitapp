@@ -267,6 +267,7 @@ Training: Add (record/log/plan), Week/month calendar, Workout detail, Active wor
 Activity: Activity type picker, Live tracking, Activity summary, Manual activity form, Activity detail.
 Nutrition: Daily dashboard, Food search, Custom food form, Meal detail, Saved meals, Recipe browser, Recipe detail (with servings), User recipe builder, Meal planner (week), Shopping list.
 Progress: Weight, Measurements, Milestones, Personal records, Weekly report.
+Long lists (weight history, training history, activities, exercises, sync queue) load **20 rows at a time**: the next page loads when scrolling near the end, and a "Showing 20 of 134 · Show more" footer does the same on a tap (`ListScreen`).
 Profile: all settings screens listed in 6.2; Training setup links to Sports, Schedule and Equipment, each with its own Save.
 Other: Daily check-in, Sync status, Legal (privacy policy, terms, disclaimer, data sources and licences).
 

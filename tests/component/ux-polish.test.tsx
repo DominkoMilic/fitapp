@@ -276,3 +276,18 @@ describe('CalendarSheet', () => {
     expect(onSelect).toHaveBeenCalledWith('2003-05-01');
   });
 });
+
+describe('ListScreen pagination', () => {
+  it('shows a page at a time with a Show more footer', async () => {
+    const { ListScreen } = jest.requireActual<typeof import('@/components/ui')>('@/components/ui');
+    const rows = Array.from({ length: 50 }, (_, i) => `Row ${i + 1}`);
+    await renderWithTheme(
+      <ListScreen data={rows} keyExtractor={(r) => r} renderItem={(r) => <Text>{r}</Text>} />,
+    );
+    expect(screen.getByText('Showing 20 of 50')).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Show more' }));
+    expect(screen.getByText('Showing 40 of 50')).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Show more' }));
+    expect(screen.queryByText(/^Showing/)).toBeNull();
+  });
+});
