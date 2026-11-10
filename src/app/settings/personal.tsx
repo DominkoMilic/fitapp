@@ -1,12 +1,11 @@
-import { router } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
 
-import { Banner, ErrorState, LoadingState } from '@/components/feedback';
+import { ErrorState, LoadingState } from '@/components/feedback';
 import { Button, Screen, SegmentedControl, Text, TextField } from '@/components/ui';
 import {
   ACTIVITY_DESCRIPTIONS,
-  ACTIVITY_MULTIPLIERS,
+  ACTIVITY_LEVELS,
   type ActivityLevel,
 } from '@/domain/calculations/energy';
 import { personalSchema } from '@/domain/validation/onboarding';
@@ -43,8 +42,6 @@ export default function PersonalSettings() {
 function PersonalForm({ profile }: { profile: Profile }) {
   const { today } = useToday();
   const update = useUpdateProfile();
-  // Snapshot of the profile when the screen opened (the query refetches after saving).
-  const [initial] = useState(profile);
   const [values, setValues] = useState({
     displayName: profile.display_name ?? '',
     dateOfBirth: profile.date_of_birth ?? '',
@@ -55,13 +52,6 @@ function PersonalForm({ profile }: { profile: Profile }) {
     activityLevel: (profile.activity_level ?? 'moderate') as ActivityLevel,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const calcChanged =
-    update.isSuccess &&
-    (values.dateOfBirth !== initial.date_of_birth ||
-      values.calcSex !== initial.calc_sex ||
-      values.heightCm !== initial.height_cm ||
-      values.activityLevel !== initial.activity_level);
-
   const save = () => {
     // weightKg is not edited here; pass a valid placeholder to reuse the shared schema.
     const parsed = personalSchema(today).safeParse({ ...values, weightKg: 70 });
@@ -87,20 +77,6 @@ function PersonalForm({ profile }: { profile: Profile }) {
       footer={<Button title="Save" loading={update.isPending} onPress={save} />}
     >
       <SaveState status={update.status} error={update.error} />
-      {update.isSuccess && calcChanged ? (
-        <Banner
-          tone="info"
-          title="Your targets use your old details"
-          message="Targets never change silently. Review a recalculation in Goal and targets."
-        />
-      ) : null}
-      {update.isSuccess && calcChanged ? (
-        <Button
-          title="Review targets"
-          variant="secondary"
-          onPress={() => router.push('/settings/targets')}
-        />
-      ) : null}
       <TextField
         label="Name"
         value={values.displayName}
@@ -156,10 +132,10 @@ function PersonalForm({ profile }: { profile: Profile }) {
         Activity level
       </Text>
       <View style={{ gap: spacing.xs }} accessibilityRole="radiogroup">
-        {(Object.keys(ACTIVITY_MULTIPLIERS) as ActivityLevel[]).map((level) => (
+        {ACTIVITY_LEVELS.map((level) => (
           <OptionCard
             key={level}
-            title={`${ACTIVITY_DESCRIPTIONS[level].title} · ×${ACTIVITY_MULTIPLIERS[level]}`}
+            title={ACTIVITY_DESCRIPTIONS[level].title}
             description={ACTIVITY_DESCRIPTIONS[level].description}
             selected={values.activityLevel === level}
             onPress={() => setValues({ ...values, activityLevel: level })}

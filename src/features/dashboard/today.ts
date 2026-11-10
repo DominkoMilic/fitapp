@@ -94,18 +94,6 @@ export function upcomingEvents(
     .slice(0, limit);
 }
 
-/** Current target version for a date: max(effective_from) <= date (spec 20.6). */
-export function targetFor<T extends { effective_from: string }>(
-  versions: readonly T[],
-  date: IsoDate,
-): T | null {
-  return (
-    [...versions]
-      .filter((v) => v.effective_from <= date)
-      .sort((a, b) => b.effective_from.localeCompare(a.effective_from))[0] ?? null
-  );
-}
-
 /** The "Next: …" line on Home's Today card: skips an event that is already today's plan. */
 export function nextEvent(
   upcoming: readonly UpcomingEvent[],

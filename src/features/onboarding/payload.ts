@@ -1,10 +1,3 @@
-import { type NutritionPlan } from '@/domain/calculations/plan';
-import {
-  checkEditedCalories,
-  targetsFromEditedCalories,
-  targetsFromEditedMacros,
-  type MacroTargets,
-} from '@/domain/calculations/targets';
 import { AREA_RESTRICTIONS } from '@/domain/training/injury';
 import { type WeeklyPattern } from '@/domain/training/weekly-pattern';
 import type {
@@ -13,12 +6,10 @@ import type {
   EquipmentValues,
   GoalsValues,
   HealthValues,
-  NutritionValues,
   PersonalValues,
   ScheduleValues,
 } from '@/domain/validation/onboarding';
 
-import type { TargetOverrides } from './draft-store';
 import { SPORT_BY_KEY } from '@/domain/sports/catalogue';
 
 export interface CompleteDraft {
@@ -27,63 +18,19 @@ export interface CompleteDraft {
   activity: ActivityValues;
   equipment: EquipmentValues;
   schedule: ScheduleValues;
-  nutrition: NutritionValues;
   health: HealthValues;
   consent: ConsentValues;
-  overrides: TargetOverrides | null;
-}
-
-/** Applies the user's edits to calculated targets (spec 8.6 editing rules). */
-export function finalTargets(
-  plan: NutritionPlan,
-  overrides: TargetOverrides | null,
-): MacroTargets & { edited: boolean } {
-  const ref = plan.macros.referenceWeightKg;
-  if (!overrides) return { ...plan.macros, edited: false };
-  if (overrides.proteinG !== null && overrides.carbsG !== null && overrides.fatG !== null) {
-    return {
-      ...targetsFromEditedMacros({
-        proteinG: overrides.proteinG,
-        carbsG: overrides.carbsG,
-        fatG: overrides.fatG,
-        referenceWeightKg: ref,
-      }),
-      edited: true,
-    };
-  }
-  if (overrides.kcal !== null) {
-    return {
-      ...targetsFromEditedCalories({
-        kcal: overrides.kcal,
-        proteinG: plan.macros.proteinG,
-        fatG: plan.macros.fatG,
-        referenceWeightKg: ref,
-      }),
-      edited: true,
-    };
-  }
-  return { ...plan.macros, edited: false };
-}
-
-export class TargetBelowFloorError extends Error {
-  constructor(public readonly floorKcal: number) {
-    super(`Calorie target is below the safety minimum of ${floorKcal} kcal`);
-  }
 }
 
 /** Builds the JSON payload for public.complete_onboarding (see the migration for the contract). */
 export function buildOnboardingPayload(input: {
   draft: CompleteDraft;
-  plan: NutritionPlan;
   pattern: WeeklyPattern;
   legalVersion: string;
+  /** Today in the user's time zone; the plan starts on this day. */
+  asOf: string;
 }) {
-  const { draft, plan, pattern, legalVersion } = input;
-  const targets = finalTargets(plan, draft.overrides);
-  const check = checkEditedCalories(targets.kcal, plan.calories.floorKcal);
-  if (!check.ok) throw new TargetBelowFloorError(check.floorKcal);
-
-  const asOf = plan.inputs.asOf;
+  const { draft, pattern, legalVersion, asOf } = input;
   const hasHealth = draft.health.injuries.length > 0;
   const g = draft.goals;
   const usesTarget = g.goalType === 'lose_weight' || g.goalType === 'build_muscle';
@@ -109,21 +56,12 @@ export function buildOnboardingPayload(input: {
       target_date: g.targetDate,
     },
     preferences: {
-      diet_type: draft.nutrition.dietType,
-      allergies: draft.nutrition.allergies,
-      intolerances: draft.nutrition.intolerances,
-      disliked_foods: draft.nutrition.dislikedFoods,
-      preferred_cuisines: draft.nutrition.preferredCuisines,
-      meals_per_day: draft.nutrition.mealsPerDay,
-      cooking_time_max_minutes: draft.nutrition.cookingTimeMaxMinutes,
-      household_servings: draft.nutrition.householdServings,
       training_days_per_week: draft.schedule.trainingDaysPerWeek,
       preferred_training_days: draft.schedule.preferredDays,
       max_session_minutes: draft.schedule.maxSessionMinutes,
       preferred_training_time: draft.schedule.preferredTime,
       training_environment: draft.equipment.environment,
       sports: g.sports,
-      nutrition_enabled: draft.nutrition.trackNutrition ?? true,
     },
     equipment: draft.equipment.items.map((i) => ({
       equipment_type: i.type,
@@ -160,26 +98,6 @@ export function buildOnboardingPayload(input: {
         granted: draft.consent.notifications,
       },
     ],
-    targets: {
-      effective_from: asOf,
-      kcal: targets.kcal,
-      protein_g: targets.proteinG,
-      carbs_g: targets.carbsG,
-      fat_g: targets.fatG,
-      fibre_g: targets.fibreG,
-      water_ml: plan.waterMl,
-      bmr: Math.round(plan.bmr * 100) / 100,
-      tdee: Math.round(plan.tdee * 100) / 100,
-      floor_kcal: plan.calories.floorKcal,
-      limited_by_floor: plan.calories.limitedByFloor,
-      is_user_edited: targets.edited,
-      calculation_version: plan.calculationVersion,
-      calculation_inputs: {
-        ...plan.inputs,
-        activityMultiplier: plan.activityMultiplier,
-        age: plan.age,
-      },
-    },
     plan: {
       name: planName(g.goalType, g.focusTags, g.sports),
       start_date: asOf,

@@ -5,24 +5,23 @@ Answers match what the V1 app actually does (see `src/features/legal/documents.t
 ## Listing text
 
 **Name:** PACE: Fitness Coach
-**Subtitle (iOS, 30 chars):** Training, food and runs in one
-**Short description (Android, 80 chars):** Realistic targets, workouts around your schedule, food logging and GPS runs.
+**Subtitle (iOS, 30 chars):** Training and runs, honestly
+**Short description (Android, 80 chars):** Workouts around your schedule, GPS runs, weight progress and friends.
 **Category:** Health & Fitness · **Age rating:** 17+ (iOS: unrestricted web access = No; medical info = Infrequent/Mild) / PEGI 3 equivalent with "health" disclosures. The app requires users to be 18+ in its terms.
 
 **Description:**
 
 > PACE is a personal fitness coach that is honest about what it knows.
 >
-> • Realistic calorie and protein targets that never go below a safety minimum, reviewed with you every two weeks from your real weight trend.
+> • A realistic weight goal with an honest date range, tracked with a 7-day average instead of daily noise.
 > • A weekly training plan built around your schedule, equipment and injuries. Play basketball, tennis, handball or another sport? Your games and practices go on the calendar, with drills for your sport. No sport? No problem.
-> • Food logging from 6,800+ reference foods. Type in your own recipes and meals (with your own numbers if you like), a meal planner and a shopping list.
 > • Walk, run and ride tracking with GPS, pause, routes and personal records. Routes are private.
 > • A daily coach that explains why it suggests something, milestones, and a weekly report.
 > • Works offline and syncs when you're back online. Export or delete all your data at any time.
 >
 > PACE is not a medical device. Estimates are labelled as estimates.
 
-**Keywords (iOS):** fitness,workout,calorie,diet,weight,run tracker,gps,training plan,meal planner,protein
+**Keywords (iOS):** fitness,workout,weight,run tracker,gps,training plan,strength,sport,coach,friends
 
 **Support URL / marketing URL:** needed before submission (a simple page with the support email and the privacy policy).
 **Privacy policy URL:** required by both stores; host the in-app privacy policy text at a public URL.
@@ -31,7 +30,7 @@ Answers match what the V1 app actually does (see `src/features/legal/documents.t
 
 1. Home with coach cards and today's plan
 2. Training calendar / workout in progress
-3. Food diary with remaining calories and macros
+3. Friends (Social tab)
 4. Activity summary with route map
 5. Weight chart with 7-day average
 6. Weekly report
@@ -45,16 +44,16 @@ Tracking: **No** (no data used to track users across apps or websites; no ad or 
 | Contact info: Email address | Yes | Yes | No | App functionality (account) |
 | Contact info: Name | Yes | Yes | No | App functionality (greeting) |
 | Health & fitness: Health | Yes | Yes | No | App functionality (injuries, conditions, pain, weight, measurements) |
-| Health & fitness: Fitness | Yes | Yes | No | App functionality (workouts, activities, food logs) |
+| Health & fitness: Fitness | Yes | Yes | No | App functionality (workouts, activities) |
 | Location: Precise location | Yes | Yes | No | App functionality (routes of recorded activities) |
-| User content: Other user content | Yes | Yes | No | App functionality (notes, custom foods and recipes) |
+| User content: Other user content | Yes | Yes | No | App functionality (notes, social profile, reports you send) |
 | Identifiers: User ID | Yes | Yes | No | App functionality (account id) |
-| Other data: date of birth, sex, height | Yes | Yes | No | App functionality (energy calculation) |
+| Other data: date of birth, sex, height | Yes | Yes | No | App functionality (profile, BMI check for goals) |
 | Diagnostics, usage data, purchases, contacts, browsing | **No** | | | |
 
 ## Google Play: Data safety
 
-- Data collected: **Yes**. Shared with third parties: **No** (Supabase is a processor acting for us; TheMealDB receives only search words, not user data).
+- Data collected: **Yes**. Shared with third parties: **No** (Supabase is a processor acting for us).
 - Encrypted in transit: **Yes**. Users can request deletion: **Yes** (in-app, Profile → Your data → Delete my account).
 
 | Category | Types | Collected | Optional | Purposes |

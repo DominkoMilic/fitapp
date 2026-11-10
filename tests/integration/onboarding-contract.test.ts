@@ -14,6 +14,6 @@ describe('onboarding payload contract', () => {
   maybe('writes the seed payload for the database contract test', () => {
     const { payload } = buildSeed();
     writeFileSync(out as string, JSON.stringify(payload));
-    expect(payload.targets.kcal).toBe(2720);
+    expect(payload.goal.target_weight_kg).toBe(90);
   });
 });

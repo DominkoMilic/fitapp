@@ -2,25 +2,17 @@ import { isAllowedTime, readPrefs } from '@/features/notifications/prefs';
 import { addDays } from '@/domain/calculations/dates';
 import { loadSpike, sessionLoadOf } from '@/domain/coach/load';
 import {
-  checkWindow,
-  isCheckDue,
-  recalibrate,
-  type RecalInput,
-} from '@/domain/coach/recalibration';
-import {
   type CoachContext,
   type DoneSession,
   evaluateCoach,
   type PlanItem,
   RULES,
   type RuleId,
-  NUTRITION_RULES,
 } from '@/domain/coach/rules';
 import { consistentWeeksReached, evaluateMilestones } from '@/domain/milestones/evaluate';
 import {
   applyQuietHours,
   DEFAULT_PREFS,
-  effectivePrefs,
   NOTIFY,
   planNotifications,
   type PlanEvent,
@@ -28,74 +20,6 @@ import {
 import { weeklyReport, weekStartFor } from '@/domain/reports/weekly';
 
 const TODAY = '2026-11-18'; // a Wednesday
-
-// ------------------------------------------------------------------ recalibration (spec 8.9, 29.3)
-
-describe('recalibration (spec 8.9)', () => {
-  const base: RecalInput = {
-    currentKcal: 2720,
-    floorKcal: 1800,
-    targetRateKgWeek: 0.54,
-    currentWeightKg: 108,
-    slopeKgPerWeek: -0.2,
-    meanIntakeKcal: 2700,
-    adherence: 0.9,
-    previousSlow: true,
-    avgFatigue: 2,
-  };
-  it('W5: slow twice → observed TDEE 2920 and −100 kcal', () => {
-    const r = recalibrate(base);
-    expect(r.observedTdee).toBe(2920);
-    expect(r.reason).toBe('decrease_slow');
-    expect(r.proposedKcal).toBe(2620);
-    expect(r.slow).toBe(true);
-  });
-  it('W6: adherence 0.7 → no proposal, adherence message without shaming', () => {
-    const r = recalibrate({ ...base, adherence: 0.7 });
-    expect(r.reason).toBe('low_adherence');
-    expect(r.proposedKcal).toBeNull();
-    expect(r.message).toBe('Log a few more full days so PACE can calibrate your target.');
-  });
-  it('W7: losing 1.2 kg/week at 100 kg → +150 kcal', () => {
-    const r = recalibrate({ ...base, currentWeightKg: 100, slopeKgPerWeek: -1.2 });
-    expect(r.reason).toBe('increase_fast_loss');
-    expect(r.proposedKcal).toBe(2870);
-  });
-  it('slow only this check → on track', () => {
-    expect(recalibrate({ ...base, previousSlow: false }).reason).toBe('on_track');
-  });
-  it('slow twice but tired (fatigue ≥ 4) → keep target, prioritise sleep', () => {
-    const r = recalibrate({ ...base, avgFatigue: 4.2 });
-    expect(r.reason).toBe('recovery_hold');
-    expect(r.proposedKcal).toBeNull();
-  });
-  it('never proposes below the floor', () => {
-    expect(recalibrate({ ...base, currentKcal: 1850 }).proposedKcal).toBe(1800);
-    const atFloor = recalibrate({ ...base, currentKcal: 1800 });
-    expect(atFloor.proposedKcal).toBeNull();
-    expect(atFloor.reason).toBe('on_track');
-  });
-  it('no trend → not enough data', () => {
-    expect(recalibrate({ ...base, slopeKgPerWeek: null }).reason).toBe('not_enough_data');
-  });
-  it('runs only after 14 days since the last check and 21 days on the target', () => {
-    expect(isCheckDue({ today: TODAY, lastCheckOn: null, targetSince: addDays(TODAY, -21) })).toBe(
-      true,
-    );
-    expect(isCheckDue({ today: TODAY, lastCheckOn: null, targetSince: addDays(TODAY, -20) })).toBe(
-      false,
-    );
-    expect(
-      isCheckDue({ today: TODAY, lastCheckOn: addDays(TODAY, -13), targetSince: '2026-01-01' }),
-    ).toBe(false);
-    expect(
-      isCheckDue({ today: TODAY, lastCheckOn: addDays(TODAY, -14), targetSince: '2026-01-01' }),
-    ).toBe(true);
-    expect(checkWindow(TODAY)).toEqual({ start: addDays(TODAY, -20), end: TODAY });
-  });
-});
-
-// ------------------------------------------------------------------ training load (spec 8.11)
 
 describe('training load (spec 8.11)', () => {
   const week = (fromDaysAgo: number, rpe: number, minutes: number) =>
@@ -144,17 +68,12 @@ const session = (p: Partial<DoneSession> = {}): DoneSession => ({
 const ctx = (p: Partial<CoachContext> = {}): CoachContext => ({
   today: TODAY,
   minuteOfDay: 10 * 60,
-  dietType: null,
   injuries: [],
   plan: { yesterday: [], today: [], tomorrow: [] },
   sessions: [],
   checkin: null,
-  targets: { kcal: 2720, proteinG: 162, waterMl: 3800, floorKcal: 1800 },
-  intake: { kcal: 600, proteinG: 40, mealsLogged: 1, waterMl: 2500 },
-  completeDays: [],
   weightGoalActive: false,
   lastWeighIn: TODAY,
-  pendingAdjustment: false,
   week: { planned: 3, completed: 1 },
   dataDays: 30,
   dismissed: new Set(),
@@ -187,21 +106,6 @@ describe('coach rules: each triggers and stays quiet (spec 15.2)', () => {
       {
         injuries: [{ area: 'ankle', status: 'resolved' }],
         plan: { yesterday: [], today: [], tomorrow: [item({ category: 'futsal_match' })] },
-      },
-    ],
-    [
-      'S4',
-      {
-        completeDays: [1500, 1600, 1700, 2600].map((kcal, i) => ({
-          date: addDays(TODAY, -i - 1),
-          kcal,
-        })),
-      },
-      {
-        completeDays: [1500, 1600, 2500, 2600].map((kcal, i) => ({
-          date: addDays(TODAY, -i - 1),
-          kcal,
-        })),
       },
     ],
     [
@@ -273,39 +177,14 @@ describe('coach rules: each triggers and stays quiet (spec 15.2)', () => {
       },
     ],
     [
-      'N1',
-      {
-        minuteOfDay: 18 * 60,
-        intake: { kcal: 1500, proteinG: 100, mealsLogged: 2, waterMl: 3000 },
-      },
-      {
-        minuteOfDay: 18 * 60,
-        intake: { kcal: 1500, proteinG: 120, mealsLogged: 2, waterMl: 3000 },
-      },
-    ],
-    [
-      'N2',
-      { minuteOfDay: 15 * 60, intake: { kcal: 0, proteinG: 0, mealsLogged: 1, waterMl: 1800 } },
-      {
-        minuteOfDay: 14 * 60 + 59,
-        intake: { kcal: 0, proteinG: 0, mealsLogged: 1, waterMl: 1800 },
-      },
-    ],
-    [
-      'N3',
-      { minuteOfDay: 14 * 60, intake: { kcal: 0, proteinG: 0, mealsLogged: 0, waterMl: 0 } },
-      { minuteOfDay: 14 * 60, intake: { kcal: 300, proteinG: 10, mealsLogged: 1, waterMl: 0 } },
-    ],
-    [
       'W1',
       { weightGoalActive: true, lastWeighIn: addDays(TODAY, -4) },
       { weightGoalActive: true, lastWeighIn: addDays(TODAY, -3) },
     ],
-    ['W2', { pendingAdjustment: true }, { pendingAdjustment: false }],
     ['C1', { week: { planned: 3, completed: 3 } }, { week: { planned: 3, completed: 2 } }],
     ['C2', { dataDays: 2 }, { dataDays: 3 }],
   ];
-  it('covers all 18 rules', () => {
+  it('covers all 13 rules', () => {
     expect(cases.map((c) => c[0]).sort()).toEqual(RULES.map((r) => r.id).sort());
   });
   it.each(cases)('%s triggers, and stays quiet otherwise', (id, on, off) => {
@@ -327,12 +206,12 @@ describe('coach engine (spec 15.1, 28.9)', () => {
     expect(cards.map((c) => c.ruleId)).not.toContain('T1');
   });
   it('#2 a dismissed card is hidden today and back tomorrow', () => {
-    const c = ctx({ pendingAdjustment: true });
-    expect(evaluateCoach({ ...c, dismissed: new Set(['W2']) }).map((r) => r.ruleId)).not.toContain(
-      'W2',
+    const c = ctx({ weightGoalActive: true, lastWeighIn: null });
+    expect(evaluateCoach({ ...c, dismissed: new Set(['W1']) }).map((r) => r.ruleId)).not.toContain(
+      'W1',
     );
     const tomorrow = evaluateCoach({ ...c, today: addDays(TODAY, 1), dismissed: new Set() });
-    expect(tomorrow.map((r) => r.ruleId)).toContain('W2');
+    expect(tomorrow.map((r) => r.ruleId)).toContain('W1');
     expect(tomorrow[0]!.expiresOn).toBe(addDays(TODAY, 1));
   });
   it('#3 a new user gets onboarding tips only (and safety)', () => {
@@ -340,7 +219,8 @@ describe('coach engine (spec 15.1, 28.9)', () => {
       ctx({
         dataDays: 1,
         minuteOfDay: 20 * 60,
-        intake: { kcal: 0, proteinG: 0, mealsLogged: 0, waterMl: 0 },
+        weightGoalActive: true,
+        lastWeighIn: null,
       }),
     );
     expect(cards.map((c) => c.ruleId)).toEqual(['C2']);
@@ -360,7 +240,6 @@ describe('coach engine (spec 15.1, 28.9)', () => {
     const cards = evaluateCoach(
       ctx({
         checkin: { pain: 6, fatigue: 2, sleepHours: 8 },
-        pendingAdjustment: true,
         weightGoalActive: true,
         lastWeighIn: null,
         week: { planned: 2, completed: 2 },
@@ -373,20 +252,13 @@ describe('coach engine (spec 15.1, 28.9)', () => {
     );
     expect(cards[0]!.ruleId).toBe('S2');
   });
-  it('protein suggestions respect the diet', () => {
-    const vegan = RULES.find((r) => r.id === 'N1')!.run(
-      ctx({ dietType: 'vegan', minuteOfDay: 19 * 60 }),
-    );
-    expect(vegan?.body).toMatch(/Tofu/);
-    expect(vegan?.body).not.toMatch(/chicken|eggs|tuna/i);
-  });
   it('never suggests eating less', () => {
     for (const r of RULES) {
       const card = r.run(
         ctx({
-          completeDays: [1, 2, 3, 4].map((i) => ({ date: addDays(TODAY, -i), kcal: 1000 })),
           minuteOfDay: 20 * 60,
-          pendingAdjustment: true,
+          weightGoalActive: true,
+          lastWeighIn: null,
         }),
       );
       if (card) expect(card.body).not.toMatch(/eat less|cut (calories|back)/i);
@@ -406,8 +278,6 @@ describe('weekly report (spec 16)', () => {
       scheduled: [],
       sessions: [],
       activities: [],
-      completeDays: [],
-      waterDays: [],
       milestones: [],
       ...p,
     });
@@ -421,20 +291,7 @@ describe('weekly report (spec 16)', () => {
     });
     expect(r.training.completionPct).toBeNull();
     expect(r.training.minutes).toBeNull();
-    expect(r.nutrition.avgKcal).toBeNull();
     expect(r.activities.runKm).toBeNull();
-  });
-  it('#8 averages only complete days: "based on 3 of 7 days"', () => {
-    const r = report({
-      completeDays: [
-        { date: '2026-11-09', kcal: 2600, proteinG: 150 },
-        { date: '2026-11-11', kcal: 2700, proteinG: 160 },
-        { date: '2026-11-13', kcal: 2800, proteinG: 170 },
-        { date: '2026-11-16', kcal: 9999, proteinG: 999 }, // next week
-      ],
-    });
-    expect(r.nutrition).toMatchObject({ completeDays: 3, avgKcal: 2700, avgProteinG: 160 });
-    expect(r.nutrition.basedOn).toBe('based on 3 of 7 days');
   });
   it('#9 the current week is in progress; a finished week is not', () => {
     expect(report({ weekStart: '2026-11-16' }).inProgress).toBe(true);
@@ -546,24 +403,33 @@ describe('notification planner (spec 17)', () => {
     ]);
   });
   it('at most 4 per day, most important kept', () => {
-    const prefs = {
-      ...DEFAULT_PREFS,
-      weighIn: { on: true, time: '07:30' },
-      meals: { on: true, times: ['12:00', '18:00', '20:00'] },
-      water: { on: true, times: ['10:00', '15:00', '17:00'] },
-    };
-    const out = plan({ prefs, events: [ev({ time: '18:00' })] });
+    const prefs = { ...DEFAULT_PREFS, weighIn: { on: true, time: '07:30' } };
+    const out = plan({
+      prefs,
+      events: [
+        ev({ id: 'a', time: '10:00' }),
+        ev({ id: 'b', time: '13:00' }),
+        ev({ id: 'c', time: '17:00' }),
+        ev({ id: 'm', date: addDays(TODAY, 1), category: 'futsal_match' }),
+      ],
+    });
     const today = out.filter((n) => n.date === TODAY);
     expect(today).toHaveLength(NOTIFY.dailyCap);
-    expect(today.map((n) => n.kind)).toEqual(['weigh_in', 'meal', 'workout', 'meal']);
+    // The match eve and workouts outrank the weigh-in, which is dropped.
+    expect(today.map((n) => n.kind)).toEqual(['workout', 'workout', 'workout', 'match']);
   });
   it('#6 needs more than 64 → nearest 14 days within the limit', () => {
     const prefs = {
       ...DEFAULT_PREFS,
       weighIn: { on: true, time: '07:30' },
-      meals: { on: true, times: ['12:00', '18:00', '20:00'] },
     };
-    const out = plan({ prefs });
+    // Five workouts a day for 14 days plus weigh-ins: far more than the device allows.
+    const events = Array.from({ length: 14 }, (_, d) =>
+      ['08:00', '10:00', '12:00', '15:00', '18:00'].map((time, k) =>
+        ev({ id: `${d}-${k}`, date: addDays(TODAY, d), time }),
+      ),
+    ).flat();
+    const out = plan({ prefs, events });
     expect(out.length).toBeLessThanOrEqual(NOTIFY.maxPending);
     expect(out.every((n) => n.date <= addDays(TODAY, 13))).toBe(true);
     const dates = out.map((n) => `${n.date}:${String(n.minute).padStart(4, '0')}`);
@@ -581,8 +447,6 @@ describe('notification planner (spec 17)', () => {
     const prefs = {
       ...DEFAULT_PREFS,
       weighIn: { on: true, time: '07:30' },
-      meals: { on: true, times: ['12:00'] },
-      water: { on: true, times: ['10:00'] },
     };
     for (const n of plan({ prefs, events: [ev({ time: '18:00' })] }))
       expect(`${n.title} ${n.body}`).not.toMatch(/\d+(\.\d+)?\s?(kg|lb|kcal)|pain|injur/i);
@@ -628,10 +492,12 @@ describe('stored reminder preferences', () => {
     expect(readPrefs(null)).toEqual(DEFAULT_PREFS);
     const p = readPrefs({
       weighIn: { on: true, time: '07:15' },
-      meals: { on: true, times: ['25:00'] },
+      workout: { on: true, minutesBefore: 999 },
+      // Old meal and water settings from before nutrition was removed are ignored.
+      meals: { on: true, times: ['12:30'] },
     });
     expect(p.weighIn).toEqual({ on: true, time: '07:15' });
-    expect(p.meals).toEqual(DEFAULT_PREFS.meals);
+    expect('meals' in p).toBe(false);
     expect(p.workout).toEqual(DEFAULT_PREFS.workout);
   });
   it('quiet hours are not selectable', () => {
@@ -639,37 +505,5 @@ describe('stored reminder preferences', () => {
     expect(isAllowedTime('21:59')).toBe(true);
     expect(isAllowedTime('22:00')).toBe(false);
     expect(isAllowedTime('06:59')).toBe(false);
-  });
-});
-
-describe('nutrition switched off (spec 6.5)', () => {
-  it('drops food, calorie and target-review cards but keeps safety and weight', () => {
-    const busy = ctx({
-      minuteOfDay: 14 * 60,
-      intake: { kcal: 600, proteinG: 20, mealsLogged: 0, waterMl: 300 },
-      completeDays: [
-        { date: addDays(TODAY, -1), kcal: 900 },
-        { date: addDays(TODAY, -2), kcal: 900 },
-        { date: addDays(TODAY, -3), kcal: 900 },
-      ],
-      pendingAdjustment: true,
-      weightGoalActive: true,
-      lastWeighIn: addDays(TODAY, -5),
-    });
-    const on = evaluateCoach(busy, 20).map((r) => r.ruleId);
-    const off = evaluateCoach({ ...busy, nutritionEnabled: false }, 20).map((r) => r.ruleId);
-    expect(on.some((id) => NUTRITION_RULES.has(id))).toBe(true);
-    expect(off.filter((id) => NUTRITION_RULES.has(id))).toEqual([]);
-    expect(off).toContain('W1');
-  });
-  it('meal and water reminders are turned off, others stay', () => {
-    const prefs = {
-      ...DEFAULT_PREFS,
-      meals: { on: true, times: ['12:30'] },
-      water: { on: true, times: ['11:00'] },
-    };
-    const off = effectivePrefs(prefs, false);
-    expect([off.meals.on, off.water.on, off.weighIn.on]).toEqual([false, false, prefs.weighIn.on]);
-    expect(effectivePrefs(prefs, true)).toBe(prefs);
   });
 });

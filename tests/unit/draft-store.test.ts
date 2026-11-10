@@ -1,4 +1,4 @@
-import { useOnboardingDraft } from '@/features/onboarding/draft-store';
+import { migrateDraft, useOnboardingDraft } from '@/features/onboarding/draft-store';
 
 describe('onboarding draft store', () => {
   it('actions return undefined (safe to call from effects)', () => {
@@ -26,8 +26,26 @@ describe('onboarding draft store', () => {
   it('the same user keeps their draft', () => {
     const s = useOnboardingDraft.getState();
     s.bindUser('user-c');
-    s.setLastStep('nutrition');
+    s.setLastStep('health');
     useOnboardingDraft.getState().bindUser('user-c');
-    expect(useOnboardingDraft.getState().lastStep).toBe('nutrition');
+    expect(useOnboardingDraft.getState().lastStep).toBe('health');
+  });
+
+  it('an old draft saved on the removed food step resumes at Health', () => {
+    expect(
+      migrateDraft(
+        {
+          userId: 'u',
+          lastStep: 'nutrition',
+          nutrition: { trackNutrition: true },
+          overrides: null,
+        },
+        1,
+      ),
+    ).toEqual({ userId: 'u', lastStep: 'health' });
+    expect(migrateDraft({ userId: 'u', lastStep: 'goals' }, 1)).toEqual({
+      userId: 'u',
+      lastStep: 'goals',
+    });
   });
 });

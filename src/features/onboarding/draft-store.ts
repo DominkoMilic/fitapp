@@ -8,20 +8,11 @@ import type {
   EquipmentValues,
   GoalsValues,
   HealthValues,
-  NutritionValues,
   PersonalValues,
   ScheduleValues,
 } from '@/domain/validation/onboarding';
 
 import type { OnboardingStepId } from './steps';
-
-/** Values the user edited on the plan preview (null = use calculated targets). */
-export interface TargetOverrides {
-  kcal: number | null;
-  proteinG: number | null;
-  carbsG: number | null;
-  fatG: number | null;
-}
 
 export interface OnboardingDraft {
   userId: string | null;
@@ -31,11 +22,9 @@ export interface OnboardingDraft {
   activity: ActivityValues | null;
   equipment: EquipmentValues | null;
   schedule: ScheduleValues | null;
-  nutrition: NutritionValues | null;
   health: HealthValues | null;
   healthConsent: boolean;
   consent: ConsentValues | null;
-  overrides: TargetOverrides | null;
 }
 
 interface DraftActions {
@@ -54,11 +43,9 @@ export const emptyDraft: OnboardingDraft = {
   activity: null,
   equipment: null,
   schedule: null,
-  nutrition: null,
   health: null,
   healthConsent: false,
   consent: null,
-  overrides: null,
 };
 
 export const useOnboardingDraft = create<OnboardingDraft & DraftActions>()(
@@ -80,8 +67,20 @@ export const useOnboardingDraft = create<OnboardingDraft & DraftActions>()(
     }),
     {
       name: 'pace.onboarding-draft',
-      version: 1,
+      version: 2,
       storage: createJSONStorage(() => AsyncStorage),
+      migrate: (persisted, version) =>
+        migrateDraft(persisted, version) as OnboardingDraft & DraftActions,
     },
   ),
 );
+
+/**
+ * Version 1 drafts had a nutrition step (removed with nutrition, decisions 2026-11-18): drop its
+ * answers and resume a draft that stopped there at the next step, Health.
+ */
+export function migrateDraft(persisted: unknown, version: number): unknown {
+  if (version >= 2 || !persisted || typeof persisted !== 'object') return persisted;
+  const { nutrition: _n, overrides: _o, ...rest } = persisted as Record<string, unknown>;
+  return { ...rest, lastStep: rest.lastStep === 'nutrition' ? 'health' : rest.lastStep };
+}

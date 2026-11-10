@@ -1,4 +1,3 @@
-import { calculateNutritionPlan } from '@/domain/calculations/plan';
 import { generateWeeklyPattern } from '@/domain/training/weekly-pattern';
 import { buildOnboardingPayload, type CompleteDraft } from '@/features/onboarding/payload';
 
@@ -56,17 +55,6 @@ export const seedDraft: CompleteDraft = {
       },
     ],
   },
-  nutrition: {
-    trackNutrition: true,
-    dietType: 'omnivore',
-    allergies: [],
-    intolerances: [],
-    dislikedFoods: [],
-    preferredCuisines: [],
-    mealsPerDay: 3,
-    cookingTimeMaxMinutes: null,
-    householdServings: 1,
-  },
   health: {
     injuries: [
       {
@@ -82,21 +70,9 @@ export const seedDraft: CompleteDraft = {
     ],
   },
   consent: { terms: true, privacy: true, healthData: true, notifications: false },
-  overrides: null,
 };
 
 export function buildSeed(draft: CompleteDraft = seedDraft) {
-  const plan = calculateNutritionPlan({
-    sex: draft.personal.calcSex,
-    dateOfBirth: draft.personal.dateOfBirth,
-    heightCm: draft.personal.heightCm,
-    weightKg: draft.personal.weightKg,
-    activityLevel: draft.activity.activityLevel,
-    goalType: draft.goals.goalType,
-    targetWeightKg: draft.goals.targetWeightKg,
-    weeklyRatePct: draft.goals.weeklyRatePct,
-    asOf: '2026-11-08',
-  });
   const pattern = generateWeeklyPattern({
     trainingDaysPerWeek: draft.schedule.trainingDaysPerWeek,
     preferredDays: draft.schedule.preferredDays,
@@ -106,8 +82,12 @@ export function buildSeed(draft: CompleteDraft = seedDraft) {
     injuries: draft.health.injuries.map((i) => ({ bodyArea: i.bodyArea, status: i.status })),
   });
   return {
-    plan,
     pattern,
-    payload: buildOnboardingPayload({ draft, plan, pattern, legalVersion: '2026-11-08' }),
+    payload: buildOnboardingPayload({
+      draft,
+      pattern,
+      legalVersion: '2026-11-08',
+      asOf: '2026-11-08',
+    }),
   };
 }

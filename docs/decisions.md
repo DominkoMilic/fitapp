@@ -248,3 +248,14 @@ Long lists render 20 rows per page (next page near the end of the scroll, or "Sh
 5. **"Delete my social profile" keeps the blocks you made**, so people you blocked can't reach you if you come back. Account deletion removes everything (cascade).
 6. **Rate-limit counters roll back when an action fails** (it runs in one transaction). Accepted: repeated failing requests are cheap and have no effect.
 7. **The social consent is recorded on setup and on each switch on or off**, with the legal version, which is bumped to 2026-11-17 (privacy: Social features; terms: Community rules). There is no re-acceptance prompt; the version is recorded with each consent.
+
+## 2026-11-18: Nutrition removed (archived)
+
+1. **Why:** the product owner found nutrition (food logging, calorie and macro targets, water, recipes, meal planner, shopping list) overwhelming and felt it made PACE more of a cooking app than a fitness app.
+2. **Archive:** the last full app with nutrition (including social 8A) is branch `archive/nutrition`, tag `nutrition-archive-2026-11`. `docs/NUTRITION_ARCHIVE.md` explains how to bring it back.
+3. **Tables dropped** (chosen by the product owner): migration `20261118000100_remove_nutrition.sql` drops the 13 nutrition tables, their functions and guards, and the food-preference columns, and rewrites `complete_onboarding` without targets (old payloads that still send them are accepted and ignored). The `recipe-images` bucket and the `recipes-proxy` function are removed from the hosted project. This deleted nutrition data permanently; bringing it back needs a new migration that recreates the schema.
+4. **Kept:** MET-based "calories burned" estimates for workouts and activities (exercise estimates, not food); the activity-level question (describes the user); weight goal, weekly rate and BMI rule.
+5. **Goal date** is now estimated from the chosen weekly rate (`projectGoalDate`, spec 8.8) instead of the calorie deficit; progress screens keep the observed-trend estimate.
+6. **Removed with it:** coach rules S4, N1–N3, W2; the 2-week calorie review; meal and water reminders (old stored settings are ignored); nutrition in the weekly report (stored snapshots keep their old fields, which the view ignores); food and water in the logging streak.
+7. **Old devices:** queued sync operations for the removed tables are dropped when the outbox loads; onboarding drafts saved on the removed food step resume at Health. App builds from before this change can't use the nutrition screens any more and must be replaced (only test accounts were affected).
+8. **Legal:** privacy, terms, disclaimer and licences lose the food, recipe, TheMealDB and USDA parts; legal version 2026-11-18.

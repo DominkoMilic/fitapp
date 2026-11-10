@@ -4,7 +4,6 @@ import SocialTab from '@/app/(tabs)/social';
 import SocialSetupScreen, { NEVER_SHARED } from '@/app/social/setup';
 import SocialUser from '@/app/social/user/[handle]';
 import type { FriendRow, PublicProfile, SocialSetup } from '@/features/social/api';
-import { profileTabShown } from '@/features/profile/features';
 
 import { renderWithTheme } from '../setup/render';
 
@@ -199,13 +198,5 @@ describe('another person', () => {
   it('shows a clear state when the profile is hidden', async () => {
     await renderWithTheme(<SocialUser />);
     expect(screen.getByText('Profile not found')).toBeTruthy();
-  });
-});
-
-describe('five tabs at most', () => {
-  it('moves Profile out of the tab bar only when nutrition and social are both on', () => {
-    expect(profileTabShown({ nutrition: true, social: false })).toBe(true);
-    expect(profileTabShown({ nutrition: false, social: true })).toBe(true);
-    expect(profileTabShown({ nutrition: true, social: true })).toBe(false);
   });
 });

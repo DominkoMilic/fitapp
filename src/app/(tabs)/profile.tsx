@@ -43,19 +43,11 @@ export default function ProfileTab() {
 
       <SectionHeader title="You" />
       <ListItem title="Personal information" onPress={() => router.push('/settings/personal')} />
-      {features.nutrition ? (
-        <ListItem
-          title="Goal and targets"
-          subtitle="Calories, macros and how they were calculated"
-          onPress={() => router.push('/settings/targets')}
-        />
-      ) : (
-        <ListItem
-          title="Goal"
-          subtitle="Your goal and target weight"
-          onPress={() => router.push('/settings/goal')}
-        />
-      )}
+      <ListItem
+        title="Goal"
+        subtitle="Your goal and target weight"
+        onPress={() => router.push('/settings/goal')}
+      />
       <ListItem title="Health and injuries" onPress={() => router.push('/settings/health')} />
 
       <SectionHeader title="Preferences" />
@@ -66,7 +58,7 @@ export default function ProfileTab() {
       />
       <ListItem
         title="App features"
-        subtitle={`Nutrition ${features.nutrition ? 'on' : 'off'} · Social ${features.social ? 'on' : 'off'}`}
+        subtitle={features.social ? 'Social is on' : 'Social is off'}
         onPress={() => router.push('/settings/features')}
       />
       {social.data ? (

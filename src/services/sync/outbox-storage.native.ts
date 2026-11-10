@@ -1,6 +1,6 @@
 import { openDatabaseAsync, type SQLiteDatabase } from 'expo-sqlite';
 
-import type { OutboxOp } from '@/domain/sync/outbox';
+import { knownOps, type OutboxOp } from '@/domain/sync/outbox';
 
 import type { OutboxStorage } from './storage.types';
 
@@ -32,7 +32,7 @@ export const outboxStorage: OutboxStorage = {
       'SELECT op FROM outbox WHERE user_id = ? ORDER BY position',
       userId,
     );
-    return rows.map((r) => JSON.parse(r.op) as OutboxOp);
+    return knownOps(rows.map((r) => JSON.parse(r.op) as OutboxOp));
   },
   async replaceAll(userId, ops) {
     const d = await db();

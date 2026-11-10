@@ -19,6 +19,8 @@ Audience: the coding agent and any developer building PACE. This document is the
 
 ## 1. Review summary — what changed and why
 
+> Historical record of the original review. Nutrition items below were archived on 2026-11-18 (2.2, `docs/NUTRITION_ARCHIVE.md`).
+
 The original PRD was strong on vision but mixed V1 and V2 scope, left several technical choices open, and contained a few features that cannot work as described with the chosen data sources. This section records every decision.
 
 ### 1.1 Kept as-is (core value)
@@ -104,11 +106,12 @@ PACE is a personal fitness coach that turns a user's profile, schedule, equipmen
 
 | Release | Contents |
 |---|---|
-| **V1 (MVP)** | Auth, onboarding, plan preview, dashboard, weight + measurements, goals, milestones, PRs, exercise library, templates, calendar, recurring events, workout execution + history, nutrition logging, food catalogue, custom foods, saved meals, water, TheMealDB browser, user recipes, servings scaling, simple meal planner, shopping list, GPS walk/run/cycle (foreground + background during active session), manual activities, daily check-in, rule-based coach, target recalibration, weekly report, local notifications, offline outbox, data export, account deletion. |
-| **V1.1** | Barcode scanning + Open Food Facts search, progress photos, monthly report, training-day carb adjustment, GPX export, best-split PRs (fastest 1 km / 5 km within a run). |
+| **V1 (MVP)** | Auth, onboarding, plan preview, dashboard, weight + measurements, goals, milestones, PRs, exercise library, templates, calendar, recurring events, workout execution + history, GPS walk/run/cycle (foreground + background during active session), manual activities, daily check-in, rule-based coach, weekly report, local notifications, offline outbox, data export, account deletion. |
+| **V1.1** | Progress photos, monthly report, GPX export, best-split PRs (fastest 1 km / 5 km within a run). |
 | **V2** | HealthKit / Health Connect, AI coach (backend adapter, read-only suggestions), elevation, privacy zones for routes, light theme polish, Apple Watch / Wear OS. |
 | **V1.2 — Social (Phase 8A–8D)** | Friends and social profiles, activity feed with cheers and comments, push notifications, private clubs, challenges and effort-only leaderboards (Section 33). |
 | **Future** | Subscriptions, coaching marketplace, discoverable public clubs. |
+| **Archived** | Nutrition (food logging, calorie and macro targets, water, recipes, meal planner, shopping list, 2-week calorie review), removed 2026-11-18 to keep PACE focused on training; kept on branch `archive/nutrition`. |
 
 ### 2.3 Out of scope (explicitly)
 
@@ -122,33 +125,31 @@ Medical diagnosis, rehabilitation programmes, meal prescriptions for medical con
 
 1. The app is not a medical device. It never diagnoses, never prescribes rehabilitation, never recommends training through pain.
 2. Active or recovering injuries automatically exclude contraindicated exercises (Section 9). The app never upgrades injury status itself; only the user can, and the app recommends professional clearance before returning to sport.
-3. Calorie targets never go below the safety floor (Section 8.5). Manual edits below the floor are blocked with an explanation.
+3. PACE sets no calorie or food targets (nutrition is archived, 2.2).
 4. Weekly weight-loss rate above 1.0% of body weight is not selectable. Above 0.75% requires an explicit warning confirmation.
 5. Target weights implying BMI < 18.5 are not accepted for weight-loss goals.
-6. Milestones never reward speed of weight loss, very low intake, or excessive training volume.
-7. Calorie targets are never changed automatically. All changes are proposals the user accepts or rejects.
+6. Milestones never reward speed of weight loss or excessive training volume.
+7. Goals and plans are never changed automatically; changes are the user's.
 8. Pain ≥ 4/10 reported in a check-in converts that day's planned training for that area to rest and shows "consider professional advice".
 
 ### 3.2 Data integrity
 
 1. Never silently discard user-entered data. Failed syncs remain visible and retryable.
-2. Logged food stores a nutrition snapshot. Editing or deleting a food never changes history.
-3. Missing data is shown as missing, never as zero.
-4. All timestamps stored as `timestamptz` (UTC). Every user event also stores a `local_date` computed at the time of the event in the user's timezone. `local_date` is never recomputed later.
-5. All internal measurements are metric (kg, cm, m, ml, kcal). Conversion happens only at the UI edge.
-6. Every user-created row has a client-generated UUID so retries are idempotent.
+2. Missing data is shown as missing, never as zero.
+3. All timestamps stored as `timestamptz` (UTC). Every user event also stores a `local_date` computed at the time of the event in the user's timezone. `local_date` is never recomputed later.
+4. All internal measurements are metric (kg, cm, m, kcal). Conversion happens only at the UI edge.
+5. Every user-created row has a client-generated UUID so retries are idempotent.
 
 ### 3.3 Honesty
 
-1. Estimates (TDEE, calories burned, projections, GPS distance) are labelled as estimates.
-2. No invented recipe quantities or nutrition. "Nutrition unavailable" is a valid, expected state.
-3. No placeholder features that appear to work. Unfinished items are hidden or labelled "Coming soon".
-4. No fake success: every backend write shows real success or real failure.
+1. Estimates (calories burned, goal dates, GPS distance) are labelled as estimates.
+2. No placeholder features that appear to work. Unfinished items are hidden or labelled "Coming soon".
+3. No fake success: every backend write shows real success or real failure.
 
 ### 3.4 Social (from V1.2, Section 33)
 
 1. **Private by default, per-type opt-in.** Nothing is visible to anyone until the user chooses; visibility is enforced by RLS on the server, never only in the UI.
-2. **Never shareable:** weight, body measurements, goal numbers, food and water, check-ins and pain, injuries and health, notes, GPS routes and start/end locations, exact start times (shared items carry date and duration only).
+2. **Never shareable:** weight, body measurements, goal numbers, check-ins and pain, injuries and health, notes, GPS routes and start/end locations, exact start times (shared items carry date and duration only).
 3. **Encourage, never shame:** no weight, body or calorie competition; no "X passed you" or other comparison notifications; leaderboards are effort-only and opt-in; daily caps discourage overtraining; users with an active injury restriction get no challenge nudges.
 4. **User-generated content is moderated:** report, block, word filter, removal, owner/admin removal of members, a published contact, review within 24 h.
 5. **18+ only; no contact-book upload;** people are found by handle or invite link.
@@ -202,22 +203,20 @@ src/
   app/                      # Expo Router routes only (thin)
     _layout.tsx
     (auth)/  welcome, sign-in, sign-up, forgot-password, reset-password, verify-email
-    (onboarding)/  personal, goals, activity, equipment, schedule, nutrition, health, consent, plan
-    (tabs)/  index (Home), training, nutrition, progress, profile
+    (onboarding)/  personal, goals, schedule, health, consent, plan
+    (tabs)/  home, training, social, progress, profile
     training/  calendar, workout/[id], session/[id], exercises/index, exercises/[id], templates/[id]
     activity/  track, [id], manual
-    nutrition/  search, food/new, meal/[id], recipes/index, recipes/[id], recipe/new, planner, shopping
     progress/  weight, measurements, milestones, records, reports/[week]
-    profile/  personal, goals, training, nutrition, equipment, health, units, notifications, privacy, export, delete
+    profile/  personal, goals, training, equipment, health, units, notifications, privacy, export, delete
     check-in.tsx
   components/  ui/ charts/ forms/ cards/ feedback/
-  features/   dashboard/ onboarding/ training/ exercises/ nutrition/ recipes/
+  features/   dashboard/ onboarding/ training/ exercises/ social/
               activity-tracking/ weight/ measurements/ milestones/ recommendations/ profile/ check-in/
   domain/
-    calculations/   bmr.ts tdee.ts targets.ts macros.ts projection.ts recalibration.ts units.ts met.ts
+    calculations/   dates.ts energy.ts goal.ts units.ts
     training/       scheduler.ts injury-filter.ts progression.ts load.ts volume.ts
     activity/       geo.ts gps-filter.ts pace.ts
-    nutrition/      totals.ts scaling.ts measure-parser.ts shopping.ts
     weight/         rolling-average.ts trend.ts
     milestones/     catalogue.ts evaluate.ts records.ts
     recommendations/ rules.ts engine.ts
@@ -225,13 +224,11 @@ src/
     validation/     schemas.ts (shared zod schemas)
   integrations/
     supabase/  client.ts database.types.ts (generated)
-    recipes/   recipe-provider.interface.ts themealdb.provider.ts recipe-normalizer.ts
-    food/      food-provider.interface.ts usda-catalogue.ts openfoodfacts.provider.ts (V1.1)
     location/  location-provider.ts background-task.ts
   services/   sync/ (outbox.ts, sync-engine.ts) notifications/ storage/ export/
   stores/  hooks/  types/  constants/  utils/  theme/
 supabase/
-  migrations/  seed/  functions/delete-account/  functions/recipes-proxy/  tests/ (pgTAP)
+  migrations/  seed/  functions/delete-account/  tests/ (pgTAP)
 tests/  unit/ integration/ e2e/ (Maestro flows)
 docs/
 ```
@@ -257,16 +254,15 @@ docs/
 
 | Tab | Primary content |
 |---|---|
-| Home | Greeting and date (tapping opens Profile), coach cards, **Quick log** (two actions with tinted icon circles), **Your progress** (Start · Now · Goal with the progress bar and "2.7 kg down · 15.3 kg to go"), **Daily check-in** prompt, today's plan card (with the next fixed event as one "Next: …" line), today's nutrition bars when nutrition is on |
+| Home | Greeting and date (tapping opens Profile), coach cards, **Quick log** (two actions with tinted icon circles), **Your progress** (Start · Now · Goal with the progress bar and "2.7 kg down · 15.3 kg to go"), **Daily check-in** prompt, today's plan card (with the next fixed event as one "Next: …" line) |
 | Training | "+ Add" button, today, this week (prev/next), then only three links: History (workouts, games and activities together, with the month calendar), Personal records, Exercise library |
-| Nutrition | Day selector, remaining kcal, macro bars, meal sections (breakfast, lunch, dinner, snacks), water, "Mark day complete", recipes, planner, shopping list |
 | Social | Only when social is on (33). Friends: Add friends (handle search), Invite, requests (Accept / Decline), friends, sent requests. Feed, clubs and challenges arrive in 8B–8D |
 | Progress | Weight chart + stats, Log weight, then Weight history, Body measurements, Milestones, Weekly report |
-| Profile | You: personal info, goal and targets (or Goal when nutrition is off), health and injuries. Preferences: Training setup (sports, schedule, equipment), App features, Social and privacy (once social is set up), Reminders, Appearance. Account: Data and privacy (export, delete, legal documents), Sync status (only while changes are waiting or failed), Sign out |
+| Profile | You: personal info, goal, health and injuries. Preferences: Training setup (sports, schedule, equipment), App features, Social and privacy (once social is set up), Reminders, Appearance. Account: Data and privacy (export, delete, legal documents), Sync status (only while changes are waiting or failed), Sign out |
 
-**At most five tabs.** With nutrition and social both on, Profile leaves the tab bar and opens from the Home header (33.5).
+**Five tabs at most:** Home, Training, Social (when on), Progress, Profile.
 
-**One main action per screen.** Rarely used screens sit one level deeper, never on the tab itself: the 2-week target review is opened from its coach card on Home (W2) or from Goal and targets; food preferences from App features; the four legal documents from Data and privacy. Screens that were removed from a tab keep their routes so notifications and deep links still work.
+**One main action per screen.** Rarely used screens sit one level deeper, never on the tab itself: the four legal documents from Data and privacy. Screens that were removed from a tab keep their routes so notifications and deep links still work.
 
 ### 6.3 Quick actions
 
@@ -275,25 +271,15 @@ Home has two: **Log weight** and **Check-in**. Everything you can add on the Tra
 ### 6.4 V1 screen inventory
 
 Auth: Welcome, Sign in (with "Forgot your password?"), Sign up, Forgot password, Reset password (deep link), Verify email. Profile → Account → **Change password** (current password re-checked, then the new one; "Forgot your current password?" sends a reset link).
-Onboarding: About you (incl. activity level), Goals, Your week (incl. equipment), Food tracking, Health, Consent, Plan preview.
+Onboarding: About you (incl. activity level), Goals, Your week (incl. equipment), Health, Consent, Plan preview.
 Training: Add (record/log/plan), Week/month calendar, Workout detail, Active workout, Workout summary, Exercise library, Exercise detail, Custom exercise form, Template detail, History (workouts and activities combined).
 Activity: Activity type picker, Live tracking, Activity summary, Manual activity form, Activity detail.
-Nutrition: Daily dashboard, Food search, Custom food form, Meal detail, Saved meals, Recipe browser, Recipe detail (with servings), User recipe builder, Meal planner (week), Shopping list.
 Progress: Weight, Measurements, Milestones, Personal records, Weekly report.
 Long lists (weight history, training history, activities, exercises, sync queue) load **20 rows at a time**: the next page loads when scrolling near the end, and a "Showing 20 of 134 · Show more" footer does the same on a tap (`ListScreen`).
 Profile: all settings screens listed in 6.2; Training setup links to Sports, Schedule and Equipment, each with its own Save.
 Other: Daily check-in, Sync status, Legal (privacy policy, terms, disclaimer, data sources and licences).
 
 ### 6.5 Optional features (Settings → App features)
-
-**Nutrition tracking** can be switched off (`user_preferences.nutrition_enabled`; the column defaults to on for older app versions, but onboarding step 4 asks and pre-selects **off**, so new users start training-first). When on, App features links to the food preferences (diet, allergies, cuisines, cooking time). When off:
-
-- the Nutrition tab, Home's "Today's nutrition" card, Profile's nutrition settings and the weekly report's nutrition section are hidden; "Goal and targets" becomes "Goal" (goal and target weight);
-- coach rules S4, N1–N3 and W2 are not shown (15.2); the two-week calorie review (8.9) does not run;
-- meal and water reminders are not scheduled (17); the reminder settings hide them;
-- links or old notifications that open a nutrition screen show "Nutrition is turned off" with a button to turn it on.
-
-Nothing is deleted. Calorie targets are still calculated and saved, so turning nutrition back on shows exactly the same targets. Weight tracking, the goal and training are unaffected.
 
 **Social** (`user_preferences.social_enabled`, default **off**). Turning it on the first time opens the social setup (33.1); afterwards it switches social on or off. Off hides the Social tab and makes you unfindable; your profile and friends are kept. See Section 33.
 
@@ -305,13 +291,12 @@ Rules: progress bar, back navigation, draft saved locally after each step (resum
 
 | Step | Fields | Validation / notes |
 |---|---|---|
-| 1 About you | display name (req.), date of birth (req.), sex for metabolic calculation (male/female, req., explained), height (req.), current weight (req.), unit system (metric/imperial), timezone (auto-detected, editable); **activity level** (5 options, each with plain-language description that includes exercise), optional average daily steps | Name 1–50 chars. Age 18–100. Height 120–230 cm. Weight 30–350 kg. Imperial: ft 3–7, in 0–11.9, lb 66–770. Activity: show multiplier and explain it already includes exercise. Saved to the `personal` and `activity` draft keys. |
+| 1 About you | display name (req.), date of birth (req.), sex for metabolic calculation (male/female, req., explained), height (req.), current weight (req.), unit system (metric/imperial), timezone (auto-detected, editable); **activity level** (5 options, each with plain-language description that includes exercise), optional average daily steps | Name 1–50 chars. Age 18–100. Height 120–230 cm. Weight 30–350 kg. Imperial: ft 3–7, in 0–11.9, lb 66–770. Activity: plain descriptions that include usual exercise. Saved to the `personal` and `activity` draft keys. |
 | 2 Goals | primary goal: lose weight / maintain / build muscle / general fitness; target weight (req. for lose/build); desired weekly rate; optional target date; focus tags (strength, sport, running, cardio, mobility); sports played (multi-select from the catalogue, max 8, or "I don't play a sport") | Lose: target < current, target BMI ≥ 18.5. Rate default 0.5%/week; range 0.25–1.0%; > 0.75% needs warning confirmation. Build: target > current; rate 0.1–0.25%/week. Optional secondary target weight (e.g. 87 kg) creates an extra milestone only. |
 | 3 Your week | training days/week (0–7), preferred days, max session duration (15–120 min, default 45), preferred time, recurring sport commitments (title, type match/practice, weekday, time, duration), rest-day preferences; **equipment**: environment (home/gym/outdoors/mixed), equipment multi-select, per-item max weight (e.g. dumbbells 5 kg), custom entries | Commitments become `recurring_events`. Training days + commitments may overlap; scheduler resolves. "No equipment" is exclusive. Max weight 0.5–200 kg. Saved to the `schedule` and `equipment` draft keys. |
-| 4 Food tracking | "Track food too?" (optional, default **no**: training-first; no → the rest of the step is hidden and nutrition starts switched off, 6.5; yes → the questions below); diet type (omnivore/vegetarian/vegan/pescatarian/other), allergies, intolerances, disliked foods, preferred cuisines, meals per day (2–6, default 3 + snacks), cooking time preference (≤15/≤30/≤60/any), household servings (1–8, default 1) | Allergies are free-text chips with suggestions (peanut, tree nuts, milk, egg, fish, shellfish, soy, wheat/gluten, sesame). |
-| 5 Health (optional) | current injuries (body area, side, status, onset date, pain 0–10, notes, professional clearance), previous injuries, conditions, professional restrictions | Shown only after health-data consent. Disclaimer visible. Can skip. |
-| 6 Consent | terms + privacy (required), health data processing (required only if health info entered), notifications (optional). Location consent is asked later, at first activity. | Store in `consents` with document version. |
-| 7 Plan preview | BMR, TDEE, calorie target, macros, water, weekly schedule, rest days, milestones, projection range, calculation breakdown ("How we calculated this") | User can edit targets before confirming. Confirm writes profile completion, goal, `nutrition_targets` v1, `training_plans`, recurring events, first 8 weeks of scheduled workouts. |
+| 4 Health (optional) | current injuries (body area, side, status, onset date, pain 0–10, notes, professional clearance), previous injuries, conditions, professional restrictions | Shown only after health-data consent. Disclaimer visible. Can skip. |
+| 5 Consent | terms + privacy (required), health data processing (required only if health info entered), notifications (optional). Location consent is asked later, at first activity. | Store in `consents` with document version. |
+| 6 Plan preview | Goal date range (8.8, weight loss only), weekly schedule, rest days, milestones | Confirm writes profile completion, goal, `training_plans`, recurring events, first 8 weeks of scheduled workouts. Drafts saved on the removed food step resume at Health. |
 
 ---
 
@@ -323,100 +308,28 @@ All functions live in `src/domain/calculations`, are pure, and take explicit inp
 
 `age = full years between date_of_birth and asOf` (birthday not yet reached this year → subtract 1). Feb 29 birthdays: treat Mar 1 as the birthday in non-leap years.
 
-### 8.2 BMR (Mifflin-St Jeor)
+### 8.2–8.7 BMR, TDEE, calorie target, safety floor, macros, water
+
+*Archived 2026-11-18: nutrition was removed from PACE. The full text is on branch `archive/nutrition` (see `docs/NUTRITION_ARCHIVE.md`).*
+
+### 8.8 Goal date (estimate)
 
 ```
-male:   BMR = 10 × weight_kg + 6.25 × height_cm − 5 × age + 5
-female: BMR = 10 × weight_kg + 6.25 × height_cm − 5 × age − 161
-```
-
-The equation is selected by "sex for metabolic calculation" (user-selectable, explained in onboarding). Keep full precision internally; round only for display.
-
-### 8.3 TDEE
-
-`TDEE = BMR × multiplier`
-
-| Level | Multiplier | Description shown to user |
-|---|---|---|
-| sedentary | 1.2 | Desk job, little or no exercise |
-| light | 1.375 | Light exercise 1–3 days/week or on feet part of the day |
-| moderate | 1.55 | Moderate exercise or sport 3–5 days/week |
-| very | 1.725 | Hard exercise 6–7 days/week or physical job + training |
-| extra | 1.9 | Athlete training twice daily or very physical job + daily hard training |
-
-Shown with the note: "This is an estimate. It includes your usual exercise, so exercise calories are not added on top. PACE refines it from your real weight trend after 3 weeks."
-
-### 8.4 Calorie target
-
-Constants: `KCAL_PER_KG = 7700`, `MAX_DEFICIT_KCAL = 750`, `MAX_DEFICIT_FRACTION = 0.25`, `MAX_SURPLUS_KCAL = 300`, `FREQUENT_TRAINING = { hardSessionsPerWeek: 4, maxDeficitKcal: 500 }`.
-
-```
-lose:
-  desired_deficit = weekly_rate_pct/100 × weight_kg × 7700 / 7
-  max_kcal = 500 if hard_sessions_per_week ≥ 4 else 750   # games + hard practices (2.1.0)
-  deficit = min(desired_deficit, max_kcal, 0.25 × TDEE)
-  raw = TDEE − deficit
-maintain / general fitness:
-  raw = TDEE
-build muscle:
-  surplus = min(weekly_rate_pct/100 × weight_kg × 7700 / 7, 300)
-  raw = TDEE + surplus
-target = max(round_to_10(raw), floor)
-```
-
-`round_to_10(x) = Math.round(x / 10) × 10`. If the floor raised the target, set `limited_by_floor = true` and show "Your target is limited by the safety minimum." Recompute and show the resulting projected weekly rate: `rate_kg_week = (TDEE − target) × 7 / 7700`. When the 500 kcal cap applied (`frequent_training_cap`), explain: "You train hard N times a week, so the daily deficit is limited to 500 kcal…" (lower risk of low energy availability, RED-S). Hard sessions per week come from the user's recurring games and practices with intensity hard.
-
-### 8.5 Safety floor
-
-`floor = max(sex_floor, round_to_10(BMR))`, where `sex_floor` = 1500 kcal (male equation) or 1200 kcal (female equation). Floors are constants in `src/constants/safety.ts` (configurable for development, not by end users in V1).
-
-### 8.6 Macronutrients
-
-```
-reference_weight =
-  target_weight_kg            if goal = lose and target set
-  current weight              otherwise, unless BMI ≥ 30
-  25 × height_m²              if BMI ≥ 30 and no target
-protein_g = round(protein_g_per_kg × reference_weight)    default 1.8, allowed 1.6–2.2
-fat_g     = round(fat_pct × target / 9)                    default 0.25, allowed 0.20–0.35
-carbs_g   = floor((target − protein_g×4 − fat_g×9) / 4)
-```
-
-Validation: `|protein×4 + carbs×4 + fat×9 − target| ≤ 10`. If carbs < 50 g, warn and suggest lower fat %. **Sport carbohydrate note (2.1.0, information only):** when the user plays a sport and has ≥ 3 sessions a week (training days + games + practices) and `carbs_g < 3 × weight_kg`, show "Sport guidance suggests about X g of carbohydrate or more on training days…". The macro split is not changed. Editing rules: when the user edits macros directly, calories are derived from macros (single source of truth); when the user edits calories, carbs absorb the change. Fibre target (display only): 14 g per 1000 kcal.
-
-### 8.7 Water
-
-`water_ml = clamp(round_to_50(35 × weight_kg), 1500, 4000)`. Displayed as a general guideline, editable. Training days are not adjusted in V1; the targets screens show "On training days, drink roughly 500 ml extra per hour of training, more in heat" (`HYDRATION_ML_PER_TRAINING_HOUR`).
-
-### 8.8 Projection
-
-```
-expected_rate = (TDEE − target) × 7 / 7700            (kg/week)
+expected_rate = weekly_rate_pct / 100 × current_weight      (kg/week)
 weeks_mid  = (current − target_weight) / expected_rate
 weeks_fast = (current − target_weight) / (expected_rate × 1.25)
 weeks_slow = (current − target_weight) / (expected_rate × 0.75)
 ```
 
-Display as a date range rounded to months ("around July–October 2027") plus the statement "An estimate, not a promise. Weight changes are not linear." Chart shows a shaded band, never a single precise line. After 21 days with enough data, the band uses the observed trend (8.9) instead of the expected rate.
+Weight-loss goals only (`projectGoalDate`). Display as a date range rounded to months ("around May–September 2027") plus "An estimate, not a promise. Weight changes are not linear." After 21 days with enough data, the progress screens use the observed trend (8.9, `estimateTargetDates`) instead of the chosen rate.
 
-### 8.9 Weight trend and recalibration
+### 8.9 Weight trend
 
-Daily value = mean of that local day's weight entries. Trend slope = ordinary least-squares linear regression of daily values over the last 21 days, expressed in kg/week. Requires ≥ 10 daily values spanning ≥ 14 days, else "Not enough data".
-
-Recalibration check runs when the app opens if ≥ 14 days since the last check and ≥ 21 days since the current target started:
-
-1. Adherence = complete nutrition days (marked complete) / days in the window. If < 80%: no change; show "Log a few more full days so PACE can calibrate your target." No shaming language.
-2. `observed_TDEE = mean_intake_complete_days − slope_kg_per_day × 7700`.
-3. `actual_rate` = −slope (kg/week, positive = loss). Compare with target rate:
-   - Loss > 1.0% body weight/week → propose +150 kcal.
-   - Loss < 50% of target rate for this check **and** the previous check → propose −100 kcal (never below floor).
-   - Otherwise → "On track — keep your current target."
-4. Also consider recovery: if the average fatigue in check-ins ≥ 4/5 over the window, do not propose a decrease; suggest keeping the target and prioritising sleep.
-5. Write a `target_adjustments` row (status `proposed`) with all inputs. On accept, create a new `nutrition_targets` version effective tomorrow. On reject, record and wait for the next check. Max one change per 14 days.
+Daily value = mean of that local day's weight entries. Trend slope = ordinary least-squares linear regression of daily values over the last 21 days, expressed in kg/week. Requires ≥ 10 daily values spanning ≥ 14 days, else "Not enough data". (The 2-week calorie recalibration is archived with nutrition.)
 
 ### 8.10 Exercise calories (estimate)
 
-`kcal = MET × weight_kg × hours` (hours = moving time for GPS activities, active time for workouts). MET table in Section 25.4. Always displayed as "≈ 420 kcal (estimate)". Not added to the food budget.
+`kcal = MET × weight_kg × hours` (hours = moving time for GPS activities, active time for workouts). MET table in Section 25.4. Always displayed as "≈ 420 kcal (estimate)".
 
 ### 8.11 Training load
 
@@ -585,68 +498,7 @@ Type (walk/run/cycle/other incl. treadmill), date/time, duration, optional dista
 
 ## 12. Nutrition module
 
-### 12.1 Data sources
-
-| Source | Use | Confidence label |
-|---|---|---|
-| USDA FoodData Central (Foundation + SR Legacy subset, ~1–2k common foods), imported into `foods` during seeding | Generic foods (chicken breast, rice, eggs, oats, skyr-type yoghurt…) | reference |
-| User custom foods | Anything else | user |
-| Open Food Facts (V1.1) | Packaged foods by barcode/search | crowdsourced |
-| TheMealDB | Recipe inspiration (name, image, ingredients text, instructions) | none (nutrition unavailable) |
-| User recipes | Recipes built from foods with grams | calculated |
-
-USDA FDC data is public domain (CC0); still show "Food data: USDA FoodData Central" in Data sources. Store nutrition per 100 g (or per 100 ml for liquids) plus named portions (`food_portions`: "1 large egg = 50 g").
-
-### 12.2 Logging
-
-- Search (catalogue + custom, recent and favourites first), select portion or enter grams/ml, choose meal type and date (default: now's local date and meal by time of day — before 10:30 breakfast, 10:30–15:00 lunch, 15:00–17:00 snack, 17:00–21:30 dinner, after that snack).
-- Quick add: name + kcal (+ optional macros).
-- Copy meal from another day, copy yesterday's meal, save meal as "saved meal", log saved meal.
-- **Saved meals** ("my usual breakfast") can be built from scratch, edited, duplicated and removed. Items are foods (grams), the user's recipes (servings) or quick items (name + own numbers); each keeps a nutrition snapshot that scales exactly with its amount. "Save as a meal" opens the editor pre-filled with that meal's entries. "Log it" logs all items or only the ticked ones.
-- Every item stores a snapshot: name, quantity, unit, grams, kcal, protein, carbs, fat, fibre, source, confidence.
-- Items with unknown macros show a "Partial data" badge; day totals show "Some items lack full nutrition data".
-- "Mark day complete" toggle (used for calibration and reports). Auto-suggested in the evening if ≥ 2 meals logged, never auto-set.
-- Logging allowed for today and past dates; future dates only via the meal planner.
-
-### 12.3 Recipes (TheMealDB)
-
-- Browse: search by name, category list, filter by main ingredient, random. Results cached in `recipes` (unique `source + external_id`) via `recipes-proxy`.
-- Normalisation (`recipe-normalizer.ts`): map `strIngredient1..20` + `strMeasure1..20` to ingredient lines, drop empty pairs, parse measures (12.4), split instructions into steps, tags, area (cuisine), category, source URL, YouTube link.
-- TheMealDB has **no servings and no nutrition**. `servings_stated = null`, `nutritional_confidence = 'none'`. Recipe detail shows "Nutrition unavailable — log this meal with your own estimate or rebuild it as a PACE recipe".
-- Scaling requires a base. If `servings_stated` is null, ask "How many servings does this recipe make?" (saved per user in `saved_recipes.base_servings`). Until answered, quantities are shown unscaled.
-- Attribution: "Recipe from TheMealDB" + link to the original on every recipe screen.
-- Dietary filtering is keyword-based on ingredient names (meat/fish list for vegetarian, animal products for vegan, allergy keywords) and shows "Always check ingredients yourself".
-
-### 12.4 Measure parser and scaling (domain/nutrition)
-
-- Parse: integers, decimals (comma or dot), fractions `1/2`, mixed `1 1/2`, unicode `½ ¼ ¾ ⅓ ⅔`, ranges `2-3`, units with aliases (g, gram(s); kg; ml; l, litre/liter; tsp, teaspoon; tbsp, tbs, tablespoon; cup(s); oz; lb; pinch; clove(s); can/tin), number glued to unit (`175g`).
-- Non-scalable: "to taste", "to serve", "garnish", "dash", "drizzle", "handful", "sprinkling", "as required", empty → `parse_status = to_taste/unparsed`, shown verbatim.
-- Scale factor = target servings / base servings. Ranges scale both ends. Count units (eggs, cloves) rounded to nearest ¼ and marked "approx.". Metric weights rounded to 5 g above 50 g, 1 g below. Volumes are never converted to grams (density unknown).
-- Per-person nutrition is shown only when the recipe has nutrition (user recipes): `per_serving = total / servings`.
-
-### 12.5 User recipes
-
-Created, edited and duplicated in the recipe editor (`recipe-edit`). A copy of a TheMealDB recipe ("Make it my own") keeps its ingredients as text, its method and its link, and has no nutrition until the user adds it.
-
-- **Ingredients** are either foods (catalogue/custom, grams; a per-100 g snapshot is stored with the ingredient) or free text: a name plus an optional amount ("2 cups", "to taste") parsed with 12.4 so it scales and reaches the shopping list. Free-text ingredients never get nutrition.
-- **Nutrition per serving** is either calculated (Σ food per-100 g × grams / 100 ÷ servings; confidence `calculated`, shown as "Calculated from N of M ingredients" when some are free text) or typed in by the user (confidence `user_estimate`, kcal required, macros optional, shown as "Your estimate"). With neither, confidence is `none` ("Nutrition unavailable").
-- Name, description, servings 1–50, prep/cook minutes, up to 8 tags, up to 40 steps, an optional https source link. Ingredients and steps can be reordered with buttons.
-- Logging: servings in ¼ steps, today or the two days before, any meal. Logged entries are snapshots; editing a recipe never changes history.
-- Your own foods can be edited and removed (archived) the same way.
-
-User recipes with nutrition are the recipes the meal planner uses for macro-aware suggestions.
-
-### 12.6 Meal planner (V1 simple)
-
-Week grid (days × meal types). Add a saved meal, user recipe, TheMealDB recipe or custom text. Shows planned kcal/macros per day where nutrition is known (otherwise "partial"). Suggestions: rank user recipes and saved meals by closeness to the slot's share of the daily target (target × slot share: breakfast 25%, lunch 35%, dinner 30%, snacks 10%, adjusted by meals per day), excluding allergens and disliked foods, respecting cooking time preference. "Mark eaten" creates a meal log with the planned portion (editable). Regenerate suggestions = next ranked options.
-
-### 12.7 Shopping list
-
-Generate from a date range of planned meals × chosen servings. A saved meal contributes its food items (grams) and quick items (as text); a recipe inside a saved meal contributes that recipe's ingredients scaled by its servings in the meal × planned servings. Merge lines with the same normalised ingredient name **and** same unit; different units stay separate lines; unparsed measures become text lines with recipe name. Check/uncheck works offline. Manual items can be added.
-
-### 12.8 Water
-
-Quick add buttons (250 ml, 500 ml, custom), undo for 5 s, daily bar vs target. Entries > 2000 ml at once or day total > 10 L require confirmation.
+*Archived 2026-11-18: nutrition was removed from PACE. The full text is on branch `archive/nutrition` (see `docs/NUTRITION_ARCHIVE.md`).*
 
 ---
 
@@ -676,7 +528,7 @@ Change since start (from goal starting weight to current 7-day average), change 
 
 ### 13.4 Goal reached
 
-When the 7-day average reaches the target: celebration, then offer (a) set the secondary target, (b) switch to maintenance (proposes a new target = observed TDEE or TDEE), (c) set a new goal. Do not keep a deficit running silently.
+When the 7-day average reaches the target: celebration, then offer (a) set the secondary target, (b) switch to maintenance, (c) set a new goal. Do not keep a deficit running silently.
 
 ### 13.5 Body measurements
 
@@ -717,7 +569,7 @@ Records store the source session/activity; deleting the source recalculates the 
 
 ### 15.1 Engine
 
-`evaluate(context, now) → Recommendation[]`. Context: profile, goal, targets, today's and tomorrow's schedule, last 28 days of sessions/activities, last 21 days of weights, today's nutrition and water, latest check-in, active injuries, dismissed cards. Each recommendation: `id, rule_id, priority (0 = highest), category, title, body, reason ("Why am I seeing this?"), action (optional deep link), expires_at`. Dashboard shows the top 3. Safety rules suppress conflicting training suggestions. Dismissed cards hide until the next day. Rules are pure functions with unit tests.
+`evaluate(context, now) → Recommendation[]`. Context: profile, goal, today's and tomorrow's schedule, last 28 days of sessions/activities, last 21 days of weights, latest check-in, active injuries, dismissed cards. Each recommendation: `id, rule_id, priority (0 = highest), category, title, body, reason ("Why am I seeing this?"), action (optional deep link), expires_at`. Dashboard shows the top 3. Safety rules suppress conflicting training suggestions. Dismissed cards hide until the next day. Rules are pure functions with unit tests.
 
 ### 15.2 Rule set V1
 
@@ -726,25 +578,20 @@ Records store the source session/activity; deleting the source recalculates the 
 | S1 | 0 | Active/recovering injury and today's plan contains restricted exercises | "Today's workout was adjusted for your ankle. Restricted exercises were swapped." |
 | S2 | 0 | Check-in pain ≥ 4/10 | "You reported pain today. Rest that area and consider professional advice if it persists." |
 | S3 | 0 | A game or practice today/tomorrow of a sport the injury restricts (status active/recovering/cleared_training) | "Basketball game tomorrow, but your ankle is marked as recovering. Check with a professional before playing." (the sport's own words) |
-| S4 | 1 | Logged intake < floor on 3 of the last 4 complete days | "Your intake has been well below your target. Eating enough supports training and recovery." |
-| R1 | 2 | Match tomorrow | "Match tomorrow. Keep today light: mobility or an easy walk, hydrate, carbs with meals, good sleep." |
+| R1 | 2 | Match tomorrow | "Match tomorrow. Keep today light: mobility or an easy walk, drink enough and get good sleep." |
 | R2 | 2 | Match yesterday | "Recovery day after your match. An easy 20–30 min walk and mobility help." |
 | R3 | 2 | Check-in fatigue ≥ 4 or sleep < 6 h, and a hard session planned | "You're tired today. Swap to the 20-minute version or a recovery session." |
 | R4 | 2 | Two hard days in a row completed and a hard session planned today | "Two hard days in a row. Today is better as an easy day." |
 | R5 | 3 | Load spike (8.11) | "Your training load jumped this week. Consider an easier day." |
 | T1 | 3 | Planned workout not started by its time + 2 h | "Short on time? The 20-minute version covers the essentials." |
 | T2 | 4 | Missed workout yesterday | "Missed yesterday's session? Move it or skip — no problem." (action: Move) |
-| N1 | 4 | After 18:00, protein remaining ≥ 30% of target | "35 g protein to go. Skyr, eggs, chicken or tuna are easy options." |
-| N2 | 5 | After 15:00, water < 50% of target | "Halfway through the day — time for some water." |
-| N3 | 5 | After 14:00, no meals logged today | "Don't forget to log lunch." |
 | W1 | 5 | No weigh-in for 4 days (if weight goal active) | "Log a morning weigh-in to keep your trend accurate." |
-| W2 | 3 | Recalibration proposal pending | "Your 2-week review is ready." |
 | C1 | 6 | Completed ≥ planned sessions this week | "3 of 3 workouts done this week. Great consistency." |
 | C2 | 6 | New user (< 3 days data) | Onboarding tips (log weight, try a workout) |
 
-Never: diagnose, recommend training through pain, suggest cutting calories, override professional restrictions, or recommend a hard session on MD-1.
+Never: diagnose, recommend training through pain, give diet advice, override professional restrictions, or recommend a hard session on MD-1.
 
-With nutrition switched off (6.5), S4, N1–N3 and W2 are never shown (`NUTRITION_RULES`).
+Food and calorie rules (S4, N1–N3) and the 2-week review card (W2) were archived with nutrition.
 
 ---
 
@@ -752,7 +599,7 @@ With nutrition switched off (6.5), S4, N1–N3 and W2 are never shown (`NUTRITIO
 
 Weekly report (local week, default Monday–Sunday), generated in the domain module and cached in `weekly_reports` as a JSON snapshot when the week ends (current week shown live and labelled "In progress").
 
-Contents: weekly average weight (start of week vs end), trend, sessions completed vs planned (completion %), total training minutes, training load, activities count, walking/running/cycling distance, average kcal and protein **on complete days** with "based on N of 7 days", water average on logged days, milestones unlocked, PRs set. Every metric distinguishes "no data" from zero.
+Contents: weekly average weight (start of week vs end), trend, sessions completed vs planned (completion %), total training minutes, training load, activities count, walking/running/cycling distance, milestones unlocked, PRs set. Every metric distinguishes "no data" from zero.
 
 ---
 
@@ -763,12 +610,10 @@ Contents: weekly average weight (start of week vs end), trend, sessions complete
 | Workout reminder | On, 60 min before scheduled time (or 09:00 if no time) | Not on rest days |
 | Match reminder | On, evening before (19:00) | |
 | Weigh-in reminder | Off | Morning at chosen time |
-| Meal logging reminder | Off | Up to 3 per day at chosen times |
-| Water reminder | Off | Max 3 per day |
 | Weekly report | On, Monday 09:00 | |
 | Rest timer | On during workouts | |
 
-Meal and water reminders are never scheduled while nutrition is switched off (6.5).
+Meal and water reminders were archived with nutrition; old stored settings for them are ignored.
 
 Rules: quiet hours 22:00–07:00; global cap 4 per day (rest timer excluded); notification permission asked only when the user turns on the first reminder. Reconcile on app start and after any schedule/preference/timezone change: cancel all PACE-scheduled notifications and schedule the next 14 days, staying under iOS's 64 pending notification limit. Notification text never includes weight or health details (lock screen privacy).
 
@@ -778,14 +623,14 @@ Rules: quiet hours 22:00–07:00; global cap 4 per day (rest timer excluded); no
 
 ### 18.1 Scope
 
-Offline read: cached plan, scheduled workouts, templates, exercise library, recent foods, saved meals, saved recipes, last 90 days of weights, targets. Offline write: weight, measurements, water, meal logs and items, workout sessions and sets, activities and routes, check-ins, shopping list checks, schedule moves.
+Offline read: cached plan, scheduled workouts, templates, exercise library, last 90 days of weights. Offline write: weight, measurements, workout sessions and sets, activities and routes, check-ins, schedule moves. Social actions are online-only (33.1).
 
 ### 18.2 Mechanism
 
 - TanStack Query cache persisted to storage for reads.
 - Writes go to the local SQLite **outbox**: `(id, user_id, entity, record_id, op: upsert|delete, payload, created_at, attempts, last_error, status)`. The UI updates optimistically.
-- Sync engine runs on app foreground, network regain, after each write (debounced 2 s) and every 5 min while foregrounded. FIFO per entity, parents before children (meal_log before items, session before sets, activity row before route upload).
-- Server writes are `upsert` on the client UUID (idempotent). Conflict resolution: last-write-wins by `client_updated_at`, tie-break by device id; append-only logs (weights, water, sets) never conflict.
+- Sync engine runs on app foreground, network regain, after each write (debounced 2 s) and every 5 min while foregrounded. FIFO per entity, parents before children (session before sets, activity row before route upload). Stored operations for removed entities (the archived nutrition tables) are dropped when the queue loads.
+- Server writes are `upsert` on the client UUID (idempotent). Conflict resolution: last-write-wins by `client_updated_at`, tie-break by device id; append-only logs (weights, sets) never conflict.
 - Ops are collapsed: create + delete before sync → nothing sent; multiple updates → last one.
 - After an op reaches the server it stays applied to local reads for 15 s (or until the refetch lands), so a just-saved change never flashes the old values. It never counts as pending in the sync status.
 - Errors: network/5xx → exponential backoff (2 s → 5 min cap); 401 → refresh session and retry; validation/RLS (4xx) → status `failed`, shown in Sync status with Retry, Edit or Delete. Never dropped automatically.
@@ -799,7 +644,7 @@ Offline read: cached plan, scheduled workouts, templates, exercise library, rece
 - RLS enabled on every table in `public` (Section 21). Default deny.
 - Mobile client uses only the Supabase URL and publishable (anon) key. Service role key exists only in Edge Function secrets.
 - Create the Supabase project in an **EU region** (GDPR, users in Europe).
-- Edge Functions validate input with zod, authenticate the caller from the JWT, and rate-limit (`recipes-proxy`: 60 requests/min per user, cached responses 24 h).
+- Edge Functions validate input with zod, authenticate the caller from the JWT, and rate-limit (`delete-account`: 5 requests/min per user).
 - Storage buckets private; object path starts with `{user_id}/`; size and MIME limits enforced by bucket config.
 - Health data (injuries, conditions, check-in pain) is special-category data under GDPR Art. 9: collected only after explicit consent, optional, deletable independently ("Delete all health information").
 - Location: consent at first use, routes deletable, never in analytics/logs.
@@ -851,12 +696,6 @@ unique index one_active_goal on user_goals(user_id) where status = 'active'
 
 user_preferences (
   user_id uuid pk references auth.users on delete cascade,
-  diet_type text check (diet_type in ('omnivore','vegetarian','vegan','pescatarian','other')),
-  allergies text[] default '{}', intolerances text[] default '{}', disliked_foods text[] default '{}',
-  preferred_cuisines text[] default '{}',
-  meals_per_day smallint check (meals_per_day between 2 and 6) default 3,
-  cooking_time_max_minutes smallint,          -- null = any
-  household_servings smallint check (household_servings between 1 and 8) default 1,
   training_days_per_week smallint check (training_days_per_week between 0 and 7),
   preferred_training_days smallint[] default '{}',   -- ISO weekdays 1..7
   max_session_minutes smallint check (max_session_minutes between 15 and 120) default 45,
@@ -864,7 +703,6 @@ user_preferences (
   training_environment text check (training_environment in ('home','gym','outdoors','mixed')),
   notification_preferences jsonb not null default '{}',
   sports text[] not null default '{}',  -- sports catalogue keys, max 8; empty = no sport
-  nutrition_enabled boolean not null default true,  -- 6.5; off hides food, calories and water
   locale text default 'en', updated_at
 )
 
@@ -983,70 +821,7 @@ index (user_id, started_at desc)
 
 ### 20.6 Nutrition
 
-```sql
-foods (id, owner_id null, name text not null, brand text, barcode text,
-  basis text check (basis in ('per_100g','per_100ml')),
-  kcal numeric(6,1), protein_g numeric(6,2), carbs_g numeric(6,2), fat_g numeric(6,2), fibre_g numeric(6,2),
-  source text check (source in ('usda','off','user')), external_id text,
-  nutritional_confidence text check (nutritional_confidence in ('reference','crowdsourced','user')),
-  archived_at, created_at, updated_at,
-  unique (source, external_id))
-index foods using gin (to_tsvector('simple', name)); index (barcode)
-
-food_portions (id, food_id on delete cascade, label text, grams numeric(7,2) check (grams > 0))
-favorite_foods (user_id, food_id, created_at, primary key (user_id, food_id))
-
-recipes (id, owner_id null, source text check (source in ('themealdb','user')), external_id text,
-  name, description, image_url, category, cuisine, tags text[], instructions text[],
-  preparation_minutes, cooking_minutes, servings_stated smallint null, source_url, video_url,
-  nutritional_confidence text check (nutritional_confidence in ('none','calculated','user_estimate')),  -- user_estimate: own recipes only
-  kcal_per_serving, protein_per_serving, carbs_per_serving, fat_per_serving,   -- null unless calculated
-  fetched_at timestamptz, created_at, updated_at,
-  unique (source, external_id))
-
-recipe_ingredients (id, recipe_id on delete cascade, order_index, ingredient_name, raw_measure text,
-  quantity_min numeric, quantity_max numeric, unit text,
-  parse_status text check (parse_status in ('parsed','unparsed','to_taste')),
-  food_id null, grams numeric(7,2) null, preparation_note)
-
-saved_recipes (user_id, recipe_id, base_servings smallint null, default_servings smallint, note, created_at,
-  primary key (user_id, recipe_id))
-
-meal_logs (id, user_id, local_date date, meal_type text check (meal_type in ('breakfast','lunch','dinner','snack')),
-  title, notes, client_updated_at, ...)
-index (user_id, local_date)
-
-meal_log_items (id, user_id, meal_log_id on delete cascade, food_id null, recipe_id null,
-  name_snapshot text not null, quantity numeric, unit text, grams numeric(7,2) null,
-  kcal numeric(7,1) null, protein_g numeric(6,2) null, carbs_g numeric(6,2) null, fat_g numeric(6,2) null,
-  fibre_g numeric(6,2) null, source_snapshot text, confidence_snapshot text, client_updated_at, ...)
-view meal_log_totals / daily_nutrition_totals (sum, plus count of items with null macros)
-
-saved_meals (id, user_id, name, meal_type, ...)  saved_meal_items (id, user_id, saved_meal_id, ...same snapshot fields)
-
-day_log_status (user_id, local_date, nutrition_complete boolean default false, updated_at,
-  primary key (user_id, local_date))
-
-water_logs (id, user_id, amount_ml int check (amount_ml between 1 and 5000), recorded_at timestamptz, local_date date, ...)
-
-nutrition_targets (id, user_id, effective_from date not null, kcal int, protein_g int, carbs_g int, fat_g int,
-  fibre_g int, water_ml int, bmr numeric, tdee numeric, floor_kcal int, limited_by_floor boolean,
-  is_user_edited boolean, calculation_version text, calculation_inputs jsonb, created_at,
-  unique (user_id, effective_from))
--- target for date D = row with max(effective_from) <= D
-
-target_adjustments (id, user_id, proposed_at timestamptz, window_start date, window_end date,
-  current_kcal int, proposed_kcal int, observed_tdee numeric, actual_rate_kg_week numeric, adherence numeric,
-  reason_code text, status text check (status in ('proposed','accepted','rejected','superseded')),
-  decided_at timestamptz, resulting_target_id uuid null, inputs jsonb)
-
-meal_plan_entries (id, user_id, local_date, meal_type, recipe_id null, saved_meal_id null, custom_title text null,
-  servings numeric(4,1), status text check (status in ('planned','eaten','skipped')), meal_log_id null, ...)
-
-shopping_lists (id, user_id, name, range_start date, range_end date, status text check (status in ('active','archived')), ...)
-shopping_list_items (id, user_id, shopping_list_id on delete cascade, ingredient_name, quantity_min, quantity_max,
-  unit, raw_text, source_recipe_ids uuid[], is_checked boolean default false, is_manual boolean default false, ...)
-```
+*Archived 2026-11-18: nutrition was removed from PACE. The full text is on branch `archive/nutrition` (see `docs/NUTRITION_ARCHIVE.md`).* Its tables were dropped by `20261118000100_remove_nutrition.sql`.
 
 ### 20.7 Progress and reports
 
@@ -1064,7 +839,7 @@ weekly_reports (id, user_id, week_start date, payload jsonb, generated_at timest
 
 ### 20.8 Migrations
 
-One concern per migration file (`supabase/migrations/YYYYMMDDHHMMSS_description.sql`), never edit an applied migration, regenerate `database.types.ts` after each schema change (`supabase gen types typescript`). System seed data (exercises, templates, foods) in idempotent seed migrations using `on conflict (slug|source,external_id) do update`. Development-only seed (example user) lives in `supabase/seed/dev.sql` and is never applied to production.
+One concern per migration file (`supabase/migrations/YYYYMMDDHHMMSS_description.sql`), never edit an applied migration, regenerate `database.types.ts` after each schema change (`supabase gen types typescript`). System seed data (exercises, templates) in idempotent seed migrations using `on conflict (slug|source,external_id) do update`. Development-only seed (example user) lives in `supabase/seed/dev.sql` and is never applied to production.
 
 ---
 
@@ -1085,9 +860,9 @@ create policy "delete own" on public.weight_entries for delete to authenticated
   using ((select auth.uid()) = user_id);
 ```
 
-Apply to every table with `user_id`. `profiles` uses `id` instead of `user_id`. Child tables also verify the parent belongs to the user in `with check` (e.g. `exists (select 1 from meal_logs m where m.id = meal_log_id and m.user_id = (select auth.uid()))`).
+Apply to every table with `user_id`. `profiles` uses `id` instead of `user_id`. Child tables also verify the parent belongs to the user in `with check` (e.g. `exists (select 1 from workout_sessions s where s.id = session_id and s.user_id = (select auth.uid()))`).
 
-### 21.2 Shared catalogue tables (exercises, workout_templates, foods, recipes)
+### 21.2 Shared catalogue tables (exercises, workout_templates)
 
 ```sql
 -- read: system rows or own rows
@@ -1096,7 +871,7 @@ using (owner_id is null or owner_id = (select auth.uid()))
 with check (owner_id = (select auth.uid()))
 ```
 
-System rows (`owner_id is null`) are written only by migrations or the `recipes-proxy` function (service role). Child tables (`food_portions`, `recipe_ingredients`, `workout_template_exercises`) inherit visibility from the parent via `exists`.
+System rows (`owner_id is null`) are written only by migrations. Child tables (`workout_template_exercises`) inherit visibility from the parent via `exists`.
 
 ### 21.3 Storage
 
@@ -1120,35 +895,18 @@ For every user-owned table: user A can CRUD own rows; user B cannot select, upda
 
 ### 22.1 Provider interfaces
 
-```ts
-interface RecipeProvider {
-  id: 'themealdb';
-  search(query: string): Promise<RecipeSummary[]>;
-  getById(externalId: string): Promise<NormalizedRecipe | null>;
-  random(): Promise<NormalizedRecipe>;
-  categories(): Promise<string[]>;
-  byCategory(category: string): Promise<RecipeSummary[]>;
-  byIngredient(ingredient: string): Promise<RecipeSummary[]>;
-}
-interface FoodProvider {            // usda-catalogue (local DB) in V1, openfoodfacts in V1.1
-  search(query: string, opts: { limit: number }): Promise<NormalizedFood[]>;
-  getByBarcode?(barcode: string): Promise<NormalizedFood | null>;
-}
-```
+Recipe and food providers are archived with nutrition. Location is behind `location-provider.ts` (11).
+
 
 All responses validated with zod before normalisation; invalid items are dropped and counted, never crash the UI.
 
-### 22.2 TheMealDB
+### 22.2–22.3 TheMealDB, Open Food Facts
 
-Endpoints (base `https://www.themealdb.com/api/json/v1/{key}/`): `search.php?s=`, `lookup.php?i=`, `random.php`, `categories.php`, `filter.php?c=`, `filter.php?i=`. The public test key `1` is for development/education only; production use needs a supporter key, kept as an Edge Function secret. Therefore the app calls `recipes-proxy` (Edge Function) which adds the key, caches responses 24 h, upserts normalised recipes into `recipes`, and rate-limits per user. In local development the proxy may use key `1`. Filter endpoints return only id/name/thumbnail; details are fetched on open. `meals: null` means no results (not an error).
-
-### 22.3 Open Food Facts (V1.1)
-
-Product endpoint `https://world.openfoodfacts.org/api/v2/product/{barcode}.json`. Must send a custom User-Agent `PACE/<version> (<contact email from config>)`. Respect rate limits (product reads ~100/min, search ~10/min — verify current limits). Data licence ODbL: show attribution. Map `nutriments.energy-kcal_100g`, `proteins_100g`, `carbohydrates_100g`, `fat_100g`, `fiber_100g`; if kcal missing but kJ present, kcal = kJ / 4.184. Missing fields stay null. Label "Crowdsourced — check the package". Cache scanned products into `foods` (source `off`).
+*Archived 2026-11-18: nutrition was removed from PACE. The full text is on branch `archive/nutrition` (see `docs/NUTRITION_ARCHIVE.md`).*
 
 ### 22.4 Failure policy
 
-External API failure shows cached data or an error with retry. Manual logging always works.
+External service failure shows cached data or an error with retry. Manual logging always works.
 
 ---
 
@@ -1191,7 +949,7 @@ Button (primary, secondary, ghost, destructive; loading, disabled), IconButton, 
 
 **Validation errors appear on the field.** A field that is wrong eases (200 ms) into a red-tinted background (`dangerSurface`) with a red border, and the message drops in right under it (`FieldError`; no animation with reduce motion) (e.g. Log weight → Save without a weight: "Enter your weight" under Weight); the message disappears as soon as that field is edited (`useFieldErrors`). Banners are only for problems that aren't about one field (save failed, "Add at least one exercise"), and they slide in rather than pop.
 
-**Tappable cards say so.** A card with `onPress` shows a small accent "Details ›" footer, or a specific label ("Weight details", "Start check-in", "Open training", "Open nutrition", "Change goal", "View"); list-like cards (scheduled workouts) show a trailing chevron instead, like list rows. Recipe rows have a chevron too.
+**Tappable cards say so.** A card with `onPress` shows a small accent "Details ›" footer, or a specific label ("Weight details", "Start check-in", "Open training", "Change goal", "View"); list-like cards (scheduled workouts) show a trailing chevron instead, like list rows. Recipe rows have a chevron too.
 
 **Card tones.** `success` = done / unlocked (completed workouts, unlocked milestones, goal reached, fully done calendar days): successSurface fill, accent border and a 5 px accent bar on the left, so it is recognisable mid-scroll and not only by its icon. `muted` = locked / not yet available: background fill and a dashed border.
 
@@ -1220,7 +978,7 @@ All values live in `motion` (`src/theme/tokens.ts`); components never hard-code 
 | Modal screens (check-in) | slide up from the bottom | 140 ms fade |
 | Onboarding steps | 200 ms cross-fade | 140 ms fade |
 | Tabs | subtle `shift` | none |
-| List rows in editors, saved meals, weekly events | fade in 200 ms when added, slide out to the left with a fade (200 ms) when removed, slide 200 ms when others move (`AnimatedRow`, keyed by name so rows keep their animation when reordered) | no animation |
+| List rows in editors, weekly events | fade in 200 ms when added, slide out to the left with a fade (200 ms) when removed, slide 200 ms when others move (`AnimatedRow`, keyed by name so rows keep their animation when reordered) | no animation |
 | Coach cards | swipe sideways to dismiss (or tap Dismiss): slides out 200 ms, then its height collapses 200 ms so the content below glides up; a short swipe springs back (`SwipeToDismiss`). The "Coach" header collapses with the last card | removed at once |
 | Sheets and dialogs (calendar, confirmations) | `ModalShell`: no native Modal animation; a full-screen window (under status and navigation bars) whose content only appears once the window has its final size, then the backdrop fades in and the sheet slides up (dialogs zoom in), 260 ms; closing slides/fades out before unmounting | appear / disappear at once |
 | Segmented controls | the selected highlight slides to the new option (200 ms) instead of jumping | jumps |
@@ -1241,10 +999,8 @@ Haptics (`src/theme/haptics.ts`, expo-haptics): a selection tick for chips, new 
 | EXPO_PUBLIC_SUPABASE_URL | app | Supabase project URL |
 | EXPO_PUBLIC_SUPABASE_ANON_KEY | app | Publishable (anon) key — safe for clients; RLS protects data |
 | EXPO_PUBLIC_APP_ENV | app | development / preview / production |
-| EXPO_PUBLIC_OFF_CONTACT | app (V1.1) | Contact for Open Food Facts User-Agent |
 | GOOGLE_MAPS_ANDROID_API_KEY | EAS secret → app config | Android map rendering (restrict key to the app's package + SHA-1) |
 | SENTRY_DSN (optional) | app | Crash reporting |
-| THEMEALDB_API_KEY | Edge Function secret | Recipe API key (`1` in dev) |
 | SUPABASE_SERVICE_ROLE_KEY | Edge Function (provided automatically) | Never in the app or repo |
 
 `.env.example` lists all app variables with empty values. `.env*` files are git-ignored. `app.config.ts` reads variables and fails fast with a clear error if a required one is missing.
@@ -1268,29 +1024,13 @@ Separate Supabase projects for development and production (staging optional). Lo
 | Weight | 108 kg |
 | Goal | lose weight → 90 kg, secondary 87 kg, 0.5%/week |
 | Focus | futsal, strength |
-| Activity level | moderate (1.55) |
+| Activity level | moderate |
 | Equipment | dumbbells (max 5 kg), kettlebell (5 kg), exercise mat |
 | Max session | 60 min (45 default) |
 | Commitments | Futsal league match Saturday 18:00, 60 min, hard; futsal practice match Tuesday 20:00, 60 min, hard |
-| Nutrition | omnivore, no restrictions, 3 meals + snacks, household 1 (2 available) |
 | Injury | right ankle sprain, status recovering, pain 2/10 |
 
-Expected calculations (must match tests):
-
-| Quantity | Value |
-|---|---|
-| BMR | 10×108 + 6.25×187 − 5×23 + 5 = **2138.75** |
-| TDEE | 2138.75 × 1.55 = **3315.06** |
-| Desired deficit | 0.005 × 108 × 7700 / 7 = **594** kcal |
-| Deficit applied | min(594, 750, 828.8) = 594 |
-| Target | round_to_10(2721.06) = **2720 kcal** (floor = max(1500, 2140) = 2140, not limiting) |
-| Projected rate | (3315.06 − 2720) × 7 / 7700 = **0.54 kg/week** |
-| Protein | 1.8 × 90 = **162 g** (648 kcal) |
-| Fat | 0.25 × 2720 / 9 = 75.6 → **76 g** (684 kcal) |
-| Carbs | floor((2720 − 648 − 684)/4) = floor(347) = **347 g** (1388 kcal) |
-| Macro check | 648 + 684 + 1388 = 2720 ✓ |
-| Water | 35 × 108 = 3780 → **3800 ml** (round to 50) |
-| Projection | 18 kg / 0.54 ≈ 33 weeks (range 27–44 weeks) → "around 6–10 months" |
+Expected goal date (must match tests, C14): 0.5 % × 108 kg = **0.54 kg/week**; 18 kg / 0.54 ≈ 33 weeks (range 27–44 weeks) → "around May–September 2027" from 2026-11-09.
 
 Example generated week (ankle status = recovering):
 
@@ -1465,9 +1205,7 @@ Exit: generated week for the seed profile matches Section 25.1; ankle restrictio
 
 ### Phase 4 — Nutrition
 
-Scope: foods (USDA import script + seed), portions, favourites, meal logs/items, saved meals, day status, water, nutrition targets display, TheMealDB provider + normaliser + measure parser + `recipes-proxy`, recipe browser/detail with servings, user recipe builder, meal planner, shopping list, nutrition rules for dashboard.
-
-Exit: macros totals correct; snapshots immutable; TheMealDB recipes show "Nutrition unavailable"; scaling vectors pass; shopping list merges correctly; manual logging works with the API offline.
+*Archived 2026-11-18: nutrition was removed from PACE. The full text is on branch `archive/nutrition` (see `docs/NUTRITION_ARCHIVE.md`).*
 
 ### Phase 5 — GPS activity
 
@@ -1477,7 +1215,7 @@ Exit: real-device walk and run of ≥ 2 km with screen locked on iOS and Android
 
 ### Phase 6 — Personal coach
 
-Scope: recommendation engine + rules, recalibration + target_adjustments UI, training load, weekly report + history, notifications with reconciliation, remaining milestones.
+Scope: recommendation engine + rules, training load, weekly report + history, notifications with reconciliation, remaining milestones.
 
 Exit: every rule has unit tests (trigger and non-trigger); recalibration vectors pass; notifications respect caps and quiet hours.
 
@@ -1504,16 +1242,16 @@ Each stage follows the same rules as earlier phases (plan, implementation, tests
 
 1. A user can sign up, verify email, sign in, sign out and reset their password; invalid credentials show a clear error; sessions persist across restarts.
 2. Onboarding can be completed, resumed after an app kill, and every field edited later in Profile.
-3. Targets for the seed profile equal Section 25.1 exactly; the plan preview shows the breakdown.
-4. Targets never fall below the floor; edits below the floor are blocked; every target change is versioned and visible.
+3. The seed profile's goal date equals Section 25.1; the plan preview shows the week and milestones.
+4. *(Archived with nutrition: calorie targets.)*
 5. Weight can be logged, edited, deleted (online and offline); chart and stats match the reference calculations; missing data shows as missing.
 6. Measurements can be logged and charted.
 7. Workouts can be planned, moved, skipped, completed and reviewed; history persists across reinstall (server).
 8. Recurring sessions generate without duplicates over 8 weeks, including DST transitions.
 9. Active/recovering injuries exclude contraindicated exercises in plans, templates and suggestions.
-10. Meals can be logged from catalogue, custom foods, quick add, saved meals; totals are correct; historical items are unchanged after a food is edited.
-11. Recipes can be searched and viewed with attribution; nutrition shows as unavailable unless calculated; servings scale only where quantities are parseable and a base is known.
-12. A shopping list can be generated from planned meals and checked off offline.
+10. *(Archived with nutrition: meal logging.)*
+11. *(Archived with nutrition: recipes.)*
+12. *(Archived with nutrition: shopping list.)*
 13. Walk, run and cycle can be tracked, paused, resumed, finished and discarded; tracking continues with the screen locked when background permission is granted; routes are reviewable and deletable.
 14. Milestones, PRs and weekly reports display correctly and never duplicate.
 15. Daily recommendations appear with reasons and respect all safety rules.
@@ -1556,20 +1294,12 @@ Each item: situation → required behaviour. (T) = must have an automated test.
 11. "No equipment" → bodyweight-only exercises (T).
 12. Optional steps skipped → defaults shown with "default" badge.
 13. Timezone changes (travel) → new events use the new timezone; existing `local_date` values unchanged.
-14. Birthday passes → age changes only at next target recalculation (not silently).
-15. User changes sex-for-calculation or height → recalculation proposal, not silent change.
+14. Birthday passes → age shown from the date of birth; nothing else changes.
+15. User changes sex or height → saved; nothing is recalculated silently.
 
 ### 28.3 Calculations
 
-1. Safety floor raises target → `limited_by_floor = true` and message (T).
-2. Deficit cap 25% TDEE applied for small TDEE (T).
-3. Macros sum within ±10 kcal of target (T).
-4. Carbs < 50 g after edits → warning (T).
-5. Protein > 2.5 g/kg reference → warning.
-6. User edits macros → calories derived; edits calories → carbs adjust (T).
-7. Edit below floor → blocked (T).
-8. Projection with zero or positive expected rate → no date shown (T).
-9. Division by zero protection everywhere (distance 0, duration 0, servings 0) (T).
+Calorie and macro edge cases are archived with nutrition. Goal date: no date without a target, a rate, or anything left to lose (C15, T).
 
 ### 28.4 Weight and measurements
 
@@ -1625,23 +1355,7 @@ Each item: situation → required behaviour. (T) = must have an automated test.
 
 ### 28.7 Nutrition and recipes
 
-1. Food missing macros → item allowed, "Partial data" badge; totals flag incomplete (T).
-2. ml entered for a per-100 g food → not allowed unless a portion defines it.
-3. Quantity 0, negative or > 5000 g → validation / confirmation (T).
-4. Food edited/deleted after logging → logged snapshot unchanged (T).
-5. Copy meal into a day that already has that meal type → items appended (T).
-6. TheMealDB `meals: null` → empty state, not error (T).
-7. TheMealDB unavailable → cached data or error with retry; manual logging works.
-8. Recipe with no stated servings → base servings prompt before scaling (T).
-9. Measures "1/2 tsp", "1 1/2 cups", "½", "2-3", "175g", "To taste", "" → parsed per 12.4 (T).
-10. Scaling counts (3 eggs × 1/4) → 0.75 → "¾ (approx.)" (T).
-11. Same TheMealDB recipe opened twice → one cached row (unique) (T).
-12. Allergy keyword present in ingredient → recipe hidden from suggestions and flagged in browse.
-13. Vegetarian user browsing beef recipe → flagged "Contains meat" (keyword list).
-14. Shopping list: same ingredient different units → separate lines; same unit → summed; unparsed → raw line (T).
-15. Water: undo within 5 s; > 10 L day → confirmation.
-16. Logging after midnight for "yesterday's dinner" → date picker defaults to today but easy to change.
-17. Day marked complete then items added → stays complete; user can untoggle.
+*Archived 2026-11-18: nutrition was removed from PACE. The full text is on branch `archive/nutrition` (see `docs/NUTRITION_ARCHIVE.md`).*
 
 ### 28.8 Milestones, records, reports
 
@@ -1652,8 +1366,7 @@ Each item: situation → required behaviour. (T) = must have an automated test.
 5. Activity with poor GPS → excluded from pace/distance PRs (T).
 6. Source session deleted → PR recalculated (T).
 7. Week with no weigh-ins → "No data" (T).
-8. Average protein on 3 complete days of 7 → "based on 3 of 7 days" (T).
-9. Current week report → labelled "In progress".
+8. Current week report → labelled "In progress".
 
 ### 28.9 Coach and notifications
 
@@ -1688,26 +1401,21 @@ Each item: situation → required behaviour. (T) = must have an automated test.
 | Component | React Native Testing Library | Forms (validation messages), key cards, empty/error states |
 | Integration | Jest + local Supabase | Repositories, sync engine against local DB |
 | Database | pgTAP (`supabase test db`) | RLS isolation, constraints, triggers, unique indexes |
-| E2E | Maestro | Sign up → onboarding → log weight → start/finish workout → log meal → sign out |
+| E2E | Maestro | Sign up → onboarding → log weight → start/finish workout → sign out |
 | Device | Manual checklist | GPS (screen locked, kill, reboot), notifications, offline, deletion |
 
 ### 29.2 Calculation vectors
 
 | # | Input | Expected |
 |---|---|---|
-| C1 | male, 108 kg, 187 cm, 23 y | BMR 2138.75 |
-| C2 | female, 65 kg, 165 cm, 30 y | BMR 1370.25 |
-| C3 | male, 80 kg, 180 cm, 40 y | BMR 1730.00 |
-| C4 | C1 × moderate | TDEE 3315.0625 |
-| C5 | C1, lose 0.5%/wk | target 2720, protein 162, fat 76, carbs 347 |
-| C6 | C2 × light (1884.09), lose 0.5%/wk (desired 357.5) | target round_to_10(1526.6) = 1530; floor 1370 not limiting |
-| C7 | female, 50 kg, 160 cm, 35 y, sedentary, lose 1.0%/wk | BMR 1164; TDEE 1396.8; desired 550 → capped 349.2 (25% of TDEE); raw 1047.6 → 1050 → floor max(1200, 1160) = 1200 → target 1200, limited_by_floor = true |
-| C8 | C1, lose 1.0%/wk | desired 1188 → capped 750 → target round_to_10(2565.06) = 2570, projected 0.68 kg/wk |
-| C9 | weight 108 kg | water 3800 ml |
-| C10 | weight 40 kg | water 1500 ml (clamped) |
 | C11 | 6 ft 2 in | 187.96 cm; 108 kg = 238.1 lb |
 | C12 | DOB 2003-11-09, asOf 2026-11-08 | age 22 |
 | C13 | DOB 2000-02-29, asOf 2025-03-01 | age 25 |
+| C14 | 108 → 90 kg at 0.5 %/week, asOf 2026-11-09 | 0.54 kg/week; weeks 26.67 / 33.33 / 44.44; mid date 2027-06-30 |
+| C15 | no target, no rate, or target ≥ current | no goal date |
+| C16 | 90 → 80 kg at 1.0 vs 0.5 %/week | the faster rate gives the earlier date |
+
+C1–C10 (BMR, TDEE, calorie targets, water) are archived with nutrition.
 
 ### 29.3 Weight vectors
 
@@ -1717,9 +1425,8 @@ Each item: situation → required behaviour. (T) = must have an automated test.
 | W2 | Same day 108.0 and 107.0 | daily value 107.5 |
 | W3 | Days 1, 2 only | no average |
 | W4 | 21 daily values decreasing exactly 0.1 kg/day | slope −0.7 kg/week |
-| W5 | Recalibration: mean intake 2700, slope −0.2 kg/week, target rate 0.54, previous check also slow, adherence 0.9 | observed TDEE = 2700 + (0.2/7)×7700 = 2920; propose −100 kcal |
-| W6 | Adherence 0.7 | no proposal, adherence message |
-| W7 | Loss 1.2 kg/week at 100 kg | propose +150 kcal |
+
+W5–W7 (calorie recalibration) are archived with nutrition.
 
 ### 29.4 Geo and activity vectors
 
@@ -1737,18 +1444,7 @@ Each item: situation → required behaviour. (T) = must have an automated test.
 
 ### 29.5 Nutrition vectors
 
-| # | Input | Expected |
-|---|---|---|
-| N1 | 150 g of food with 165 kcal/31 g P/0 g C/3.6 g F per 100 g | 247.5 kcal, 46.5 g P, 0 g C, 5.4 g F |
-| N2 | Measure "1 1/2 cups" | 1.5 cup |
-| N3 | Measure "175g" | 175 g |
-| N4 | Measure "2-3 cloves" ×2 | 4–6 cloves |
-| N5 | Measure "To taste" ×2 | unchanged, to_taste |
-| N6 | 400 g chicken, base 4 → 2 servings | 200 g |
-| N7 | 3 eggs, base 4 → 1 serving | 0.75 → "¾ egg (approx.)" |
-| N8 | List: 200 g rice + 300 g rice + 1 cup rice | 500 g rice; 1 cup rice (separate) |
-| N9 | User recipe total 2000 kcal, 4 servings | 500 kcal/serving |
-| N10 | Workout volume 3 sets × 12 reps × 5 kg | 180 kg |
+*Archived 2026-11-18: nutrition was removed from PACE. The full text is on branch `archive/nutrition` (see `docs/NUTRITION_ARCHIVE.md`).*
 
 ### 29.6 Device test matrix (minimum)
 
@@ -1834,7 +1530,7 @@ Friends, a feed of shared training, clubs, challenges and effort-only leaderboar
 
 ### 33.1 Concepts and defaults
 
-- **Social is off until turned on** (Settings → App features → Social, like nutrition; plus a server kill switch `app_config.social_enabled`). Turning it on opens the setup sheet: (1) handle and display name, (2) what friends and clubs see, per type, **all off by default**, with the "never shared" list shown, (3) leaderboard opt-in; then the `social` consent is recorded with the policy version.
+- **Social is off until turned on** (Settings → App features → Social; plus a server kill switch `app_config.social_enabled`). Turning it on opens the setup sheet: (1) handle and display name, (2) what friends and clubs see, per type, **all off by default**, with the "never shared" list shown, (3) leaderboard opt-in; then the `social` consent is recorded with the policy version.
 - **Audiences** per type (workouts, activities, milestones, challenge results): `private` · `friends` · `friends_and_clubs`. A single shared item can be changed or hidden afterwards.
 - **Friends** are mutual (request → accept). Up to 500. Requests can be limited to nobody.
 - **Clubs** are private and invite-only (link or code), up to 50 members, roles owner / admin / member.
@@ -1875,7 +1571,7 @@ Friends, a feed of shared training, clubs, challenges and effort-only leaderboar
 
 ### 33.5 Screens
 
-- **Tab bar stays at five tabs at most:** Home, Training, Social, Progress, and Nutrition or Profile. When nutrition and social are both on, Profile leaves the tab bar (it opens from the Home header avatar).
+- **Tabs:** Home, Training, Social, Progress, Profile (five at most).
 - **Social tab:** Feed · Friends · Clubs · Challenges. Feed cards (paged): avatar, name, summary ("Strength A · 45 min · 9 sets"), date, cheers (tap; long-press picks a kind), comments. Friends: requests, list, handle search (≥ 3 characters), Invite (share sheet with `pace://add/<handle>`). Other user's profile: their shared items, mutual clubs, ⋯ Remove / Block / Report.
 - **Clubs:** create, join by link or code, club home Feed · Members · Board · Challenges; owners and admins rotate the invite, remove, promote, edit and delete; members leave.
 - **Challenges:** templates, progress rings / bars, days left, participants, ranks in ranking mode.
@@ -1928,16 +1624,11 @@ Friends, a feed of shared training, clubs, challenges and effort-only leaderboar
 
 ## Appendix A — Glossary
 
-BMR: basal metabolic rate. TDEE: total daily energy expenditure. MET: metabolic equivalent of task. RPE: rate of perceived exertion (0–10). MD-1 / MD+1: day before / after a match. RLS: Row Level Security. LWW: last write wins. Outbox: local queue of pending writes. Snapshot: copy of nutrition values stored with a log entry.
+MET: metabolic equivalent of task. RPE: rate of perceived exertion (0–10). MD-1 / MD+1: day before / after a match. RLS: Row Level Security. LWW: last write wins. Outbox: local queue of pending writes. Snapshot: copy of nutrition values stored with a log entry.
 
 ## Appendix B — External references
 
-- Mifflin MD, St Jeor ST et al. (1990). A new predictive equation for resting energy expenditure. Am J Clin Nutr.
 - Adult Compendium of Physical Activities (2024 update) — MET values.
-- International Society of Sports Nutrition position stand: protein and exercise (2017) — 1.4–2.0 g/kg guidance.
 - Foster C. et al. (2001). A new approach to monitoring exercise training (session RPE).
-- TheMealDB API: https://www.themealdb.com/api.php
-- Open Food Facts API: https://openfoodfacts.github.io/documentation/
-- USDA FoodData Central: https://fdc.nal.usda.gov/
 - Supabase docs: Auth with React Native, Row Level Security, Storage access control, Edge Functions.
 - Expo docs: expo-location (background location), expo-task-manager, expo-notifications, EAS Build.

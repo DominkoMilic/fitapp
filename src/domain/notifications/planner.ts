@@ -10,8 +10,6 @@ export interface NotificationPrefs {
   workout: { on: boolean; minutesBefore: number };
   match: { on: boolean };
   weighIn: { on: boolean; time: string };
-  meals: { on: boolean; times: string[] };
-  water: { on: boolean; times: string[] };
   weeklyReport: { on: boolean };
 }
 
@@ -19,19 +17,8 @@ export const DEFAULT_PREFS: NotificationPrefs = {
   workout: { on: true, minutesBefore: 60 },
   match: { on: true },
   weighIn: { on: false, time: '07:30' },
-  meals: { on: false, times: ['12:30', '19:00'] },
-  water: { on: false, times: ['11:00', '16:00'] },
   weeklyReport: { on: true },
 };
-
-/** Meal and water reminders are part of nutrition: off while the user has nutrition switched off. */
-export const effectivePrefs = (
-  p: NotificationPrefs,
-  nutritionEnabled: boolean,
-): NotificationPrefs =>
-  nutritionEnabled
-    ? p
-    : { ...p, meals: { ...p.meals, on: false }, water: { ...p.water, on: false } };
 
 export const NOTIFY = {
   horizonDays: 14,
@@ -43,19 +30,15 @@ export const NOTIFY = {
   defaultWorkoutTime: 9 * 60,
   matchEveTime: 19 * 60,
   weeklyReportTime: 9 * 60,
-  maxPerKind: 3,
 } as const;
 
-export type NotificationKind =
-  'match' | 'workout' | 'weekly_report' | 'weigh_in' | 'meal' | 'water';
+export type NotificationKind = 'match' | 'workout' | 'weekly_report' | 'weigh_in';
 /** When the daily cap bites, earlier kinds win. */
 const RANK: Record<NotificationKind, number> = {
   match: 0,
   workout: 1,
   weekly_report: 2,
   weigh_in: 3,
-  meal: 4,
-  water: 5,
 };
 
 export interface PlannedNotification {
@@ -159,26 +142,6 @@ export function planNotifications(input: {
         body: 'A quick weigh-in keeps your trend accurate.',
         href: '/weight/log',
       });
-    if (prefs.meals.on)
-      for (const t of prefs.meals.times.slice(0, NOTIFY.maxPerKind))
-        add({
-          kind: 'meal',
-          date,
-          minute: hm(t),
-          title: 'Log your meal',
-          body: 'Take a moment to log what you ate.',
-          href: '/nutrition/add',
-        });
-    if (prefs.water.on)
-      for (const t of prefs.water.times.slice(0, NOTIFY.maxPerKind))
-        add({
-          kind: 'water',
-          date,
-          minute: hm(t),
-          title: 'Water break',
-          body: 'Time for a glass of water.',
-          href: '/nutrition',
-        });
     const iso = new Date(`${date}T00:00:00Z`).getUTCDay() || 7;
     if (prefs.weeklyReport.on && iso === input.weekStartsOn)
       add({

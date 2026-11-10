@@ -3,7 +3,6 @@ import { z } from 'zod';
 import { DEFAULT_PREFS, type NotificationPrefs } from '@/domain/notifications/planner';
 
 const time = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
-const times = z.array(time).max(3);
 
 /** Stored in user_preferences.notification_preferences; anything missing or invalid gets the default. */
 const schema = z.object({
@@ -12,8 +11,6 @@ const schema = z.object({
     .catch(DEFAULT_PREFS.workout),
   match: z.object({ on: z.boolean() }).catch(DEFAULT_PREFS.match),
   weighIn: z.object({ on: z.boolean(), time }).catch(DEFAULT_PREFS.weighIn),
-  meals: z.object({ on: z.boolean(), times }).catch(DEFAULT_PREFS.meals),
-  water: z.object({ on: z.boolean(), times }).catch(DEFAULT_PREFS.water),
   weeklyReport: z.object({ on: z.boolean() }).catch(DEFAULT_PREFS.weeklyReport),
 });
 

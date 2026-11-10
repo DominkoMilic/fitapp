@@ -11,7 +11,6 @@ import {
 } from '@/domain/reports/weekly';
 import { dailyValues } from '@/domain/weight/trend';
 import { useActivities } from '@/features/activity/api';
-import { useNutritionRange } from '@/features/coach/api';
 import { useToday } from '@/features/dashboard/useToday';
 import { useUnlockedMilestones } from '@/features/milestones/api';
 import { useProfile } from '@/features/profile/api';
@@ -59,14 +58,12 @@ const isReport = (p: unknown): p is WeeklyReport =>
  */
 export function useWeeklyReport(weekStart: string) {
   const { today } = useWeekStart();
-  const weekEnd = addDays(weekStart, 6);
   const cached = useCachedReports();
   const snapshot = cached.rows.find((r) => r.week_start === weekStart);
   const weights = useWeightEntries();
   const schedule = useScheduledWorkouts(addDays(today, -120), addDays(today, 120));
   const sessions = useSessions();
   const activities = useActivities();
-  const food = useNutritionRange(weekStart, weekEnd);
   const milestones = useUnlockedMilestones();
 
   const ready =
@@ -74,7 +71,6 @@ export function useWeeklyReport(weekStart: string) {
     schedule.isSuccess &&
     sessions.isSuccess &&
     activities.isSuccess &&
-    food.isSuccess &&
     milestones.isSuccess;
 
   const live = useMemo(() => {
@@ -102,8 +98,6 @@ export function useWeeklyReport(weekStart: string) {
         distanceM: a.distance_meters,
         trusted: distanceTrusted({ quality: a.gps_quality, source: a.source }),
       })),
-      completeDays: food.data?.completeDays ?? [],
-      waterDays: food.data?.waterDays ?? [],
       milestones: milestones.rows.map((m) => ({
         date:
           ((m.metadata as Record<string, unknown> | null)?.achieved_on as string | undefined) ??
@@ -119,7 +113,6 @@ export function useWeeklyReport(weekStart: string) {
     schedule.rows,
     sessions.sessions,
     activities.rows,
-    food.data,
     milestones.rows,
   ]);
 
@@ -128,8 +121,12 @@ export function useWeeklyReport(weekStart: string) {
     report: stored ?? live,
     fromSnapshot: !!stored,
     isPending: !stored && !live,
-    isError: !stored && (weights.isError || food.isError || sessions.isError),
-    refetch: food.refetch,
+    isError: !stored && (weights.isError || sessions.isError || activities.isError),
+    refetch: () => {
+      void weights.refetch();
+      void sessions.refetch();
+      void activities.refetch();
+    },
   };
 }
 

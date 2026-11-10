@@ -27,7 +27,7 @@ function userTablesFromTypes(): string[] {
 describe('data export covers every user table (spec 27 #18)', () => {
   it('lists every table with a user_id/owner_id column, plus profiles', () => {
     const found = userTablesFromTypes();
-    expect(found.length).toBeGreaterThan(25);
+    expect(found.length).toBeGreaterThan(20);
     const listed = new Set<string>(EXPORT_TABLES.map(([t]) => t));
     const missing = found.filter(
       (t) => !listed.has(t) && !(NOT_EXPORTED as readonly string[]).includes(t),

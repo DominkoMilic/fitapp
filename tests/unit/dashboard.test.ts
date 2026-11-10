@@ -3,7 +3,6 @@ import {
   hourInTimezone,
   nextEvent,
   parsePattern,
-  targetFor,
   todaysSession,
   upcomingEvents,
 } from '@/features/dashboard/today';
@@ -84,19 +83,6 @@ describe('upcoming events', () => {
     );
     expect(r).toEqual([]);
   });
-});
-
-describe('target versions (spec 20.6)', () => {
-  const v = [
-    { effective_from: '2026-11-08', kcal: 2720 },
-    { effective_from: '2026-11-22', kcal: 2620 },
-  ];
-  it('picks the latest version effective on the date', () => {
-    expect(targetFor(v, '2026-11-08')?.kcal).toBe(2720);
-    expect(targetFor(v, '2026-11-21')?.kcal).toBe(2720);
-    expect(targetFor(v, '2026-11-22')?.kcal).toBe(2620);
-  });
-  it('returns null before the first version', () => expect(targetFor(v, '2026-11-01')).toBeNull());
 });
 
 describe('nextEvent', () => {

@@ -17,7 +17,7 @@ export function SportsPicker({
     <View style={styles.stack}>
       <Toggle
         label="I don't play a sport"
-        description="PACE plans your training and nutrition without games or practices."
+        description="PACE plans your training without games or practices."
         value={none}
         onChange={(on) => onChange(on ? [] : [...value])}
       />

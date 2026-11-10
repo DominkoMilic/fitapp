@@ -169,9 +169,6 @@ const now = new Date().toISOString();
               },
             ]
           : [],
-        nutrition_targets: p
-          ? [{ id: 't1', user_id: UID, ...p.targets, created_at: now, updated_at: now }]
-          : [],
         training_plans: p
           ? [
               {
@@ -279,10 +276,7 @@ const now = new Date().toISOString();
   await page.getByLabel('Heaviest dumbbells (optional)').fill('5');
   await shot('12-schedule');
   await cont();
-  // 4 food tracking: off by default; the later nutrition checks need it on
-  await page.getByRole('switch', { name: /Track food in PACE/ }).click();
-  await cont();
-  // 5 health
+  // 4 health
   await page.getByRole('switch', { name: 'Store my health information' }).click();
   await page.getByRole('button', { name: 'Add an injury' }).click();
   await page
@@ -435,10 +429,9 @@ const now = new Date().toISOString();
   const historyText = await page.locator('body').innerText();
   fs.writeFileSync(`${out}/payload.json`, JSON.stringify(payload, null, 2));
   const checks = {
-    'plan shows 2720 kcal': planText.includes('2720'),
-    'plan shows 162 g protein': planText.includes('162'),
-    'plan shows 347 g carbs': planText.includes('347'),
-    'payload kcal = 2720': payload?.targets?.kcal === 2720,
+    'plan shows the estimated goal date': /Your goal[\s\S]*per week/.test(planText),
+    'plan shows no calorie targets': !/kcal|Protein|Carbs/.test(planText),
+    'payload has no targets': payload !== null && !('targets' in payload),
     'seed week matches spec 25.1':
       payload?.plan?.weekly_pattern?.map((d) => d.kind).join(',') ===
       'strength_upper,commitment,recovery,strength_lower_safe,rest,commitment,recovery',

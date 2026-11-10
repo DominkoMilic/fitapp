@@ -13,20 +13,12 @@ import {
 } from '@/components/ui';
 import type { NotificationPrefs } from '@/domain/notifications/planner';
 import { useSaveNotificationPrefs } from '@/features/notifications/api';
-import { useFeatures } from '@/features/profile/features';
 import { isAllowedTime, readPrefs } from '@/features/notifications/prefs';
 import { usePreferences } from '@/features/profile/api';
 import { notifier } from '@/services/notifications/notifier';
 import type { PermissionState } from '@/services/notifications/notifier.types';
 
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
-const parseTimes = (s: string) =>
-  s
-    .split(/[,\s]+/)
-    .map((t) => t.trim())
-    .filter(Boolean)
-    .map((t) => (/^\d:\d\d$/.test(t) ? `0${t}` : t));
-
 export default function NotificationSettings() {
   const prefsQuery = usePreferences();
   if (prefsQuery.isPending)
@@ -53,9 +45,6 @@ function Form({ initial }: { initial: NotificationPrefs }) {
   const [prefs, setPrefs] = useState<NotificationPrefs>(initial);
   const [permission, setPermission] = useState<PermissionState>('undetermined');
   const [weighIn, setWeighIn] = useState(initial.weighIn.time);
-  const [meals, setMeals] = useState(initial.meals.times.join(', '));
-  const [water, setWater] = useState(initial.water.times.join(', '));
-  const nutrition = useFeatures().nutrition;
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -74,20 +63,13 @@ function Form({ initial }: { initial: NotificationPrefs }) {
   };
 
   const onSave = () => {
-    const mealTimes = parseTimes(meals);
-    const waterTimes = parseTimes(water);
-    const all = [weighIn, ...mealTimes, ...waterTimes];
-    if (all.some((t) => !TIME.test(t))) return setError('Use 24-hour times like 07:30 or 19:00.');
-    if (all.some((t) => !isAllowedTime(t)))
+    if (!TIME.test(weighIn)) return setError('Use a 24-hour time like 07:30.');
+    if (!isAllowedTime(weighIn))
       return setError('Reminders can be between 07:00 and 21:59 (quiet hours are 22:00–07:00).');
-    if (mealTimes.length > 3 || waterTimes.length > 3)
-      return setError('Up to 3 meal and 3 water reminders a day.');
     setError(null);
     const next: NotificationPrefs = {
       ...prefs,
       weighIn: { ...prefs.weighIn, time: weighIn },
-      meals: { ...prefs.meals, times: mealTimes },
-      water: { ...prefs.water, times: waterTimes },
     };
     save.mutate(next, {
       onSuccess: () => {
@@ -148,32 +130,6 @@ function Form({ initial }: { initial: NotificationPrefs }) {
       <Toggle label="Weigh-in reminder" value={prefs.weighIn.on} onChange={toggle('weighIn')} />
       {prefs.weighIn.on ? (
         <TextField label="Time" value={weighIn} onChangeText={setWeighIn} placeholder="07:30" />
-      ) : null}
-      {nutrition ? (
-        <>
-          <Toggle
-            label="Meal logging reminders"
-            value={prefs.meals.on}
-            onChange={toggle('meals')}
-          />
-          {prefs.meals.on ? (
-            <TextField
-              label="Times (up to 3)"
-              value={meals}
-              onChangeText={setMeals}
-              placeholder="12:30, 19:00"
-            />
-          ) : null}
-          <Toggle label="Water reminders" value={prefs.water.on} onChange={toggle('water')} />
-          {prefs.water.on ? (
-            <TextField
-              label="Times (up to 3)"
-              value={water}
-              onChangeText={setWater}
-              placeholder="11:00, 16:00"
-            />
-          ) : null}
-        </>
       ) : null}
 
       <SectionHeader title="Reports" />

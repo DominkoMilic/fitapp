@@ -9,7 +9,6 @@ import { dailyValues } from '@/domain/weight/trend';
 import { addDays } from '@/domain/calculations/dates';
 import { isTrainingItem, weekStartFor } from '@/domain/reports/weekly';
 import { useActivities } from '@/features/activity/api';
-import { useNutritionRange } from '@/features/coach/api';
 import { useToday } from '@/features/dashboard/useToday';
 import { useScheduledWorkouts } from '@/features/training/schedule-api';
 import { useAuth } from '@/features/auth/AuthProvider';
@@ -87,7 +86,6 @@ export function useMilestoneEngine() {
   const { today } = useToday();
   const profile = useProfile();
   const schedule = useScheduledWorkouts(addDays(today, -120), addDays(today, 120));
-  const food = useNutritionRange(addDays(today, -89), today);
   const weekStartsOn: 1 | 7 = profile.data?.week_start === 7 ? 7 : 1;
   const { write } = useSyncActions();
   const showToast = useToast((s) => s.show);
@@ -101,8 +99,7 @@ export function useMilestoneEngine() {
     unlocked.isSuccess &&
     training.isSuccess &&
     activities.isSuccess &&
-    schedule.isSuccess &&
-    food.isSuccess;
+    schedule.isSuccess;
 
   useEffect(() => {
     if (!ready) return;
@@ -119,7 +116,6 @@ export function useMilestoneEngine() {
         ...checkins.rows.map((c) => c.local_date),
         ...training.sessions.map((t) => t.local_date),
         ...activities.rows.map((a) => a.local_date),
-        ...(food.data?.loggedDates ?? []),
       ],
       unlockedKeys,
       sessions: training.sessions
@@ -169,7 +165,6 @@ export function useMilestoneEngine() {
     training.sessions,
     activities.rows,
     schedule.rows,
-    food.data,
     today,
     weekStartsOn,
     unlocked.rows,

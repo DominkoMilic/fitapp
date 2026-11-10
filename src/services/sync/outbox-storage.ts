@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import type { OutboxOp } from '@/domain/sync/outbox';
+import { knownOps, type OutboxOp } from '@/domain/sync/outbox';
 
 import type { OutboxStorage } from './storage.types';
 
@@ -10,7 +10,7 @@ const key = (userId: string) => `pace.outbox.${userId}`;
 export const outboxStorage: OutboxStorage = {
   async load(userId) {
     const raw = await AsyncStorage.getItem(key(userId));
-    return raw ? (JSON.parse(raw) as OutboxOp[]) : [];
+    return raw ? knownOps(JSON.parse(raw) as OutboxOp[]) : [];
   },
   async replaceAll(userId, ops) {
     await AsyncStorage.setItem(key(userId), JSON.stringify(ops));

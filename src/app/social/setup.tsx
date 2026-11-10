@@ -34,7 +34,6 @@ import { spacing, TOUCH_TARGET, useTheme } from '@/theme';
 /** What can never be shared, shown before anything is chosen (spec 3.4). */
 export const NEVER_SHARED = [
   'Weight, body measurements and goal numbers',
-  'Food, calories and water',
   'Check-ins, pain, injuries and health',
   'Notes',
   'GPS routes and where you start or finish',
@@ -300,7 +299,7 @@ export default function SocialSetupScreen() {
           />
           <Toggle
             label="Appear in leaderboards"
-            description="Rank by effort only (workouts, active minutes, distance, active days) among friends and clubs. Never weight or food."
+            description="Rank by effort only (workouts, active minutes, distance, active days) among friends and clubs. Never weight or body data."
             value={leaderboards}
             onChange={setLeaderboards}
           />

@@ -37,15 +37,14 @@ Guidance for coding agents working in this repository.
 ## Safety and honesty (non-negotiable — spec Section 3)
 
 - Not a medical device: never diagnose, never recommend training through pain, never override injury restrictions.
-- Calorie targets never go below the safety floor, and are never changed without user confirmation.
-- Never invent recipe quantities or nutrition; "Nutrition unavailable" is a valid state.
-- Label estimates (TDEE, calories burned, projections, GPS distance) as estimates.
+- Goals and plans are never changed without the user. Nutrition is archived (`docs/NUTRITION_ARCHIVE.md`).
+- Label estimates (calories burned, goal dates, GPS distance) as estimates.
 - No fake functionality and no fake success messages; hide or label anything unfinished.
 - Never silently discard user data.
 
 ## Security
 
-- The app uses only the Supabase URL and publishable (anon) key. Service role keys and API keys (e.g. TheMealDB) live only in Edge Function secrets.
+- The app uses only the Supabase URL and publishable (anon) key. Service role keys and other secrets live only in Edge Function secrets.
 - Never commit `.env` files or secrets.
 - Never send weight, food, health or location data to logs, analytics or crash reports.
 

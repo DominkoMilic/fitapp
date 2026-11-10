@@ -20,10 +20,6 @@ export interface WeeklyReportInput {
     distanceM: number | null;
     trusted: boolean;
   }[];
-  /** Complete nutrition days with totals. */
-  completeDays: readonly { date: IsoDate; kcal: number; proteinG: number }[];
-  /** Water per day for days with any water logged. */
-  waterDays: readonly { date: IsoDate; ml: number }[];
   milestones: readonly { date: IsoDate; title: string }[];
 }
 
@@ -52,23 +48,13 @@ export interface WeeklyReport {
     runKm: number | null;
     cycleKm: number | null;
   };
-  nutrition: {
-    completeDays: number;
-    avgKcal: number | null;
-    avgProteinG: number | null;
-    /** "based on N of 7 days" */
-    basedOn: string;
-  };
-  water: { avgMl: number | null; days: number };
   milestones: string[];
 }
 
 /** Rest days are on the calendar but aren't workouts to complete. */
 export const isTrainingItem = (category: string) => category !== 'rest';
 
-const r1 = (n: number) => Math.round(n * 10) / 10;
 const r2 = (n: number) => Math.round(n * 100) / 100;
-const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
 
 export function weeklyReport(i: WeeklyReportInput): WeeklyReport {
   const start = i.weekStart;
@@ -94,12 +80,6 @@ export function weeklyReport(i: WeeklyReportInput): WeeklyReport {
     return list.length ? r2(list.reduce((a, x) => a + (x.distanceM ?? 0), 0) / 1000) : null;
   };
 
-  const complete = i.completeDays.filter((d) => inWeek(d.date));
-  const water = i.waterDays.filter((d) => inWeek(d.date) && d.ml > 0);
-  const avgKcal = mean(complete.map((d) => d.kcal));
-  const avgProtein = mean(complete.map((d) => d.proteinG));
-  const avgWater = mean(water.map((d) => d.ml));
-
   return {
     version: REPORT_VERSION,
     weekStart: start,
@@ -122,13 +102,6 @@ export function weeklyReport(i: WeeklyReportInput): WeeklyReport {
       load: rated.length ? loadBetween(rated, start, end) : null,
     },
     activities: { count: acts.length, walkKm: km('walk'), runKm: km('run'), cycleKm: km('cycle') },
-    nutrition: {
-      completeDays: complete.length,
-      avgKcal: avgKcal === null ? null : Math.round(avgKcal),
-      avgProteinG: avgProtein === null ? null : r1(avgProtein),
-      basedOn: `based on ${complete.length} of 7 days`,
-    },
-    water: { avgMl: avgWater === null ? null : Math.round(avgWater), days: water.length },
     milestones: i.milestones.filter((m) => inWeek(m.date)).map((m) => m.title),
   };
 }

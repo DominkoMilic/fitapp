@@ -228,31 +228,6 @@ export type Database = {
         };
         Relationships: [];
       };
-      day_log_status: {
-        Row: {
-          client_updated_at: string | null;
-          local_date: string;
-          nutrition_complete: boolean;
-          updated_at: string;
-          user_id: string;
-        };
-        ComputedFields: never;
-        Insert: {
-          client_updated_at?: string | null;
-          local_date: string;
-          nutrition_complete?: boolean;
-          updated_at?: string;
-          user_id: string;
-        };
-        Update: {
-          client_updated_at?: string | null;
-          local_date?: string;
-          nutrition_complete?: boolean;
-          updated_at?: string;
-          user_id?: string;
-        };
-        Relationships: [];
-      };
       edge_rate_limits: {
         Row: {
           bucket: string;
@@ -430,79 +405,6 @@ export type Database = {
         };
         Relationships: [];
       };
-      foods: {
-        Row: {
-          archived_at: string | null;
-          barcode: string | null;
-          basis: string;
-          brand: string | null;
-          carbs_g: number | null;
-          category: string | null;
-          client_updated_at: string | null;
-          created_at: string;
-          external_id: string | null;
-          fat_g: number | null;
-          fibre_g: number | null;
-          id: string;
-          kcal: number | null;
-          name: string;
-          nutritional_confidence: string;
-          owner_id: string | null;
-          portions: NonNullable<Json>;
-          protein_g: number | null;
-          search: unknown;
-          source: string;
-          updated_at: string;
-        };
-        ComputedFields: never;
-        Insert: {
-          archived_at?: string | null;
-          barcode?: string | null;
-          basis?: string;
-          brand?: string | null;
-          carbs_g?: number | null;
-          category?: string | null;
-          client_updated_at?: string | null;
-          created_at?: string;
-          external_id?: string | null;
-          fat_g?: number | null;
-          fibre_g?: number | null;
-          id?: string;
-          kcal?: number | null;
-          name: string;
-          nutritional_confidence: string;
-          owner_id?: string | null;
-          portions?: NonNullable<Json>;
-          protein_g?: number | null;
-          search?: never;
-          source: string;
-          updated_at?: string;
-        };
-        Update: {
-          archived_at?: string | null;
-          barcode?: string | null;
-          basis?: string;
-          brand?: string | null;
-          carbs_g?: number | null;
-          category?: string | null;
-          client_updated_at?: string | null;
-          created_at?: string;
-          external_id?: string | null;
-          fat_g?: number | null;
-          fibre_g?: number | null;
-          id?: string;
-          kcal?: number | null;
-          name?: string;
-          nutritional_confidence?: string;
-          owner_id?: string | null;
-          portions?: NonNullable<Json>;
-          protein_g?: number | null;
-          search?: never;
-          source?: string;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
       friendships: {
         Row: {
           accepted_at: string | null;
@@ -586,215 +488,6 @@ export type Database = {
         };
         Relationships: [];
       };
-      meal_log_items: {
-        Row: {
-          carbs_g: number | null;
-          client_updated_at: string | null;
-          confidence_snapshot: string | null;
-          created_at: string;
-          fat_g: number | null;
-          fibre_g: number | null;
-          food_id: string | null;
-          grams: number | null;
-          id: string;
-          kcal: number | null;
-          local_date: string;
-          logged_at: string;
-          meal_type: string;
-          name_snapshot: string;
-          protein_g: number | null;
-          quantity: number | null;
-          recipe_id: string | null;
-          source_snapshot: string | null;
-          unit: string | null;
-          updated_at: string;
-          user_id: string;
-        };
-        ComputedFields: never;
-        Insert: {
-          carbs_g?: number | null;
-          client_updated_at?: string | null;
-          confidence_snapshot?: string | null;
-          created_at?: string;
-          fat_g?: number | null;
-          fibre_g?: number | null;
-          food_id?: string | null;
-          grams?: number | null;
-          id?: string;
-          kcal?: number | null;
-          local_date: string;
-          logged_at?: string;
-          meal_type: string;
-          name_snapshot: string;
-          protein_g?: number | null;
-          quantity?: number | null;
-          recipe_id?: string | null;
-          source_snapshot?: string | null;
-          unit?: string | null;
-          updated_at?: string;
-          user_id: string;
-        };
-        Update: {
-          carbs_g?: number | null;
-          client_updated_at?: string | null;
-          confidence_snapshot?: string | null;
-          created_at?: string;
-          fat_g?: number | null;
-          fibre_g?: number | null;
-          food_id?: string | null;
-          grams?: number | null;
-          id?: string;
-          kcal?: number | null;
-          local_date?: string;
-          logged_at?: string;
-          meal_type?: string;
-          name_snapshot?: string;
-          protein_g?: number | null;
-          quantity?: number | null;
-          recipe_id?: string | null;
-          source_snapshot?: string | null;
-          unit?: string | null;
-          updated_at?: string;
-          user_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'meal_log_items_food_id_fkey';
-            columns: ['food_id'];
-            isOneToOne: false;
-            referencedRelation: 'foods';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
-      meal_plan_entries: {
-        Row: {
-          client_updated_at: string | null;
-          created_at: string;
-          custom_title: string | null;
-          id: string;
-          local_date: string;
-          meal_type: string;
-          recipe_id: string | null;
-          saved_meal_id: string | null;
-          servings: number;
-          status: string;
-          title_snapshot: string;
-          updated_at: string;
-          user_id: string;
-        };
-        ComputedFields: never;
-        Insert: {
-          client_updated_at?: string | null;
-          created_at?: string;
-          custom_title?: string | null;
-          id?: string;
-          local_date: string;
-          meal_type: string;
-          recipe_id?: string | null;
-          saved_meal_id?: string | null;
-          servings?: number;
-          status?: string;
-          title_snapshot: string;
-          updated_at?: string;
-          user_id: string;
-        };
-        Update: {
-          client_updated_at?: string | null;
-          created_at?: string;
-          custom_title?: string | null;
-          id?: string;
-          local_date?: string;
-          meal_type?: string;
-          recipe_id?: string | null;
-          saved_meal_id?: string | null;
-          servings?: number;
-          status?: string;
-          title_snapshot?: string;
-          updated_at?: string;
-          user_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'meal_plan_entries_recipe_id_fkey';
-            columns: ['recipe_id'];
-            isOneToOne: false;
-            referencedRelation: 'recipes';
-            referencedColumns: ['id'];
-          },
-          {
-            foreignKeyName: 'meal_plan_entries_saved_meal_id_fkey';
-            columns: ['saved_meal_id'];
-            isOneToOne: false;
-            referencedRelation: 'saved_meals';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
-      nutrition_targets: {
-        Row: {
-          bmr: number | null;
-          calculation_inputs: NonNullable<Json>;
-          calculation_version: string;
-          carbs_g: number;
-          created_at: string;
-          effective_from: string;
-          fat_g: number;
-          fibre_g: number | null;
-          floor_kcal: number | null;
-          id: string;
-          is_user_edited: boolean;
-          kcal: number;
-          limited_by_floor: boolean;
-          protein_g: number;
-          tdee: number | null;
-          updated_at: string;
-          user_id: string;
-          water_ml: number | null;
-        };
-        ComputedFields: never;
-        Insert: {
-          bmr?: number | null;
-          calculation_inputs?: NonNullable<Json>;
-          calculation_version: string;
-          carbs_g: number;
-          created_at?: string;
-          effective_from: string;
-          fat_g: number;
-          fibre_g?: number | null;
-          floor_kcal?: number | null;
-          id?: string;
-          is_user_edited?: boolean;
-          kcal: number;
-          limited_by_floor?: boolean;
-          protein_g: number;
-          tdee?: number | null;
-          updated_at?: string;
-          user_id: string;
-          water_ml?: number | null;
-        };
-        Update: {
-          bmr?: number | null;
-          calculation_inputs?: NonNullable<Json>;
-          calculation_version?: string;
-          carbs_g?: number;
-          created_at?: string;
-          effective_from?: string;
-          fat_g?: number;
-          fibre_g?: number | null;
-          floor_kcal?: number | null;
-          id?: string;
-          is_user_edited?: boolean;
-          kcal?: number;
-          limited_by_floor?: boolean;
-          protein_g?: number;
-          tdee?: number | null;
-          updated_at?: string;
-          user_id?: string;
-          water_ml?: number | null;
-        };
-        Relationships: [];
-      };
       profiles: {
         Row: {
           activity_level: string | null;
@@ -844,119 +537,6 @@ export type Database = {
           unit_system?: string;
           updated_at?: string;
           week_start?: number;
-        };
-        Relationships: [];
-      };
-      recipe_images: {
-        Row: {
-          created_at: string;
-          external_id: string;
-          path: string;
-        };
-        ComputedFields: never;
-        Insert: {
-          created_at?: string;
-          external_id: string;
-          path: string;
-        };
-        Update: {
-          created_at?: string;
-          external_id?: string;
-          path?: string;
-        };
-        Relationships: [];
-      };
-      recipes: {
-        Row: {
-          archived_at: string | null;
-          carbs_per_serving: number | null;
-          category: string | null;
-          client_updated_at: string | null;
-          cooking_minutes: number | null;
-          created_at: string;
-          cuisine: string | null;
-          description: string | null;
-          external_id: string | null;
-          fat_per_serving: number | null;
-          fetched_at: string | null;
-          fibre_per_serving: number | null;
-          id: string;
-          image_url: string | null;
-          ingredients: NonNullable<Json>;
-          instructions: string[];
-          kcal_per_serving: number | null;
-          name: string;
-          nutritional_confidence: string;
-          owner_id: string | null;
-          preparation_minutes: number | null;
-          protein_per_serving: number | null;
-          servings_stated: number | null;
-          source: string;
-          source_url: string | null;
-          tags: string[];
-          updated_at: string;
-          video_url: string | null;
-        };
-        ComputedFields: never;
-        Insert: {
-          archived_at?: string | null;
-          carbs_per_serving?: number | null;
-          category?: string | null;
-          client_updated_at?: string | null;
-          cooking_minutes?: number | null;
-          created_at?: string;
-          cuisine?: string | null;
-          description?: string | null;
-          external_id?: string | null;
-          fat_per_serving?: number | null;
-          fetched_at?: string | null;
-          fibre_per_serving?: number | null;
-          id?: string;
-          image_url?: string | null;
-          ingredients?: NonNullable<Json>;
-          instructions?: string[];
-          kcal_per_serving?: number | null;
-          name: string;
-          nutritional_confidence?: string;
-          owner_id?: string | null;
-          preparation_minutes?: number | null;
-          protein_per_serving?: number | null;
-          servings_stated?: number | null;
-          source: string;
-          source_url?: string | null;
-          tags?: string[];
-          updated_at?: string;
-          video_url?: string | null;
-        };
-        Update: {
-          archived_at?: string | null;
-          carbs_per_serving?: number | null;
-          category?: string | null;
-          client_updated_at?: string | null;
-          cooking_minutes?: number | null;
-          created_at?: string;
-          cuisine?: string | null;
-          description?: string | null;
-          external_id?: string | null;
-          fat_per_serving?: number | null;
-          fetched_at?: string | null;
-          fibre_per_serving?: number | null;
-          id?: string;
-          image_url?: string | null;
-          ingredients?: NonNullable<Json>;
-          instructions?: string[];
-          kcal_per_serving?: number | null;
-          name?: string;
-          nutritional_confidence?: string;
-          owner_id?: string | null;
-          preparation_minutes?: number | null;
-          protein_per_serving?: number | null;
-          servings_stated?: number | null;
-          source?: string;
-          source_url?: string | null;
-          tags?: string[];
-          updated_at?: string;
-          video_url?: string | null;
         };
         Relationships: [];
       };
@@ -1060,79 +640,6 @@ export type Database = {
         };
         Relationships: [];
       };
-      saved_meals: {
-        Row: {
-          archived_at: string | null;
-          client_updated_at: string | null;
-          created_at: string;
-          id: string;
-          items: NonNullable<Json>;
-          meal_type: string | null;
-          name: string;
-          updated_at: string;
-          user_id: string;
-        };
-        ComputedFields: never;
-        Insert: {
-          archived_at?: string | null;
-          client_updated_at?: string | null;
-          created_at?: string;
-          id?: string;
-          items?: NonNullable<Json>;
-          meal_type?: string | null;
-          name: string;
-          updated_at?: string;
-          user_id: string;
-        };
-        Update: {
-          archived_at?: string | null;
-          client_updated_at?: string | null;
-          created_at?: string;
-          id?: string;
-          items?: NonNullable<Json>;
-          meal_type?: string | null;
-          name?: string;
-          updated_at?: string;
-          user_id?: string;
-        };
-        Relationships: [];
-      };
-      saved_recipes: {
-        Row: {
-          base_servings: number | null;
-          client_updated_at: string | null;
-          created_at: string;
-          default_servings: number | null;
-          recipe_id: string;
-          user_id: string;
-        };
-        ComputedFields: never;
-        Insert: {
-          base_servings?: number | null;
-          client_updated_at?: string | null;
-          created_at?: string;
-          default_servings?: number | null;
-          recipe_id: string;
-          user_id: string;
-        };
-        Update: {
-          base_servings?: number | null;
-          client_updated_at?: string | null;
-          created_at?: string;
-          default_servings?: number | null;
-          recipe_id?: string;
-          user_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'saved_recipes_recipe_id_fkey';
-            columns: ['recipe_id'];
-            isOneToOne: false;
-            referencedRelation: 'recipes';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
       scheduled_workouts: {
         Row: {
           category: string;
@@ -1214,106 +721,6 @@ export type Database = {
             referencedColumns: ['id'];
           },
         ];
-      };
-      shopping_list_items: {
-        Row: {
-          client_updated_at: string | null;
-          created_at: string;
-          id: string;
-          ingredient_name: string;
-          is_checked: boolean;
-          is_manual: boolean;
-          quantity_max: number | null;
-          quantity_min: number | null;
-          raw_text: string | null;
-          shopping_list_id: string;
-          sort_index: number;
-          source_recipes: string[];
-          unit: string | null;
-          updated_at: string;
-          user_id: string;
-        };
-        ComputedFields: never;
-        Insert: {
-          client_updated_at?: string | null;
-          created_at?: string;
-          id?: string;
-          ingredient_name: string;
-          is_checked?: boolean;
-          is_manual?: boolean;
-          quantity_max?: number | null;
-          quantity_min?: number | null;
-          raw_text?: string | null;
-          shopping_list_id: string;
-          sort_index?: number;
-          source_recipes?: string[];
-          unit?: string | null;
-          updated_at?: string;
-          user_id: string;
-        };
-        Update: {
-          client_updated_at?: string | null;
-          created_at?: string;
-          id?: string;
-          ingredient_name?: string;
-          is_checked?: boolean;
-          is_manual?: boolean;
-          quantity_max?: number | null;
-          quantity_min?: number | null;
-          raw_text?: string | null;
-          shopping_list_id?: string;
-          sort_index?: number;
-          source_recipes?: string[];
-          unit?: string | null;
-          updated_at?: string;
-          user_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'shopping_list_items_shopping_list_id_fkey';
-            columns: ['shopping_list_id'];
-            isOneToOne: false;
-            referencedRelation: 'shopping_lists';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
-      shopping_lists: {
-        Row: {
-          client_updated_at: string | null;
-          created_at: string;
-          id: string;
-          name: string;
-          range_end: string | null;
-          range_start: string | null;
-          status: string;
-          updated_at: string;
-          user_id: string;
-        };
-        ComputedFields: never;
-        Insert: {
-          client_updated_at?: string | null;
-          created_at?: string;
-          id?: string;
-          name: string;
-          range_end?: string | null;
-          range_start?: string | null;
-          status?: string;
-          updated_at?: string;
-          user_id: string;
-        };
-        Update: {
-          client_updated_at?: string | null;
-          created_at?: string;
-          id?: string;
-          name?: string;
-          range_end?: string | null;
-          range_start?: string | null;
-          status?: string;
-          updated_at?: string;
-          user_id?: string;
-        };
-        Relationships: [];
       };
       social_blocked_words: {
         Row: {
@@ -1417,78 +824,6 @@ export type Database = {
           workouts_audience?: string;
         };
         Relationships: [];
-      };
-      target_adjustments: {
-        Row: {
-          actual_rate_kg_week: number | null;
-          adherence: number | null;
-          created_at: string;
-          current_kcal: number;
-          decided_at: string | null;
-          id: string;
-          inputs: NonNullable<Json>;
-          observed_tdee: number | null;
-          proposed_at: string;
-          proposed_kcal: number | null;
-          reason_code: string;
-          resulting_target_id: string | null;
-          slow: boolean;
-          status: string;
-          updated_at: string;
-          user_id: string;
-          window_end: string;
-          window_start: string;
-        };
-        ComputedFields: never;
-        Insert: {
-          actual_rate_kg_week?: number | null;
-          adherence?: number | null;
-          created_at?: string;
-          current_kcal: number;
-          decided_at?: string | null;
-          id?: string;
-          inputs?: NonNullable<Json>;
-          observed_tdee?: number | null;
-          proposed_at?: string;
-          proposed_kcal?: number | null;
-          reason_code: string;
-          resulting_target_id?: string | null;
-          slow?: boolean;
-          status: string;
-          updated_at?: string;
-          user_id: string;
-          window_end: string;
-          window_start: string;
-        };
-        Update: {
-          actual_rate_kg_week?: number | null;
-          adherence?: number | null;
-          created_at?: string;
-          current_kcal?: number;
-          decided_at?: string | null;
-          id?: string;
-          inputs?: NonNullable<Json>;
-          observed_tdee?: number | null;
-          proposed_at?: string;
-          proposed_kcal?: number | null;
-          reason_code?: string;
-          resulting_target_id?: string | null;
-          slow?: boolean;
-          status?: string;
-          updated_at?: string;
-          user_id?: string;
-          window_end?: string;
-          window_start?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'target_adjustments_resulting_target_id_fkey';
-            columns: ['resulting_target_id'];
-            isOneToOne: false;
-            referencedRelation: 'nutrition_targets';
-            referencedColumns: ['id'];
-          },
-        ];
       };
       training_plans: {
         Row: {
@@ -1658,19 +993,10 @@ export type Database = {
       };
       user_preferences: {
         Row: {
-          allergies: string[];
-          cooking_time_max_minutes: number | null;
           created_at: string;
-          diet_type: string | null;
-          disliked_foods: string[];
-          household_servings: number;
-          intolerances: string[];
           locale: string;
           max_session_minutes: number;
-          meals_per_day: number;
           notification_preferences: NonNullable<Json>;
-          nutrition_enabled: boolean;
-          preferred_cuisines: string[];
           preferred_training_days: number[];
           preferred_training_time: string | null;
           social_enabled: boolean;
@@ -1682,19 +1008,10 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
-          allergies?: string[];
-          cooking_time_max_minutes?: number | null;
           created_at?: string;
-          diet_type?: string | null;
-          disliked_foods?: string[];
-          household_servings?: number;
-          intolerances?: string[];
           locale?: string;
           max_session_minutes?: number;
-          meals_per_day?: number;
           notification_preferences?: NonNullable<Json>;
-          nutrition_enabled?: boolean;
-          preferred_cuisines?: string[];
           preferred_training_days?: number[];
           preferred_training_time?: string | null;
           social_enabled?: boolean;
@@ -1705,19 +1022,10 @@ export type Database = {
           user_id: string;
         };
         Update: {
-          allergies?: string[];
-          cooking_time_max_minutes?: number | null;
           created_at?: string;
-          diet_type?: string | null;
-          disliked_foods?: string[];
-          household_servings?: number;
-          intolerances?: string[];
           locale?: string;
           max_session_minutes?: number;
-          meals_per_day?: number;
           notification_preferences?: NonNullable<Json>;
-          nutrition_enabled?: boolean;
-          preferred_cuisines?: string[];
           preferred_training_days?: number[];
           preferred_training_time?: string | null;
           social_enabled?: boolean;
@@ -1725,37 +1033,6 @@ export type Database = {
           training_days_per_week?: number | null;
           training_environment?: string | null;
           updated_at?: string;
-          user_id?: string;
-        };
-        Relationships: [];
-      };
-      water_logs: {
-        Row: {
-          amount_ml: number;
-          client_updated_at: string | null;
-          created_at: string;
-          id: string;
-          local_date: string;
-          recorded_at: string;
-          user_id: string;
-        };
-        ComputedFields: never;
-        Insert: {
-          amount_ml: number;
-          client_updated_at?: string | null;
-          created_at?: string;
-          id?: string;
-          local_date: string;
-          recorded_at: string;
-          user_id: string;
-        };
-        Update: {
-          amount_ml?: number;
-          client_updated_at?: string | null;
-          created_at?: string;
-          id?: string;
-          local_date?: string;
-          recorded_at?: string;
           user_id?: string;
         };
         Relationships: [];
@@ -2026,10 +1303,6 @@ export type Database = {
     };
     Functions: {
       accept_friend_request: { Args: { other: string }; Returns: string };
-      accept_target_adjustment: {
-        Args: { p_adjustment_id: string; p_target: Json };
-        Returns: string;
-      };
       are_friends: { Args: { a: string; b: string }; Returns: boolean };
       block_user: { Args: { other: string }; Returns: undefined };
       complete_onboarding: { Args: { payload: Json }; Returns: undefined };
@@ -2079,39 +1352,6 @@ export type Database = {
       report_content: {
         Args: { p_note: string; p_reason: string; p_target_id: string; p_target_type: string };
         Returns: string;
-      };
-      safety_sex_floor: { Args: { sex: string }; Returns: number };
-      search_foods: {
-        Args: { max_results?: number; query: string };
-        Returns: {
-          archived_at: string | null;
-          barcode: string | null;
-          basis: string;
-          brand: string | null;
-          carbs_g: number | null;
-          category: string | null;
-          client_updated_at: string | null;
-          created_at: string;
-          external_id: string | null;
-          fat_g: number | null;
-          fibre_g: number | null;
-          id: string;
-          kcal: number | null;
-          name: string;
-          nutritional_confidence: string;
-          owner_id: string | null;
-          portions: NonNullable<Json>;
-          protein_g: number | null;
-          search: unknown;
-          source: string;
-          updated_at: string;
-        }[];
-        SetofOptions: {
-          from: '*';
-          to: 'foods';
-          isOneToOne: false;
-          isSetofReturn: true;
-        };
       };
       search_social_profiles: {
         Args: { q: string };

@@ -8,7 +8,6 @@ import {
   estimateTargetDates,
   goalProgressPct,
   isSuspiciousWeight,
-  observedTdee,
   rollingAverageAt,
   trendLast21Days,
 } from '@/domain/weight/trend';
@@ -42,9 +41,6 @@ describe('weight vectors (spec 29.3)', () => {
       ),
     );
     expect(trendLast21Days(d, '2026-11-21')!.slopeKgPerWeek).toBeCloseTo(-0.7, 9);
-  });
-  it('W5 observed TDEE from intake and trend', () => {
-    expect(observedTdee(2700, -0.2)).toBeCloseTo(2920, 6);
   });
 });
 

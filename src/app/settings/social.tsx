@@ -289,8 +289,8 @@ export default function SocialSettingsScreen() {
 
       <SectionHeader title="What friends see" />
       <Text variant="small" color="textSecondary">
-        Sharing starts when the friends feed arrives in a coming update. Weight, food, health, notes
-        and routes are never shared.
+        Sharing starts when the friends feed arrives in a coming update. Weight, health, notes and
+        routes are never shared.
       </Text>
       {AUDIENCES.map((a) => (
         <Toggle

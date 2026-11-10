@@ -24,7 +24,7 @@ describe('requests time out instead of hanging (audit fix)', () => {
   it('uploads and functions get 60 s', () => {
     expect(timeoutFor('https://x.supabase.co/storage/v1/object/routes/a.json')).toBe(TIMEOUTS.long);
     expect(timeoutFor('https://x.supabase.co/functions/v1/delete-account')).toBe(TIMEOUTS.long);
-    expect(timeoutFor('https://x.supabase.co/rest/v1/foods')).toBe(TIMEOUTS.api);
+    expect(timeoutFor('https://x.supabase.co/rest/v1/activities')).toBe(TIMEOUTS.api);
   });
   it('a caller abort still aborts, and is not reported as a timeout', async () => {
     const f = createTimeoutFetch(hanging);

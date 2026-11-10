@@ -2,18 +2,15 @@ import { router } from 'expo-router';
 import { ChevronRight, ClipboardCheck, Scale } from 'lucide-react-native';
 import { StyleSheet, View } from 'react-native';
 
-import { Banner, ErrorState, LoadingState } from '@/components/feedback';
+import { ErrorState, LoadingState } from '@/components/feedback';
 import { Card, ProgressBar, Screen, SectionHeader, Text } from '@/components/ui';
 import { PressableScale } from '@/components/ui/PressableScale';
 import { isoWeekday } from '@/domain/calculations/dates';
 import { formatWeight, kgToLb, type UnitSystem } from '@/domain/calculations/units';
 import { useCheckins } from '@/features/checkin/api';
-import { useNutritionDay } from '@/features/nutrition/useNutritionDay';
-import { useFeatures } from '@/features/profile/features';
 import {
   greetingFor,
   parsePattern,
-  targetFor,
   nextEvent,
   todaysSession,
   upcomingEvents,
@@ -21,12 +18,7 @@ import {
 import { useToday } from '@/features/dashboard/useToday';
 import { CoachCards } from '@/features/coach/CoachCards';
 import { GoalReachedCard } from '@/features/milestones/GoalReachedCard';
-import {
-  useActivePlan,
-  useProfile,
-  useRecurringEvents,
-  useTargetHistory,
-} from '@/features/profile/api';
+import { useActivePlan, useProfile, useRecurringEvents } from '@/features/profile/api';
 import { SyncBanner } from '@/features/sync/SyncBanner';
 import { useWeightStats } from '@/features/weight/useWeightStats';
 import { ResumeWorkoutCard } from '@/features/training/ResumeWorkoutCard';
@@ -106,15 +98,12 @@ export default function Home() {
   const { colors } = useTheme();
   const { today, hour } = useToday();
   const profile = useProfile();
-  const targets = useTargetHistory();
   const plan = useActivePlan();
   const events = useRecurringEvents();
   const stats = useWeightStats('30D');
   const checkins = useCheckins();
-  const food = useNutritionDay(today);
-  const features = useFeatures();
 
-  const queries = [profile, targets, plan, events, stats.goal];
+  const queries = [profile, plan, events, stats.goal];
   if (queries.some((q) => q.isPending))
     return (
       <Screen edges={['top']}>
@@ -136,7 +125,6 @@ export default function Home() {
   const u = unit === 'metric' ? 'kg' : 'lb';
   const disp = (kg: number) => (unit === 'metric' ? kg : kgToLb(kg));
   const name = profile.data?.display_name ?? '';
-  const target = targetFor(targets.data ?? [], today);
   const session = todaysSession(parsePattern(plan.data?.weekly_pattern), today);
   const upcoming = upcomingEvents(events.data ?? [], today);
   const checkedInToday = checkins.rows.some((c) => c.local_date === today);
@@ -284,59 +272,6 @@ export default function Home() {
           </Text>
         ) : null}
       </Card>
-
-      {features.nutrition ? (
-        <>
-          <SectionHeader title="Today's nutrition" />
-          {target ? (
-            <Card
-              onPress={() => router.push('/nutrition')}
-              accessibilityLabel="Open nutrition"
-              actionLabel="Open nutrition"
-            >
-              <ProgressBar
-                label="Calories"
-                value={food.hasData ? food.totals.kcal : null}
-                max={target.kcal}
-                unit="kcal"
-              />
-              <ProgressBar
-                label="Protein"
-                value={food.hasData ? food.totals.protein_g : null}
-                max={target.protein_g}
-                unit="g"
-              />
-              <ProgressBar
-                label="Carbs"
-                value={food.hasData ? food.totals.carbs_g : null}
-                max={target.carbs_g}
-                unit="g"
-              />
-              <ProgressBar
-                label="Fat"
-                value={food.hasData ? food.totals.fat_g : null}
-                max={target.fat_g}
-                unit="g"
-              />
-              {target.water_ml ? (
-                <ProgressBar
-                  label="Water"
-                  value={food.waterMl ? food.waterMl : null}
-                  max={target.water_ml}
-                  unit="ml"
-                />
-              ) : null}
-              {!food.hasData ? (
-                <Text variant="caption" color="textSecondary">
-                  Nothing logged yet today. Tap to add your first meal.
-                </Text>
-              ) : null}
-            </Card>
-          ) : (
-            <Banner tone="info" message="No nutrition targets yet." />
-          )}
-        </>
-      ) : null}
 
       {stats.startKg !== null && stats.current ? (
         <Text variant="caption" color="textSecondary">

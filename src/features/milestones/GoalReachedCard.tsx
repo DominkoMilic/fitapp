@@ -50,7 +50,7 @@ export function GoalReachedCard() {
                 goalId: active.id,
                 values: { target_weight_kg: secondary, secondary_target_weight_kg: null },
               },
-              { onSuccess: () => router.push('/settings/targets') },
+              { onSuccess: () => router.push('/settings/goal') },
             )
           }
         />
@@ -71,7 +71,7 @@ export function GoalReachedCard() {
                 started_at: today,
               },
             },
-            { onSuccess: () => router.push('/settings/targets') },
+            { onSuccess: () => router.push('/settings/goal') },
           )
         }
       />
@@ -80,9 +80,6 @@ export function GoalReachedCard() {
         variant="ghost"
         onPress={() => router.push('/settings/goal')}
       />
-      <Text variant="caption" color="textSecondary">
-        Your calorie target doesn&apos;t change until you review and confirm it.
-      </Text>
     </Card>
   );
 }

@@ -5,13 +5,11 @@ import { stackAnimation, useTheme } from '@/theme';
 
 const TITLES: Record<string, string> = {
   personal: 'Personal information',
-  targets: 'Goal and targets',
   goal: 'Change goal',
   sync: 'Sync status',
   health: 'Health and injuries',
   'training-setup': 'Training setup',
   training: 'Schedule',
-  nutrition: 'Nutrition',
   equipment: 'Equipment',
   appearance: 'Appearance',
   notifications: 'Reminders',

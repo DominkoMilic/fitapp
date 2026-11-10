@@ -2,7 +2,6 @@
  * Weight trend maths (spec 8.9, 13.2, 13.3). Pure; dates are ISO local dates.
  */
 import { addDays, dayNumber, type IsoDate } from '@/domain/calculations/dates';
-import { KCAL_PER_KG } from '@/constants/safety';
 
 export interface WeightEntryLike {
   local_date: IsoDate;
@@ -139,7 +138,3 @@ export function isSuspiciousWeight(newKg: number, referenceKg: number | null): b
   const diff = Math.abs(newKg - referenceKg);
   return diff > 3 || diff / referenceKg > 0.03;
 }
-
-/** Observed energy expenditure from intake and trend (spec 8.9 #2), used from Phase 6. */
-export const observedTdee = (meanIntakeKcal: number, slopeKgPerWeek: number) =>
-  meanIntakeKcal - (slopeKgPerWeek / 7) * KCAL_PER_KG;

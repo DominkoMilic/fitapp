@@ -67,9 +67,9 @@ export default function DeleteAccount() {
       <Card>
         <Text>This permanently deletes:</Text>
         <Text variant="small" color="textSecondary">
-          • your account ({email}){'\n'}• your profile, goals, targets and reviews{'\n'}• weights,
-          measurements, check-ins and health information{'\n'}• workouts, activities and GPS routes
-          {'\n'}• food logs, recipes, plans and shopping lists{'\n'}• milestones and reports
+          • your account ({email}){'\n'}• your profile and goals{'\n'}• weights, measurements,
+          check-ins and health information{'\n'}• workouts, plans, activities and GPS routes
+          {'\n'}• milestones and reports{'\n'}• your social profile, friends and requests
         </Text>
         <Text variant="small" color="textSecondary">
           It can&apos;t be undone. Our hosting provider&apos;s backups expire on their own schedule

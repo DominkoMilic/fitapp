@@ -78,7 +78,7 @@ export default function ScheduleStep() {
     if (!week || !gear) return;
     save('schedule', week);
     save('equipment', gear);
-    router.replace('/onboarding/nutrition');
+    router.replace('/onboarding/health');
   };
 
   const addCommitment = () => {

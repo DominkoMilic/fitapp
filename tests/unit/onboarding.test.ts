@@ -1,20 +1,14 @@
 import { weightMilestones } from '@/domain/milestones/weight-milestones';
-import { finalTargets, TargetBelowFloorError } from '@/features/onboarding/payload';
 import { nextStep, ONBOARDING_STEPS, previousStep } from '@/features/onboarding/steps';
 
 import { buildSeed, seedDraft } from '../fixtures/onboarding';
 
 describe('onboarding payload (profile creation)', () => {
-  it('matches the seed targets and the RPC contract', () => {
+  it('matches the RPC contract (no calorie targets or food preferences)', () => {
     const { payload } = buildSeed();
-    expect(payload.targets).toMatchObject({
-      kcal: 2720,
-      protein_g: 162,
-      carbs_g: 347,
-      fat_g: 76,
-      water_ml: 3800,
-      floor_kcal: 2140,
-    });
+    expect('targets' in payload).toBe(false);
+    expect(Object.keys(payload.preferences)).not.toContain('diet_type');
+    expect(payload.plan.start_date).toBe('2026-11-08');
     expect(payload.profile).toMatchObject({
       calc_sex: 'male',
       height_cm: 187,
@@ -55,32 +49,12 @@ describe('onboarding payload (profile creation)', () => {
     expect(payload.consents.some((c) => c.consent_type === 'health_data')).toBe(false);
     expect(payload.health_conditions).toEqual([]);
   });
-
-  it('applies edited calories (carbs absorb the change)', () => {
-    const { plan } = buildSeed();
-    const t = finalTargets(plan, { kcal: 2600, proteinG: null, carbsG: null, fatG: null });
-    expect(t).toMatchObject({ kcal: 2600, proteinG: 162, fatG: 76, carbsG: 317, edited: true });
-  });
-
-  it('applies edited macros (calories derived)', () => {
-    const { plan } = buildSeed();
-    const t = finalTargets(plan, { kcal: null, proteinG: 180, carbsG: 300, fatG: 80 });
-    expect(t.kcal).toBe(180 * 4 + 300 * 4 + 80 * 9);
-  });
-
-  it('refuses targets below the safety floor', () => {
-    expect(() =>
-      buildSeed({
-        ...seedDraft,
-        overrides: { kcal: 2000, proteinG: null, carbsG: null, fatG: null },
-      }),
-    ).toThrow(TargetBelowFloorError);
-  });
 });
 
 describe('onboarding step order', () => {
-  it('has 7 steps ending with the plan', () => {
-    expect(ONBOARDING_STEPS).toHaveLength(7);
+  it('has 6 steps ending with the plan (no food step)', () => {
+    expect(ONBOARDING_STEPS).toHaveLength(6);
+    expect(nextStep('schedule')).toBe('health');
     expect(nextStep('consent')).toBe('plan');
     expect(nextStep('plan')).toBeNull();
     expect(previousStep('personal')).toBeNull();

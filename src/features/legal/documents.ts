@@ -7,7 +7,7 @@ import { envResult } from '@/config/env';
 
 export type LegalDocId = 'privacy' | 'terms' | 'disclaimer' | 'licences';
 
-export const LEGAL_UPDATED = '17 November 2026';
+export const LEGAL_UPDATED = '18 November 2026';
 
 const supportEmail = envResult.ok ? envResult.env.supportEmail : undefined;
 /** How to reach the operator; the store listings always carry a support contact too. */
@@ -27,7 +27,7 @@ export const LEGAL_DOCS: Record<LegalDocId, Doc> = {
       },
       {
         heading: 'What we collect',
-        body: 'Your account email and password (stored hashed by our authentication provider). Profile details you enter: name, date of birth, sex (for the energy formula), height, weight, goal, activity level, schedule, equipment and food preferences. What you log: weights, body measurements, daily check-ins, workouts, walks, runs and rides with their GPS routes, food and water, recipes, meal plans and shopping lists. Optional health information (injuries, conditions, pain). Your reminder settings and timezone. We do not collect contacts, photos, advertising identifiers or your location outside a recording.',
+        body: 'Your account email and password (stored hashed by our authentication provider). Profile details you enter: name, date of birth, sex, height, weight, goal, activity level, sports, schedule and equipment. What you log: weights, body measurements, daily check-ins, workouts, and walks, runs and rides with their GPS routes. Optional health information (injuries, conditions, pain). Your reminder settings and timezone. We do not collect contacts, photos, advertising identifiers or your location outside a recording.',
       },
       {
         heading: 'Why we use it, and on what basis',
@@ -43,11 +43,11 @@ export const LEGAL_DOCS: Record<LegalDocId, Doc> = {
       },
       {
         heading: 'Social features (optional)',
-        body: 'Social is off until you turn it on. When you do, people can find you by your handle and see your name, handle, colour, short bio and number of friends. Your friends will see only the types of activity you choose to share (all off at first). Weight, body measurements, goals, food, water, check-ins, pain, injuries, health, notes, GPS routes and the time of day you train are never shared. When you send a friend request, block someone or report something, we store that so the feature works and to keep people safe; reports are reviewed by us within 24 hours. You can turn social off (your friends are kept) or delete your social profile (handle, friends and requests are removed) at any time in Settings → Social and privacy, and deleting your account removes all of it.',
+        body: 'Social is off until you turn it on. When you do, people can find you by your handle and see your name, handle, colour, short bio and number of friends. Your friends will see only the types of activity you choose to share (all off at first). Weight, body measurements, goals, check-ins, pain, injuries, health, notes, GPS routes and the time of day you train are never shared. When you send a friend request, block someone or report something, we store that so the feature works and to keep people safe; reports are reviewed by us within 24 hours. You can turn social off (your friends are kept) or delete your social profile (handle, friends and requests are removed) at any time in Settings → Social and privacy, and deleting your account removes all of it.',
       },
       {
         heading: 'Where your data is stored and who processes it',
-        body: 'Your data is stored by Supabase (database, sign-in and file storage) in the European Union, acting as our processor. Recipe searches go through our server to TheMealDB; only the search words are sent, never your identity. Recipe photos are copied to our own storage and shown from there, so your phone never contacts TheMealDB. Reminders are local notifications created on your phone; no notification service receives your data.',
+        body: 'Your data is stored by Supabase (database, sign-in and file storage) in the European Union, acting as our processor. Reminders are local notifications created on your phone; no notification service receives your data.',
       },
       {
         heading: 'Security',
@@ -81,11 +81,11 @@ export const LEGAL_DOCS: Record<LegalDocId, Doc> = {
       { heading: 'Eligibility', body: 'You must be 18 or older to use PACE.' },
       {
         heading: 'Not medical advice',
-        body: 'PACE gives general fitness and nutrition guidance. It is not a medical device and does not diagnose, treat or prevent any condition. Read the health disclaimer before you start.',
+        body: 'PACE gives general fitness guidance. It is not a medical device and does not diagnose, treat or prevent any condition. Read the health disclaimer before you start.',
       },
       {
         heading: 'Estimates',
-        body: 'Calorie targets, energy expenditure, calories burned, projections, training load and GPS distances are estimates and can be inaccurate for you. PACE never changes your calorie target without your confirmation and never sets it below a safety minimum.',
+        body: 'Calories burned, goal dates, training load and GPS distances are estimates and can be inaccurate for you.',
       },
       {
         heading: 'Training and outdoor safety',
@@ -102,10 +102,6 @@ export const LEGAL_DOCS: Record<LegalDocId, Doc> = {
       {
         heading: 'Community rules',
         body: 'If you use social features: be kind and respectful. No harassment, hate, threats, sexual content, spam, impersonation or sharing other people’s private information, and no offensive handles, names or bios. Do not pressure anyone to train through pain or to lose weight. You can block or report anyone; we review reports within 24 hours and may remove content, suspend social features for an account, or end an account that breaks these rules.',
-      },
-      {
-        heading: 'Third-party content',
-        body: 'Recipes come from TheMealDB and are shown as provided; quantities are not verified and nutrition is not calculated for them. Food data comes from USDA FoodData Central. See Data sources and licences.',
       },
       {
         heading: 'Availability and changes',
@@ -134,15 +130,11 @@ export const LEGAL_DOCS: Record<LegalDocId, Doc> = {
       },
       {
         heading: 'Talk to a professional first if',
-        body: 'you have a heart, lung, metabolic or other medical condition; an injury that has not been assessed; you are pregnant or have recently given birth; you are under medical supervision for your weight; or you have, or have had, an eating disorder. In these cases please don’t follow calorie targets without professional advice.',
+        body: 'you have a heart, lung, metabolic or other medical condition; an injury that has not been assessed; you are pregnant or have recently given birth; you are under medical supervision for your weight; or you have, or have had, an eating disorder. In these cases please talk to a professional before setting a weight goal or starting a new programme.',
       },
       {
         heading: 'Injuries',
         body: 'Marking an injury makes PACE leave out exercises that load that area. It cannot judge how serious an injury is. Follow your physiotherapist’s or doctor’s restrictions over anything PACE suggests.',
-      },
-      {
-        heading: 'Food and calories',
-        body: 'Nutrition values are estimates from reference data and what you enter. Targets never go below a safety minimum, but they are not tailored medical nutrition therapy.',
       },
     ],
   },
@@ -150,20 +142,12 @@ export const LEGAL_DOCS: Record<LegalDocId, Doc> = {
     title: 'Data sources and licences',
     sections: [
       {
-        heading: 'Food data',
-        body: 'U.S. Department of Agriculture, Agricultural Research Service. FoodData Central, SR Legacy. Public domain (CC0 1.0). fdc.nal.usda.gov',
-      },
-      {
-        heading: 'Recipes',
-        body: 'Recipes and images are provided by TheMealDB (themealdb.com) and belong to their respective owners. PACE shows them with attribution, keeps a copy of each photo on its own server so your phone never contacts TheMealDB, and does not add nutrition to them.',
-      },
-      {
         heading: 'Exercise energy (MET values)',
         body: 'Herrmann SD, et al. 2024 Adult Compendium of Physical Activities. Journal of Sport and Health Science, 2024. Used for calorie estimates.',
       },
       {
         heading: 'Formulas',
-        body: 'Basal metabolic rate: Mifflin MD, St Jeor ST, et al. Am J Clin Nutr 1990. Distances: the haversine formula.',
+        body: 'Distances: the haversine formula.',
       },
       {
         heading: 'Maps',

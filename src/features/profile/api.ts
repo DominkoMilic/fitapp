@@ -9,13 +9,11 @@ import {
 import { useAuth } from '@/features/auth/AuthProvider';
 import { clearFutureGenerated, ensureSchedule } from '@/features/training/schedule-sync';
 import { requireSupabase } from '@/integrations/supabase/client';
-import { fetchAllPages } from '@/integrations/supabase/paging';
 import type { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/database.types';
 import { isValidCommitmentCategory } from '@/domain/sports/catalogue';
 
 export type Profile = Tables<'profiles'>;
 export type Goal = Tables<'user_goals'>;
-export type NutritionTarget = Tables<'nutrition_targets'>;
 export type TrainingPlan = Tables<'training_plans'>;
 export type RecurringEvent = Tables<'recurring_events'>;
 export type Preferences = Tables<'user_preferences'>;
@@ -26,7 +24,6 @@ export const profileKeys = {
   all: ['profile'] as const,
   me: (userId: string) => ['profile', userId] as const,
   goal: (userId: string) => ['profile', userId, 'goal'] as const,
-  targets: (userId: string) => ['profile', userId, 'targets'] as const,
   plan: (userId: string) => ['profile', userId, 'plan'] as const,
   events: (userId: string) => ['profile', userId, 'events'] as const,
   preferences: (userId: string) => ['profile', userId, 'preferences'] as const,
@@ -69,20 +66,6 @@ export const useActiveGoal = () =>
         .eq('user_id', id)
         .eq('status', 'active')
         .maybeSingle(),
-    ),
-  );
-
-/** All target versions, newest first. The current one is the latest with effective_from <= today. */
-export const useTargetHistory = () =>
-  useUserQuery(profileKeys.targets, (id) =>
-    fetchAllPages((a, b) =>
-      db()
-        .from('nutrition_targets')
-        .select('*')
-        .eq('user_id', id)
-        .order('effective_from', { ascending: false })
-        .order('id')
-        .range(a, b),
     ),
   );
 
@@ -159,18 +142,6 @@ export const useUpdatePreferences = () =>
     );
     await regenerateWeeklyPattern(id);
   });
-
-/** Saves a new target version (spec 8.9: versions are kept for history, never deleted). */
-export const useSaveTargets = () =>
-  useInvalidatingMutation<Omit<TablesInsert<'nutrition_targets'>, 'user_id'>>(
-    async (id, values) => {
-      unwrap(
-        await db()
-          .from('nutrition_targets')
-          .upsert({ ...values, user_id: id }, { onConflict: 'user_id,effective_from' }),
-      );
-    },
-  );
 
 export const useReplaceEquipment = () =>
   useInvalidatingMutation<Omit<TablesInsert<'user_equipment'>, 'user_id'>[]>(async (id, items) => {
@@ -330,7 +301,6 @@ export type GoalChange =
 
 /**
  * Edits the active goal in place, or ends it and starts a new one (history is kept).
- * Never changes calorie targets: the user reviews a recalculation afterwards (spec 3.1 #7).
  */
 export const useChangeGoal = () =>
   useInvalidatingMutation<GoalChange>(async (id, change) => {

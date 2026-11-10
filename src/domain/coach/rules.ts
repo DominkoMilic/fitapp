@@ -7,8 +7,7 @@ import { addDays, dayNumber, type IsoDate } from '../calculations/dates';
 import { type LoadSession, loadSpike } from './load';
 import { eventNoun, isMatchCategory, sportEventLabel } from '../sports/catalogue';
 
-export type CoachCategory =
-  'safety' | 'recovery' | 'training' | 'nutrition' | 'weight' | 'consistency' | 'tips';
+export type CoachCategory = 'safety' | 'recovery' | 'training' | 'weight' | 'consistency' | 'tips';
 
 export interface Recommendation {
   id: string;
@@ -25,24 +24,7 @@ export interface Recommendation {
 }
 
 export type RuleId =
-  | 'S1'
-  | 'S2'
-  | 'S3'
-  | 'S4'
-  | 'R1'
-  | 'R2'
-  | 'R3'
-  | 'R4'
-  | 'R5'
-  | 'T1'
-  | 'T2'
-  | 'N1'
-  | 'N2'
-  | 'N3'
-  | 'W1'
-  | 'W2'
-  | 'C1'
-  | 'C2';
+  'S1' | 'S2' | 'S3' | 'R1' | 'R2' | 'R3' | 'R4' | 'R5' | 'T1' | 'T2' | 'W1' | 'C1' | 'C2';
 
 export interface PlanItem {
   id: string;
@@ -66,32 +48,21 @@ export interface CoachContext {
   today: IsoDate;
   /** Minutes since local midnight. */
   minuteOfDay: number;
-  dietType: string | null;
   injuries: { area: string; status: 'active' | 'recovering' | 'resolved' | string }[];
   plan: { yesterday: PlanItem[]; today: PlanItem[]; tomorrow: PlanItem[] };
   /** Completed sessions of the last 28 days. */
   sessions: DoneSession[];
   checkin: { pain: number | null; fatigue: number | null; sleepHours: number | null } | null;
-  targets: { kcal: number; proteinG: number; waterMl: number | null; floorKcal: number } | null;
-  intake: { kcal: number; proteinG: number; mealsLogged: number; waterMl: number };
-  /** Kcal of the most recent complete days (any order). */
-  completeDays: { date: IsoDate; kcal: number }[];
   weightGoalActive: boolean;
   lastWeighIn: IsoDate | null;
-  pendingAdjustment: boolean;
   week: { planned: number; completed: number };
-  /** Distinct local days with any data (weights, logs, sessions…). */
+  /** Distinct local days with any data (weights, check-ins, sessions…). */
   dataDays: number;
   /** Rule ids the user dismissed today. */
   dismissed: ReadonlySet<string>;
-  /** False when the user switched nutrition off: no food, calorie or target-review cards. */
-  nutritionEnabled?: boolean;
 }
 
 export const MAX_CARDS = 3;
-
-/** Rules about food, calories, water or calorie-target reviews (hidden when nutrition is off). */
-export const NUTRITION_RULES: ReadonlySet<string> = new Set(['S4', 'N1', 'N2', 'N3', 'W2']);
 
 const isMatch = isMatchCategory;
 /** "Basketball game" / "Futsal match"; "Match" for unknown sports. */
@@ -124,15 +95,6 @@ const hardOn = (c: CoachContext, date: IsoDate) =>
 
 type Card = Omit<Recommendation, 'id' | 'expiresOn' | 'ruleId' | 'priority'>;
 type Rule = { id: RuleId; priority: number; run: (c: CoachContext) => Card | null };
-
-const proteinIdeas = (diet: string | null) =>
-  diet === 'vegan'
-    ? 'Tofu, tempeh, lentils or soy yoghurt'
-    : diet === 'vegetarian'
-      ? 'Skyr, eggs, lentils or tofu'
-      : diet === 'pescatarian'
-        ? 'Skyr, eggs, tuna or salmon'
-        : 'Skyr, eggs, chicken or tuna';
 
 export const RULES: Rule[] = [
   {
@@ -184,23 +146,6 @@ export const RULES: Rule[] = [
     },
   },
   {
-    id: 'S4',
-    priority: 1,
-    run: (c) => {
-      if (!c.targets) return null;
-      const last4 = [...c.completeDays].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 4);
-      const low = last4.filter((d) => d.kcal < c.targets!.floorKcal).length;
-      return last4.length >= 3 && low >= 3
-        ? {
-            category: 'nutrition',
-            title: 'Eating enough matters',
-            body: 'Your intake has been well below your target. Eating enough supports training and recovery.',
-            reason: `On ${low} of your last ${last4.length} complete days you ate under ${c.targets.floorKcal} kcal, your safety minimum.`,
-          }
-        : null;
-    },
-  },
-  {
     id: 'R1',
     priority: 2,
     run: (c) => {
@@ -209,7 +154,7 @@ export const RULES: Rule[] = [
         ? {
             category: 'recovery',
             title: `${eventTitle(m.category)} tomorrow`,
-            body: `${eventTitle(m.category)} tomorrow. Keep today light: mobility or an easy walk, hydrate, carbs with meals, good sleep.`,
+            body: `${eventTitle(m.category)} tomorrow. Keep today light: mobility or an easy walk, drink enough and get good sleep.`,
             reason: `There is a ${eventPhrase(m.category)} on your calendar tomorrow.`,
           }
         : null;
@@ -317,51 +262,6 @@ export const RULES: Rule[] = [
     },
   },
   {
-    id: 'N1',
-    priority: 4,
-    run: (c) => {
-      if (!c.targets || c.minuteOfDay < 18 * 60 || c.targets.proteinG <= 0) return null;
-      const left = c.targets.proteinG - c.intake.proteinG;
-      return left >= 0.3 * c.targets.proteinG
-        ? {
-            category: 'nutrition',
-            title: 'Protein to go',
-            body: `${Math.round(left)} g protein to go. ${proteinIdeas(c.dietType)} are easy options.`,
-            reason: `It's evening and you've logged ${Math.round(c.intake.proteinG)} of ${c.targets.proteinG} g protein.`,
-            action: { label: 'Log food', href: '/nutrition/add' },
-          }
-        : null;
-    },
-  },
-  {
-    id: 'N2',
-    priority: 5,
-    run: (c) =>
-      c.targets?.waterMl && c.minuteOfDay >= 15 * 60 && c.intake.waterMl < 0.5 * c.targets.waterMl
-        ? {
-            category: 'nutrition',
-            title: 'Time for water',
-            body: 'Halfway through the day — time for some water.',
-            reason: `You've logged ${c.intake.waterMl} of ${c.targets.waterMl} ml today.`,
-            action: { label: 'Open nutrition', href: '/nutrition' },
-          }
-        : null,
-  },
-  {
-    id: 'N3',
-    priority: 5,
-    run: (c) =>
-      c.minuteOfDay >= 14 * 60 && c.intake.mealsLogged === 0
-        ? {
-            category: 'nutrition',
-            title: 'Log lunch',
-            body: "Don't forget to log lunch.",
-            reason: 'Nothing is logged in your food diary today.',
-            action: { label: 'Log food', href: '/nutrition/add' },
-          }
-        : null,
-  },
-  {
     id: 'W1',
     priority: 5,
     run: (c) =>
@@ -376,21 +276,6 @@ export const RULES: Rule[] = [
                 ? 'You have a weight goal and no weigh-ins yet.'
                 : `Your last weigh-in was ${dayNumber(c.today) - dayNumber(c.lastWeighIn)} days ago.`,
             action: { label: 'Log weight', href: '/weight/log' },
-          }
-        : null,
-  },
-  {
-    id: 'W2',
-    priority: 3,
-    run: (c) =>
-      c.pendingAdjustment
-        ? {
-            category: 'weight',
-            title: 'Your 2-week review is ready',
-            body: 'PACE compared your intake with your weight trend and has a suggestion for your target.',
-            reason:
-              'It has been at least two weeks since your last review, with enough weigh-ins and complete food days.',
-            action: { label: 'Review', href: '/coach/review' },
           }
         : null,
   },
@@ -442,7 +327,6 @@ export function evaluateCoach(c: CoachContext, limit = MAX_CARDS): Recommendatio
       : null;
   }).filter((x): x is Recommendation => x !== null);
 
-  if (c.nutritionEnabled === false) cards = cards.filter((r) => !NUTRITION_RULES.has(r.ruleId));
   // New users get onboarding tips only (safety always stays; 28.9 #3).
   if (c.dataDays < 3) cards = cards.filter((r) => r.category === 'safety' || r.ruleId === 'C2');
   if (cards.some((r) => SUPPRESSORS.has(r.ruleId)))

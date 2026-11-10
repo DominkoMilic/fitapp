@@ -1,12 +1,11 @@
 import { Redirect } from 'expo-router';
 import { Tabs } from 'expo-router/js-tabs';
-import { ChartLine, Dumbbell, House, User, Users, Utensils } from 'lucide-react-native';
+import { ChartLine, Dumbbell, House, User, Users } from 'lucide-react-native';
 
 import { useAuth } from '@/features/auth/AuthProvider';
-import { useRecalibrationEngine } from '@/features/coach/useRecalibrationEngine';
 import { useMilestoneEngine } from '@/features/milestones/api';
 import { useNotificationEngine } from '@/features/notifications/useNotificationEngine';
-import { profileTabShown, useFeatures } from '@/features/profile/features';
+import { useFeatures } from '@/features/profile/features';
 import { motion, useTheme } from '@/theme';
 
 function MilestoneEngine() {
@@ -20,12 +19,6 @@ function NotificationEngine() {
   return null;
 }
 
-/** Two-weekly target review (spec 8.9); runs when the app opens. */
-function RecalibrationEngine() {
-  useRecalibrationEngine();
-  return null;
-}
-
 export default function TabsLayout() {
   const { session, initializing } = useAuth();
   const { colors, reduceMotion } = useTheme();
@@ -35,7 +28,6 @@ export default function TabsLayout() {
   return (
     <>
       <MilestoneEngine />
-      <RecalibrationEngine />
       <NotificationEngine />
       <Tabs
         screenOptions={{
@@ -62,15 +54,6 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
-          name="nutrition"
-          options={{
-            // Hidden when the user switched nutrition off (Settings → App features).
-            href: features.nutrition ? undefined : null,
-            title: 'Nutrition',
-            tabBarIcon: ({ color, size }) => <Utensils color={color} size={size} />,
-          }}
-        />
-        <Tabs.Screen
           name="social"
           options={{
             // Shown once social is set up and switched on (spec 33.5).
@@ -89,9 +72,6 @@ export default function TabsLayout() {
         <Tabs.Screen
           name="profile"
           options={{
-            // At most five tabs: with nutrition and social both on, Profile opens from the Home
-            // header instead.
-            href: profileTabShown(features) ? undefined : null,
             title: 'Profile',
             tabBarIcon: ({ color, size }) => <User color={color} size={size} />,
           }}

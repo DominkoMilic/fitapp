@@ -69,7 +69,6 @@ set local role authenticated;
 select public.complete_onboarding(:'payload'::jsonb);
 select concat_ws(',',
   (select count(*) from public.profiles where onboarding_completed_at is not null),
-  (select kcal from public.nutrition_targets),
   (select count(*) from public.recurring_events),
   (select count(*) from public.health_conditions),
   (select jsonb_array_length(weekly_pattern) from public.training_plans where status = 'active'),
@@ -77,8 +76,8 @@ select concat_ws(',',
 rollback;
 SQL
 )" || status=1
-    echo "   result: $(echo "$result" | tail -1) (expected 1,2720,2,1,7,1)"
-    if [ "$(echo "$result" | tail -1)" != "1,2720,2,1,7,1" ]; then echo "$result" | head -20; status=1; fi
+    echo "   result: $(echo "$result" | tail -1) (expected 1,2,1,7,1)"
+    if [ "$(echo "$result" | tail -1)" != "1,2,1,7,1" ]; then echo "$result" | head -20; status=1; fi
   fi
 else
   echo "   skipped (run npm install first)"

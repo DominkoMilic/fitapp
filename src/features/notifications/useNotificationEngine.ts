@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 
 import { addDays, instantFromLocal } from '@/domain/calculations/dates';
-import { effectivePrefs, planNotifications } from '@/domain/notifications/planner';
+import { planNotifications } from '@/domain/notifications/planner';
 import { minuteInTimezone } from '@/features/coach/time';
 import { useToday } from '@/features/dashboard/useToday';
 import { usePreferences, useProfile } from '@/features/profile/api';
@@ -45,10 +45,7 @@ export function useNotificationEngine() {
   const reminders = useMemo(() => {
     if (!prefs.isSuccess || !schedule.isSuccess || !profile.isSuccess) return null;
     const plan = planNotifications({
-      prefs: effectivePrefs(
-        readPrefs(prefs.data?.notification_preferences),
-        prefs.data?.nutrition_enabled ?? true,
-      ),
+      prefs: readPrefs(prefs.data?.notification_preferences),
       today,
       nowMinute: minuteInTimezone(new Date(now), timezone),
       weekStartsOn: profile.data?.week_start === 7 ? 7 : 1,

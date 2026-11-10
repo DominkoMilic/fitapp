@@ -1,16 +1,14 @@
-import { ageOn, type IsoDate } from './dates';
-
 export type CalcSex = 'male' | 'female';
 export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'very' | 'extra';
 
-/** Activity multipliers (spec 8.3). They already include usual exercise. */
-export const ACTIVITY_MULTIPLIERS: Record<ActivityLevel, number> = {
-  sedentary: 1.2,
-  light: 1.375,
-  moderate: 1.55,
-  very: 1.725,
-  extra: 1.9,
-};
+/** Everyday activity, from least to most (asked in onboarding and Personal information). */
+export const ACTIVITY_LEVELS: readonly ActivityLevel[] = [
+  'sedentary',
+  'light',
+  'moderate',
+  'very',
+  'extra',
+];
 
 export const ACTIVITY_DESCRIPTIONS: Record<ActivityLevel, { title: string; description: string }> =
   {
@@ -32,30 +30,6 @@ export const ACTIVITY_DESCRIPTIONS: Record<ActivityLevel, { title: string; descr
       description: 'Training twice daily, or a very physical job plus daily hard training',
     },
   };
-
-/** Mifflin-St Jeor BMR in kcal/day, full precision (spec 8.2). */
-export function bmrMifflinStJeor(input: {
-  sex: CalcSex;
-  weightKg: number;
-  heightCm: number;
-  age: number;
-}): number {
-  const base = 10 * input.weightKg + 6.25 * input.heightCm - 5 * input.age;
-  return input.sex === 'male' ? base + 5 : base - 161;
-}
-
-export function bmrFor(input: {
-  sex: CalcSex;
-  weightKg: number;
-  heightCm: number;
-  dateOfBirth: IsoDate;
-  asOf: IsoDate;
-}): number {
-  return bmrMifflinStJeor({ ...input, age: ageOn(input.dateOfBirth, input.asOf) });
-}
-
-export const tdee = (bmr: number, level: ActivityLevel): number =>
-  bmr * ACTIVITY_MULTIPLIERS[level];
 
 export const bmi = (weightKg: number, heightCm: number): number => weightKg / (heightCm / 100) ** 2;
 

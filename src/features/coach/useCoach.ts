@@ -7,23 +7,14 @@ import { EXERCISE_BY_SLUG, TEMPLATE_BY_SLUG } from '@/domain/training/catalogue'
 import { buildWorkout } from '@/domain/training/workout-builder';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useCheckins } from '@/features/checkin/api';
-import { targetFor } from '@/features/dashboard/today';
 import { useToday } from '@/features/dashboard/useToday';
-import { useNutritionDay } from '@/features/nutrition/useNutritionDay';
-import {
-  useActiveGoal,
-  useHealthConditions,
-  usePreferences,
-  useProfile,
-  useTargetHistory,
-} from '@/features/profile/api';
+import { useActiveGoal, useHealthConditions, useProfile } from '@/features/profile/api';
 import { useOwnedEquipment, useRestrictions } from '@/features/training/library';
 import { type ScheduledWorkout, useScheduledWorkouts } from '@/features/training/schedule-api';
 import { useSessions } from '@/features/training/session-api';
 import { useWeightEntries } from '@/features/weight/api';
 import { useNow } from '@/hooks/useNow';
 
-import { useAdjustments, useNutritionRange } from './api';
 import { dismissedOn, useDismissals } from './dismissals';
 import { minuteInTimezone } from './time';
 
@@ -35,9 +26,7 @@ export function useCoach() {
   const { today, timezone } = useToday();
   const now = useNow(60_000);
   const profile = useProfile();
-  const prefs = usePreferences();
   const goal = useActiveGoal();
-  const targets = useTargetHistory();
   const health = useHealthConditions();
   const restrictions = useRestrictions();
   const owned = useOwnedEquipment();
@@ -45,22 +34,17 @@ export function useCoach() {
   const sessions = useSessions();
   const checkins = useCheckins();
   const weights = useWeightEntries();
-  const day = useNutritionDay(today);
-  const range = useNutritionRange(addDays(today, -27), today);
-  const adjustments = useAdjustments();
   const dismissState = useDismissals((s) => s.byUser);
   const dismiss = useDismissals((s) => s.dismiss);
 
   const weekStartsOn: 1 | 7 = profile.data?.week_start === 7 ? 7 : 1;
   const ready =
     profile.isSuccess &&
-    targets.isSuccess &&
     health.isSuccess &&
     schedule.isSuccess &&
     sessions.isSuccess &&
     checkins.isSuccess &&
-    weights.isSuccess &&
-    range.isSuccess;
+    weights.isSuccess;
 
   // Everything except the time of day: rebuilt only when data changes, not every minute.
   const base = useMemo((): Omit<CoachContext, 'minuteOfDay'> | null => {
@@ -115,20 +99,16 @@ export function useCoach() {
         isTrainingItem(r.category) &&
         r.status !== 'skipped',
     );
-    const t = targetFor(targets.data ?? [], today);
     const checkin = checkins.rows.find((c) => c.local_date === today) ?? null;
     const weighIns = weights.entries.map((e) => e.local_date).sort();
     const dataDays = new Set([
       ...weighIns,
       ...checkins.rows.map((c) => c.local_date),
       ...sessions.sessions.map((s) => s.local_date),
-      ...(range.data?.loggedDates ?? []),
     ]).size;
 
     return {
       today,
-      dietType: prefs.data?.diet_type ?? null,
-      nutritionEnabled: prefs.data?.nutrition_enabled ?? true,
       injuries,
       plan: {
         yesterday: on(addDays(today, -1)),
@@ -143,25 +123,9 @@ export function useCoach() {
             sleepHours: checkin.sleep_hours === null ? null : Number(checkin.sleep_hours),
           }
         : null,
-      targets: t
-        ? {
-            kcal: t.kcal,
-            proteinG: t.protein_g,
-            waterMl: t.water_ml,
-            floorKcal: t.floor_kcal ?? 1200,
-          }
-        : null,
-      intake: {
-        kcal: day.totals.kcal ?? 0,
-        proteinG: day.totals.protein_g ?? 0,
-        mealsLogged: day.log.rows.length,
-        waterMl: day.waterMl,
-      },
-      completeDays: (range.data?.completeDays ?? []).filter((d) => d.date < today),
       weightGoalActive:
         goal.data?.goal_type === 'lose_weight' && goal.data.target_weight_kg !== null,
       lastWeighIn: weighIns[weighIns.length - 1] ?? null,
-      pendingAdjustment: (adjustments.data ?? []).some((a) => a.status === 'proposed'),
       week: {
         planned: thisWeek.length,
         completed: thisWeek.filter((r) => r.status === 'completed').length,
@@ -176,16 +140,11 @@ export function useCoach() {
     owned,
     schedule.rows,
     sessions.sessions,
-    prefs.data,
     weekStartsOn,
     today,
-    targets.data,
     checkins.rows,
     weights.entries,
-    range.data,
-    day,
     goal.data,
-    adjustments.data,
     dismissState,
     userId,
   ]);

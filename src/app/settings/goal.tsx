@@ -1,4 +1,3 @@
-import { router } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
 
@@ -13,6 +12,7 @@ import { OptionCard } from '@/features/onboarding/components/OptionCard';
 import { type Goal, useActiveGoal, useChangeGoal, useProfile } from '@/features/profile/api';
 import { SaveState } from '@/features/profile/SaveState';
 import { useWeightStats } from '@/features/weight/useWeightStats';
+import { goBack } from '@/navigation/back';
 import { spacing } from '@/theme';
 
 const GOALS: { value: GoalsValues['goalType']; title: string }[] = [
@@ -93,7 +93,7 @@ function GoalForm({ goal, currentKg }: { goal: Goal | null; currentKg: number })
     };
     // Same goal type: edit in place (keeps the starting weight and milestones).
     // New goal type: end the current goal and start a new one from today's weight.
-    const onSuccess = () => router.replace('/settings/targets');
+    const onSuccess = () => goBack('/profile');
     if (goal && goal.goal_type === g.goalType)
       change.mutate({ mode: 'update', goalId: goal.id, values: fields }, { onSuccess });
     else
@@ -201,10 +201,6 @@ function GoalForm({ goal, currentKg }: { goal: Goal | null; currentKg: number })
           })
         }
       />
-      <Text variant="caption" color="textSecondary">
-        After saving you can review your calorie targets. They never change without your
-        confirmation.
-      </Text>
     </Screen>
   );
 }

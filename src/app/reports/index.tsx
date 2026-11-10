@@ -5,7 +5,6 @@ import { ListItem, Screen, SectionHeader } from '@/components/ui';
 import type { UnitSystem } from '@/domain/calculations/units';
 import { addDays } from '@/domain/calculations/dates';
 import { useProfile } from '@/features/profile/api';
-import { useFeatures } from '@/features/profile/features';
 import { useCachedReports, useWeeklyReport, useWeekStart } from '@/features/reports/api';
 import { WeeklyReportView } from '@/features/reports/WeeklyReportView';
 import { formatWeekOf } from '@/domain/format';
@@ -13,7 +12,6 @@ import { LoadErrorBanner } from '@/components/feedback/LoadErrorBanner';
 
 /** This week (live) and the last 12 weeks. */
 export default function Reports() {
-  const features = useFeatures();
   const { current } = useWeekStart();
   const { report, isPending, isError, refetch } = useWeeklyReport(current);
   const cached = useCachedReports();
@@ -25,7 +23,7 @@ export default function Reports() {
     <Screen edges={['bottom']}>
       <LoadErrorBanner visible={isError} what="this week's report" onRetry={() => void refetch()} />
       {report ? (
-        <WeeklyReportView report={report} unit={unit} showNutrition={features.nutrition} />
+        <WeeklyReportView report={report} unit={unit} />
       ) : isPending && !isError ? (
         <LoadingState />
       ) : null}

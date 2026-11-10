@@ -16,8 +16,7 @@ insert into payloads values ('valid', $json$
               "unit_system": "metric", "timezone": "Europe/Zagreb", "activity_level": "moderate"},
   "goal": {"goal_type": "lose_weight", "focus_tags": ["futsal", "strength"], "starting_weight_kg": 108,
            "target_weight_kg": 90, "secondary_target_weight_kg": 87, "weekly_rate_pct": 0.5},
-  "preferences": {"diet_type": "omnivore", "meals_per_day": 3, "household_servings": 1,
-                  "training_days_per_week": 3, "preferred_training_days": [1, 4], "max_session_minutes": 45,
+  "preferences": {"training_days_per_week": 3, "preferred_training_days": [1, 4], "max_session_minutes": 45,
                   "training_environment": "home"},
   "equipment": [{"equipment_type": "dumbbells", "max_weight_kg": 5},
                 {"equipment_type": "kettlebell", "max_weight_kg": 5},
@@ -28,9 +27,6 @@ insert into payloads values ('valid', $json$
   "consents": [{"consent_type": "terms", "document_version": "2026-11-08", "granted": true},
                {"consent_type": "privacy", "document_version": "2026-11-08", "granted": true},
                {"consent_type": "health_data", "document_version": "2026-11-08", "granted": true}],
-  "targets": {"effective_from": "2026-11-09", "kcal": 2720, "protein_g": 162, "carbs_g": 347, "fat_g": 76,
-              "fibre_g": 38, "water_ml": 3800, "bmr": 2138.75, "tdee": 3315.06, "floor_kcal": 2140,
-              "limited_by_floor": false, "calculation_version": "2.0.0", "calculation_inputs": {}},
   "plan": {"name": "Fat loss + futsal", "start_date": "2026-11-09", "generator_version": "1.0.0",
            "weekly_pattern": []},
   "recurring_events": [{"title": "League match", "category": "futsal_match", "weekday": 6, "local_time": "18:00",
@@ -57,20 +53,24 @@ select throws_like(
 select throws_like(
   $$ select public.complete_onboarding(jsonb_set((select body from payloads where name='valid'), '{consents}', '[{"consent_type":"terms","document_version":"x","granted":true},{"consent_type":"privacy","document_version":"x","granted":true}]')) $$,
   '%explicit consent%', 'health data without consent is rejected');
-select throws_ok(
-  $$ select public.complete_onboarding(jsonb_set((select body from payloads where name='valid'), '{targets,kcal}', '2000')) $$,
-  '23514', null, 'targets below the safety floor violate a constraint');
+select throws_like(
+  $$ select public.complete_onboarding((select body from payloads where name='valid') - 'plan') $$,
+  '%Incomplete onboarding payload%', 'a payload without a plan is rejected');
 select is((select onboarding_completed_at from public.profiles), null, 'failed attempts leave no partial data');
 select is((select count(*) from public.user_goals)::int, 0, 'failed attempts create no goal');
 
 -- Happy path ---------------------------------------------------------------
-select lives_ok($$ select public.complete_onboarding((select body from payloads where name='valid')) $$,
-  'valid onboarding succeeds');
+-- An app version from before nutrition was removed still sends targets and food preferences:
+-- they are ignored.
+select lives_ok($$ select public.complete_onboarding(
+    jsonb_set((select body from payloads where name='valid'), '{preferences,diet_type}', '"omnivore"')
+    || '{"targets": {"kcal": 2720, "protein_g": 162}}'::jsonb) $$,
+  'valid onboarding succeeds (old nutrition fields are ignored)');
 select isnt((select onboarding_completed_at from public.profiles), null, 'profile marked as onboarded');
 select is((select count(*) from public.user_goals where status = 'active')::int, 1, 'one active goal');
 select is((select count(*) from public.user_equipment)::int, 3, 'equipment stored');
 select is((select count(*) from public.health_conditions)::int, 1, 'injury stored');
-select is((select kcal from public.nutrition_targets), 2720, 'targets stored');
+select is(to_regclass('public.nutrition_targets'), null, 'no nutrition tables exist');
 select is((select count(*) from public.recurring_events)::int, 2, 'recurring commitments stored and linked');
 select is((select count(*) from public.consents)::int, 3, 'consents recorded');
 select throws_like($$ select public.complete_onboarding((select body from payloads where name='valid')) $$,

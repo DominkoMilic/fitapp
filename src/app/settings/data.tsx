@@ -40,9 +40,9 @@ export default function YourData() {
     <Screen edges={['bottom']}>
       <SectionHeader title="Export" />
       <Text color="textSecondary">
-        Download everything PACE stores about you as one JSON file: profile, goals and targets,
-        weights and measurements, check-ins and health information, workouts, activities with their
-        routes, food logs, recipes, plans, reviews and reports.
+        Download everything PACE stores about you as one JSON file: profile and goals, weights and
+        measurements, check-ins and health information, workouts, activities with their routes,
+        plans, milestones, reports and your social profile.
       </Text>
       {unsynced ? (
         <Banner

@@ -48,15 +48,12 @@ appId: ${APP_ID}
     element: 'Dumbbells'
 - tapOn: 'Dumbbells'
 - tapOn: 'Continue'
-# Food tracking is off by default; turn it on so the plan shows calorie targets
-- tapOn: 'Track food in PACE.*'
-- tapOn: 'Continue'
 - tapOn: 'Skip for now'
 - tapOn: 'I accept the terms of use'
 - tapOn: 'I accept the privacy policy'
 - tapOn: 'Continue'
 - assertVisible: 'Your starting plan'
-- assertVisible: '2720'
+- assertVisible: 'Your goal'
 - tapOn: 'Save and start'
 # Home: the quick actions are always above the fold (coach cards can push 'Today' down)
 - extendedWaitUntil:

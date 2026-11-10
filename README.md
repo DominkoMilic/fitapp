@@ -1,8 +1,8 @@
-# PACE: Personal Fitness & Nutrition Platform
+# PACE: Personal Fitness Platform
 
-A mobile fitness coach, workout planner, nutrition tracker and activity tracker for iOS and Android, built with Expo (React Native) and Supabase.
+A mobile fitness coach, workout planner, activity tracker and training community for iOS and Android, built with Expo (React Native) and Supabase.
 
-**Status:** All seven V1 phases are implemented (Foundation, Progress, Training, Nutrition, GPS activities, Personal coach, Production readiness). What's left before the stores is in [`docs/release/checklist.md`](docs/release/checklist.md): legal review, real-device testing and the store submissions. See the phase reports in [`docs/`](docs/).
+**Status:** All seven V1 phases are implemented (Foundation, Progress, Training, Nutrition, GPS activities, Personal coach, Production readiness). Nutrition was later archived to keep PACE focused on training: branch `archive/nutrition`, see [`docs/NUTRITION_ARCHIVE.md`](docs/NUTRITION_ARCHIVE.md). Social (Phase 8) is in progress. What's left before the stores is in [`docs/release/checklist.md`](docs/release/checklist.md): legal review, real-device testing and the store submissions. See the phase reports in [`docs/`](docs/).
 
 ## Documents
 
@@ -16,9 +16,9 @@ A mobile fitness coach, workout planner, nutrition tracker and activity tracker 
 | [`docs/phase-1-report.md`](docs/phase-1-report.md) | What Phase 1 delivered, test results and known limitations                 |
 | [`docs/phase-2-report.md`](docs/phase-2-report.md) | Phase 2: weight, measurements, check-in, milestones, offline sync          |
 | [`docs/phase-3-report.md`](docs/phase-3-report.md) | Phase 3: exercise library, calendar, workouts, history, records            |
-| [`docs/phase-4-report.md`](docs/phase-4-report.md) | Phase 4: food logging, USDA catalogue, recipes, planner, shopping list     |
+| [`docs/phase-4-report.md`](docs/phase-4-report.md) | Phase 4: nutrition (archived; see `docs/NUTRITION_ARCHIVE.md`)             |
 | [`docs/phase-5-report.md`](docs/phase-5-report.md) | Phase 5: GPS walk/run/ride recording, routes, manual activities            |
-| [`docs/phase-6-report.md`](docs/phase-6-report.md) | Phase 6: daily coach, 2-week target review, weekly report, reminders       |
+| [`docs/phase-6-report.md`](docs/phase-6-report.md) | Phase 6: daily coach, weekly report, reminders                             |
 | [`docs/phase-7-report.md`](docs/phase-7-report.md) | Phase 7: account deletion, export, legal, accessibility, release setup     |
 | [`docs/release/`](docs/release/)                   | Release checklist, store listing and privacy answers, device test matrix   |
 | [`docs/audit-report.md`](docs/audit-report.md)     | Full security, UX, accessibility, privacy and reliability audit with fixes |
@@ -70,18 +70,6 @@ npx supabase db reset   # applies migrations + the dev seed
 
 The local `supabase/config.toml` already enables email confirmation, 8-character passwords and the `pace://` redirects. Confirmation emails are caught by the local mail viewer at http://127.0.0.1:55324 (PACE uses the 553xx ports so it can run beside other local Supabase projects). On a physical phone, use your computer's LAN IP instead of `127.0.0.1`.
 
-### Recipes Edge Function
-
-Recipes come from TheMealDB through the `recipes-proxy` Edge Function, so the API key never ships in the app.
-
-```bash
-npx supabase functions deploy recipes-proxy                 # hosted project (after `supabase link`)
-npx supabase secrets set THEMEALDB_API_KEY=<key>            # optional; defaults to TheMealDB's public test key "1"
-npx supabase functions serve recipes-proxy                  # local stack
-```
-
-Before release, get a TheMealDB supporter key (the test key is for development only).
-
 ### Using the local stack from the app
 
 Expo bundles `.env.local` into development builds, and it wins over shell variables. To point a dev build at the local stack, create `.env.development.local` with `EXPO_PUBLIC_SUPABASE_URL=http://127.0.0.1:55321` and the local publishable key from `npx supabase status`. Delete the file to go back to the hosted project.
@@ -132,19 +120,18 @@ Store the Supabase values per environment in EAS (`eas env:create`), or in `.env
 
 ## Scripts
 
-| Command                                                 | What it does                                                                                                                              |
-| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run check`                                         | Typecheck + lint (zero warnings) + unit/component tests                                                                                   |
-| `npm test`                                              | Jest unit and component tests                                                                                                             |
-| `npm run typecheck` / `npm run lint` / `npm run format` | Individual checks                                                                                                                         |
-| `npm run db:verify`                                     | Applies all migrations to a throwaway PostgreSQL, runs the pgTAP tests and the app↔DB contract test (no Docker needed)                    |
-| `npm run db:test`                                       | pgTAP tests against the local Supabase stack (`supabase test db`)                                                                         |
-| `npm run db:reset`                                      | Rebuilds the local database (Docker)                                                                                                      |
-| `npm run db:types`                                      | Regenerates `src/integrations/supabase/database.types.ts`                                                                                 |
-| `npm run db:seed-training`                              | Regenerates the exercise/template seed migration from `src/domain/training/catalogue.ts` (`npm run check` verifies it is up to date)      |
-| `npm run db:seed-usda -- <csv dir>`                     | Regenerates the USDA food seed migration from the downloaded SR Legacy CSVs                                                               |
-| `npm run functions:sync`                                | Copies shared tested modules (recipe parser/normaliser, account deletion) into `supabase/functions/_shared` (`npm run check` verifies it) |
-| `npm run e2e:web`                                       | Builds the web bundle and runs the Playwright onboarding smoke test (mocked backend)                                                      |
+| Command                                                 | What it does                                                                                                                         |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `npm run check`                                         | Typecheck + lint (zero warnings) + unit/component tests                                                                              |
+| `npm test`                                              | Jest unit and component tests                                                                                                        |
+| `npm run typecheck` / `npm run lint` / `npm run format` | Individual checks                                                                                                                    |
+| `npm run db:verify`                                     | Applies all migrations to a throwaway PostgreSQL, runs the pgTAP tests and the app↔DB contract test (no Docker needed)               |
+| `npm run db:test`                                       | pgTAP tests against the local Supabase stack (`supabase test db`)                                                                    |
+| `npm run db:reset`                                      | Rebuilds the local database (Docker)                                                                                                 |
+| `npm run db:types`                                      | Regenerates `src/integrations/supabase/database.types.ts`                                                                            |
+| `npm run db:seed-training`                              | Regenerates the exercise/template seed migration from `src/domain/training/catalogue.ts` (`npm run check` verifies it is up to date) |
+| `npm run functions:sync`                                | Copies shared tested modules (account deletion) into `supabase/functions/_shared` (`npm run check` verifies it)                      |
+| `npm run e2e:web`                                       | Builds the web bundle and runs the Playwright onboarding smoke test (mocked backend)                                                 |
 
 Device E2E: `maestro test tests/e2e/maestro/smoke -e APP_ID=app.pace.fitness.development -e EMAIL=… -e PASSWORD=…` against a development or preview build (see [`tests/e2e/maestro/README.md`](tests/e2e/maestro/README.md)). CI: [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 

@@ -206,7 +206,7 @@ export default function SocialUser() {
             ? 'This is how friends see you. Change it in Settings → Social and privacy.'
             : p.relationship === 'friends'
               ? 'What they choose to share will appear here when the friends feed arrives.'
-              : 'Friends see only what each person chooses to share. Weight, food and health are never shared.'}
+              : 'Friends see only what each person chooses to share. Weight and health are never shared.'}
         </Text>
       </Card>
 

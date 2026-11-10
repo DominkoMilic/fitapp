@@ -2,17 +2,13 @@ import { type Control, Controller } from 'react-hook-form';
 import { View } from 'react-native';
 
 import { NumberField, Text } from '@/components/ui';
-import {
-  ACTIVITY_DESCRIPTIONS,
-  ACTIVITY_MULTIPLIERS,
-  type ActivityLevel,
-} from '@/domain/calculations/energy';
+import { ACTIVITY_DESCRIPTIONS, ACTIVITY_LEVELS } from '@/domain/calculations/energy';
 import type { ActivityValues } from '@/domain/validation/onboarding';
 import { spacing } from '@/theme';
 
 import { OptionCard } from './OptionCard';
 
-const LEVELS = Object.keys(ACTIVITY_MULTIPLIERS) as ActivityLevel[];
+const LEVELS = ACTIVITY_LEVELS;
 
 /** Activity level question, shown inside the "About you" step. */
 export function ActivitySection({ control }: { control: Control<ActivityValues> }) {
@@ -22,8 +18,7 @@ export function ActivitySection({ control }: { control: Control<ActivityValues> 
         How active are you?
       </Text>
       <Text variant="small" color="textSecondary">
-        Include your usual exercise and sport. PACE does not add exercise calories on top, so pick
-        what describes a normal week.
+        Include your usual exercise and sport. Pick what describes a normal week.
       </Text>
       <Controller
         control={control}
@@ -33,7 +28,7 @@ export function ActivitySection({ control }: { control: Control<ActivityValues> 
             {LEVELS.map((level) => (
               <OptionCard
                 key={level}
-                title={`${ACTIVITY_DESCRIPTIONS[level].title} · ×${ACTIVITY_MULTIPLIERS[level]}`}
+                title={ACTIVITY_DESCRIPTIONS[level].title}
                 description={ACTIVITY_DESCRIPTIONS[level].description}
                 selected={field.value === level}
                 onPress={() => field.onChange(level)}
