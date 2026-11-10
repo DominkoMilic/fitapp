@@ -1,5 +1,7 @@
 # Push notifications setup (Phase 8B-2)
 
+**Status (2026-11-20): done for the preview app** (`app.pace.fitness.preview`). Repeat steps 2, 5 and the FCM upload for the production package `app.pace.fitness` before release.
+
 Social push notifications ("Ana cheered your run") are built but switched off. Turning them on needs a few steps in accounts only you can sign in to. Steps 1–3 need your Expo and Firebase accounts; 4–7 finish the setup and test it.
 
 ## 1. Link the app to Expo (EAS project ID)

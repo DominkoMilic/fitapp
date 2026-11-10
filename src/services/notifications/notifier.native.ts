@@ -19,6 +19,14 @@ Notifications.setNotificationHandler({
   }),
 });
 
+// Social pushes (cheers, comments, friend requests) arrive on the "social" channel; Android drops
+// a push whose channel doesn't exist yet, so it is created as soon as the app starts.
+if (Platform.OS === 'android')
+  void Notifications.setNotificationChannelAsync('social', {
+    name: 'Friends',
+    importance: AndroidImportance.HIGH,
+  }).catch(() => undefined);
+
 let channelReady: Promise<unknown> | null = null;
 const ensureChannel = () =>
   Platform.OS === 'android'

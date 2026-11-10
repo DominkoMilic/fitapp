@@ -7,7 +7,7 @@ import { envResult } from '@/config/env';
 
 export type LegalDocId = 'privacy' | 'terms' | 'disclaimer' | 'licences';
 
-export const LEGAL_UPDATED = '19 November 2026';
+export const LEGAL_UPDATED = '20 November 2026';
 
 const supportEmail = envResult.ok ? envResult.env.supportEmail : undefined;
 /** How to reach the operator; the store listings always carry a support contact too. */
@@ -47,7 +47,7 @@ export const LEGAL_DOCS: Record<LegalDocId, Doc> = {
       },
       {
         heading: 'Where your data is stored and who processes it',
-        body: 'Your data is stored by Supabase (database, sign-in and file storage) in the European Union, acting as our processor. Reminders are local notifications created on your phone; no notification service receives your data.',
+        body: 'Your data is stored by Supabase (database, sign-in and file storage) in the European Union, acting as our processor. Reminders are local notifications created on your phone. If you use social features, notifications about cheers, comments and friend requests are delivered through Expo and Google Firebase Cloud Messaging, acting as our processors; they carry only a name, the kind of event and a link inside the app, never your training numbers or health information. You can turn each type off in Settings → Social and privacy.',
       },
       {
         heading: 'Security',

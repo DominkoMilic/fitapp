@@ -365,7 +365,8 @@ export default function SocialSettingsScreen() {
 
       <SectionHeader title="Notifications" />
       <Text variant="small" color="textSecondary">
-        Push notifications arrive in a coming update. These choices are saved for when they do.
+        Notifications on this phone when friends cheer, comment or send a request. Never between
+        22:00 and 07:00; several at once arrive as one.
       </Text>
       <Toggle
         label="Cheers"
