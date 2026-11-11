@@ -451,9 +451,9 @@ Fields as in schema (Section 20). Searchable by name, filterable by category, mu
 
 ### 11.1 Flow
 
-Pick type (walk/run/cycle) → permission check → "Acquiring GPS" (shows accuracy) → Start → live screen (elapsed time, moving time, distance, current speed/pace, average pace/speed, estimated kcal, GPS quality, map) → Pause/Resume → Finish (confirm) or Discard (confirm) → Summary → Save.
+Pick type (walk/run/cycle) → permission check → "Acquiring GPS" (shows accuracy) → Start → live screen (map, distance, moving time, current pace/speed, GPS quality) → Pause/Resume → Finish (confirm) or Discard (confirm) → Summary → Save.
 
-Live screen layout: distance as the hero, Pace and Calories as two tiles, then Total time · Avg pace · GPS as three smaller figures in one card (three full tiles don't fit a 360 dp screen), then the map. The live map opens at street level (zoom 16) on the phone's location and follows it; paused, it fits the whole route with start and finish markers. On Android the map is Google Maps when `GOOGLE_MAPS_ANDROID_API_KEY` is set (preview builds have one), otherwise the route shape. A recording in progress shows an amber **Recording** card on Home and Training ("Open recording").
+Live screen layout (map first, 2026-11-21): the map fills the top of the screen with two small badges on it, **Recording**/**Paused** and **GPS Good/Fair** (or **Weak GPS**, amber); below it only distance (large), time and current pace (speed for rides); then Pause/Resume and Finish. **Discard** appears only while paused, sliding in as the map makes room (fades with reduce motion). Calories, averages and total time are on the summary after Finish, not while moving. The live map opens at street level (zoom 16) on the phone's location and follows it; paused, it fits the route with start and finish markers (a route under ~100 m stays at street level). On Android the map is Google Maps when `GOOGLE_MAPS_ANDROID_API_KEY` is set (preview builds have one), otherwise the route shape. A recording in progress shows an amber **Recording** card on Home and Training ("Open recording").
 
 ### 11.2 Permissions
 

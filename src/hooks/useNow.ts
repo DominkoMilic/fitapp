@@ -5,8 +5,14 @@ export function useNow(intervalMs = 1000, active = true): number {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     if (!active) return;
+    // Catch up at once when (re)activated: the last value is from before a pause, and showing it
+    // for up to a second made a resumed timer jump backwards.
+    const first = setTimeout(() => setNow(Date.now()), 0);
     const t = setInterval(() => setNow(Date.now()), intervalMs);
-    return () => clearInterval(t);
+    return () => {
+      clearTimeout(first);
+      clearInterval(t);
+    };
   }, [intervalMs, active]);
   return now;
 }

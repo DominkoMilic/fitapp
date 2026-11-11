@@ -1,5 +1,5 @@
 import Constants from 'expo-constants';
-import { useEffect, useMemo, useRef } from 'react';
+import { type ReactNode, useEffect, useMemo, useRef } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 
@@ -13,16 +13,32 @@ const hasAndroidKey = !!(Constants.expoConfig?.extra as { hasAndroidMapsKey?: bo
 const toCoord = (p: LatLng) => ({ latitude: p.lat, longitude: p.lng });
 /** Street level: a walk or run around the block fills the map. */
 const FOLLOW_ZOOM = 16;
+/** About 100 m in degrees: smaller routes are shown at street level instead of fitted. */
+const TINY_SPAN_DEG = 0.001;
+const tiny = (cs: readonly { latitude: number; longitude: number }[]) => {
+  const lats = cs.map((c) => c.latitude);
+  const lngs = cs.map((c) => c.longitude);
+  return (
+    Math.max(...lats) - Math.min(...lats) < TINY_SPAN_DEG &&
+    Math.max(...lngs) - Math.min(...lngs) < TINY_SPAN_DEG
+  );
+};
 
 /** Apple Maps on iOS, Google Maps on Android when a key is configured, else an SVG shape. */
 export function RouteMap({
   pieces,
   height = 240,
   follow = false,
+  fill = false,
+  overlay,
 }: {
   pieces: readonly (readonly LatLng[])[];
   height?: number;
   follow?: boolean;
+  /** Take all the space the parent gives (the live recording screen). */
+  fill?: boolean;
+  /** Drawn on top of the map's top edge (status and GPS badges). */
+  overlay?: ReactNode;
 }) {
   const { colors } = useTheme();
   const ref = useRef<MapView>(null);
@@ -38,6 +54,9 @@ export function RouteMap({
     if (follow && last) {
       ref.current.animateCamera({ center: last, zoom: FOLLOW_ZOOM }, { duration: 500 });
       centred.current = true;
+    } else if (tiny(all) && last) {
+      // A route of a few metres would be "fitted" at maximum zoom (a pin on a blank map).
+      ref.current.animateCamera({ center: last, zoom: FOLLOW_ZOOM }, { duration: 0 });
     } else {
       ref.current.fitToCoordinates(all, {
         edgePadding: { top: 32, right: 32, bottom: 32, left: 32 },
@@ -47,13 +66,20 @@ export function RouteMap({
   }, [all, follow, last]);
 
   if (Platform.OS === 'android' && !hasAndroidKey)
-    return <RouteSvg pieces={pieces} height={height} />;
+    return (
+      <View style={fill ? styles.fill : undefined}>
+        <RouteSvg pieces={pieces} height={height} />
+        {overlay ? <View style={styles.overlay}>{overlay}</View> : null}
+      </View>
+    );
   return (
-    <View style={[styles.box, { height }]}>
+    <View style={[styles.box, fill ? styles.fill : { height }]}>
       <MapView
         ref={ref}
         style={StyleSheet.absoluteFill}
         showsUserLocation={follow}
+        showsMyLocationButton={false}
+        toolbarEnabled={false}
         onUserLocationChange={(e) => {
           const c = e.nativeEvent.coordinate;
           if (!follow || centred.current || !c || !ref.current) return;
@@ -78,8 +104,17 @@ export function RouteMap({
         {all[0] && !follow ? <Marker coordinate={all[0]} title="Start" pinColor="green" /> : null}
         {last && !follow ? <Marker coordinate={last} title="Finish" /> : null}
       </MapView>
+      {overlay ? (
+        <View style={styles.overlay} pointerEvents="box-none">
+          {overlay}
+        </View>
+      ) : null}
     </View>
   );
 }
 
-const styles = StyleSheet.create({ box: { borderRadius: radius.card, overflow: 'hidden' } });
+const styles = StyleSheet.create({
+  box: { borderRadius: radius.card, overflow: 'hidden' },
+  fill: { flex: 1 },
+  overlay: { position: 'absolute', top: 0, left: 0, right: 0 },
+});
