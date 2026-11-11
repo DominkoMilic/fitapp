@@ -27,7 +27,7 @@ import { useActiveWorkout } from '@/features/training/active-workout-store';
 import { useScheduledWorkouts, useScheduleGeneration } from '@/features/training/schedule-api';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { radius, spacing, TOUCH_TARGET, useTheme } from '@/theme';
-import { formatLongWeekday, intensityLabel } from '@/domain/format';
+import { formatLongWeekday, intensityLabel, weighedWhen } from '@/domain/format';
 import { goalJourney } from '@/domain/weight/tone';
 
 const WEEKDAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -56,12 +56,6 @@ function QuickAction({
       </Text>
     </PressableScale>
   );
-}
-
-/** "today", "yesterday" or "3 days ago" for the latest weigh-in. */
-function weighedWhen(date: string, today: string): string {
-  const days = Math.round((Date.parse(today) - Date.parse(date)) / 86_400_000);
-  return days <= 0 ? 'today' : days === 1 ? 'yesterday' : `${days} days ago`;
 }
 
 /** One labelled number in the Start · Now · Goal row. */

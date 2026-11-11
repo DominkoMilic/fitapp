@@ -326,3 +326,7 @@ A "Now" figure that differed from what the scale showed felt wrong. Home's Now i
 ## 2026-11-23: Removed comments disappear completely
 
 Replaces the soft removal of 2026-11-19 (decision 4), at the product owner's request. A placeholder ("Comment removed") kept drawing attention to what was removed. Removing a comment now deletes the row; existing placeholders were deleted by the migration. While comments are off, the post screen doesn't invite anyone to comment.
+
+## 2026-11-23: Progress tab in the same style as the others
+
+The big Log weight button became the round "+" next to the title (as on Training), the four large stat tiles became one compact card, and the list rows became icon tiles. `Tile`, `HeaderAddButton` and `MiniStat` are shared components used by both tabs.

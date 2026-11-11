@@ -118,3 +118,9 @@ export const categoryLabel = (value: string | null | undefined) =>
   (value && sportEventLabel(value)) || baseCategoryLabel(value);
 
 export const muscleLabel = (m: string) => humanize(m).toLowerCase();
+
+/** When the latest weigh-in was: "today", "yesterday" or "3 days ago". */
+export function weighedWhen(date: IsoDate, today: IsoDate): string {
+  const days = Math.round((Date.parse(today) - Date.parse(date)) / 86_400_000);
+  return days <= 0 ? 'today' : days === 1 ? 'yesterday' : `${days} days ago`;
+}

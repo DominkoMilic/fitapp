@@ -1,12 +1,11 @@
 import { router } from 'expo-router';
-import { BookOpen, History, Plus, Trophy } from 'lucide-react-native';
+import { BookOpen, History, Trophy } from 'lucide-react-native';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { Banner, LoadingState } from '@/components/feedback';
 import { LoadErrorBanner } from '@/components/feedback/LoadErrorBanner';
-import { Screen, Text } from '@/components/ui';
-import { PressableScale } from '@/components/ui/PressableScale';
+import { HeaderAddButton, Screen, Text, Tile } from '@/components/ui';
 import { addDays } from '@/domain/calculations/dates';
 import { formatDateRange, formatLongWeekday } from '@/domain/format';
 import { weekStartOf } from '@/domain/training/records';
@@ -21,7 +20,7 @@ import { OccurrenceRow } from '@/features/training/OccurrenceRow';
 import { ResumeWorkoutCard } from '@/features/training/ResumeWorkoutCard';
 import { useScheduledWorkouts, useScheduleGeneration } from '@/features/training/schedule-api';
 import { WeekStrip } from '@/features/training/WeekStrip';
-import { radius, spacing, TOUCH_TARGET, useTheme } from '@/theme';
+import { spacing, useTheme } from '@/theme';
 
 /**
  * Training tab (redesign 2026-11-21): a week strip on top, then only the selected day's sessions,
@@ -55,14 +54,10 @@ export default function Training() {
         <Text variant="heading" accessibilityRole="header">
           Training
         </Text>
-        <PressableScale
-          accessibilityRole="button"
+        <HeaderAddButton
           accessibilityLabel="Add training: record, log or plan"
           onPress={() => router.push('/training/add')}
-          style={[styles.add, { backgroundColor: colors.accent }]}
-        >
-          <Plus size={24} color={colors.onAccent} strokeWidth={2.5} />
-        </PressableScale>
+        />
       </View>
       <LoadErrorBanner
         visible={week.isError}
@@ -138,51 +133,8 @@ export default function Training() {
   );
 }
 
-function Tile({
-  label,
-  icon,
-  onPress,
-}: {
-  label: string;
-  icon: React.ReactNode;
-  onPress: () => void;
-}) {
-  const { colors } = useTheme();
-  return (
-    <PressableScale
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      onPress={onPress}
-      style={[styles.tile, { backgroundColor: colors.surface, borderColor: colors.border }]}
-    >
-      {icon}
-      <Text variant="small" style={styles.tileLabel}>
-        {label}
-      </Text>
-    </PressableScale>
-  );
-}
-
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  add: {
-    width: TOUCH_TARGET,
-    height: TOUCH_TARGET,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   day: { gap: spacing.sm, marginTop: spacing.xs },
   tiles: { flexDirection: 'row', gap: spacing.xs, marginTop: spacing.md },
-  tile: {
-    flex: 1,
-    minHeight: TOUCH_TARGET + 28,
-    borderRadius: radius.card,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.xs,
-    padding: spacing.sm,
-  },
-  tileLabel: { fontWeight: '600' },
 });

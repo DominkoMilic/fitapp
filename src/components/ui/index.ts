@@ -17,3 +17,6 @@ export * from './SwipeToDismiss';
 export * from './FieldError';
 export * from './FormLock';
 export * from './StatusTag';
+export * from './Tile';
+export * from './HeaderAddButton';
+export * from './MiniStat';
