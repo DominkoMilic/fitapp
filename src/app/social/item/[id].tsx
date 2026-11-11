@@ -90,7 +90,8 @@ export default function FeedItemScreen() {
     );
   };
 
-  const list = comments.data ?? [];
+  // Removed comments are deleted on the server; any older placeholder is never shown.
+  const list = (comments.data ?? []).filter((c) => !c.removed);
   return (
     <>
       <Stack.Screen options={{ title: row.is_mine ? 'Your post' : row.display_name }} />
