@@ -15,6 +15,8 @@ const toCoord = (p: LatLng) => ({ latitude: p.lat, longitude: p.lng });
 const FOLLOW_ZOOM = 16;
 /** About 100 m in degrees: smaller routes are shown at street level instead of fitted. */
 const TINY_SPAN_DEG = 0.001;
+/** About 1 km across: street level for the first view. */
+const STREET_DELTA = 0.01;
 const tiny = (cs: readonly { latitude: number; longitude: number }[]) => {
   const lats = cs.map((c) => c.latitude);
   const lngs = cs.map((c) => c.longitude);
@@ -84,9 +86,15 @@ export function RouteMap({
           const c = e.nativeEvent.coordinate;
           if (!follow || centred.current || !c || !ref.current) return;
           centred.current = true;
-          ref.current.animateCamera(
-            { center: { latitude: c.latitude, longitude: c.longitude }, zoom: FOLLOW_ZOOM },
-            { duration: 0 },
+          // A region jumps straight to street level (a camera zoom eased in slowly on Android).
+          ref.current.animateToRegion(
+            {
+              latitude: c.latitude,
+              longitude: c.longitude,
+              latitudeDelta: STREET_DELTA,
+              longitudeDelta: STREET_DELTA,
+            },
+            0,
           );
         }}
         initialCamera={

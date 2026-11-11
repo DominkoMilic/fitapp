@@ -330,3 +330,8 @@ Replaces the soft removal of 2026-11-19 (decision 4), at the product owner's req
 ## 2026-11-23: Progress tab in the same style as the others
 
 The big Log weight button became the round "+" next to the title (as on Training), the four large stat tiles became one compact card, and the list rows became icon tiles. `Tile`, `HeaderAddButton` and `MiniStat` are shared components used by both tabs.
+
+## 2026-11-24: Live recording notification and route shape
+
+1. **Recording notification.** It is our own notification (expo-notifications) rather than the location service's, so it can carry live time, distance, pace and buttons. Pause runs headless; Resume and Finish open the app (Android forbids starting location tracking from the background). Android 14+ lets users swipe away ongoing notifications, so "can't be removed" is done by re-posting it. Updates every 10 s (Samsung redraws a re-posted notification and can lose a tap mid-redraw).
+2. **Route shape, not a map.** The user chose an opt-in, map-free line: only coordinates normalised to a 0–1000 box leave the phone, so the shared shape can't reveal where someone lives or trains. Legal version 2026-11-24.
