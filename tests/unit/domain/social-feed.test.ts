@@ -18,8 +18,12 @@ import {
 describe('feed snapshot whitelist', () => {
   it('matches the keys the database may put in a snapshot', () => {
     const dir = join(__dirname, '../../../supabase/migrations');
-    const file = readdirSync(dir).find((f) => f.endsWith('_social_feed.sql'))!;
-    const sql = readFileSync(join(dir, file), 'utf8');
+    // Every migration in order: a later WHITELIST line for a kind replaces the earlier one.
+    const sql = readdirSync(dir)
+      .filter((f) => f.endsWith('.sql'))
+      .sort()
+      .map((f) => readFileSync(join(dir, f), 'utf8'))
+      .join('\n');
     const fromSql = Object.fromEntries(
       [...sql.matchAll(/-- WHITELIST (\w+): ([\w,]+)/g)].map((m) => [m[1], m[2]!.split(',')]),
     );

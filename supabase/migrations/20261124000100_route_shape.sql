@@ -21,6 +21,7 @@ $$;
 create trigger activities_route_shape_cleanup before insert or update on public.activities
   for each row execute function public.activities_route_shape_cleanup();
 
+-- WHITELIST activity: type,distance_km,moving_min,pace_s_per_km,manual,shape
 create function public.activity_snapshot(a jsonb, with_shape boolean) returns jsonb
 language sql immutable set search_path = '' as $$
   select jsonb_strip_nulls(jsonb_build_object(
