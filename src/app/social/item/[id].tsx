@@ -121,7 +121,7 @@ export default function FeedItemScreen() {
               message="Comments couldn’t be loaded."
               onRetry={() => void comments.refetch()}
             />
-          ) : (
+          ) : row.comments_off ? null : (
             <Text variant="small" color="textSecondary">
               No comments yet. Say something encouraging.
             </Text>

@@ -207,6 +207,7 @@ describe('post screen', () => {
     mockItem = row({ comments_off: true, comment_count: 0 });
     await renderWithTheme(<FeedItemScreen />);
     expect(screen.getByText('Comments are turned off for this post.')).toBeTruthy();
+    expect(screen.queryByText(/No comments yet/)).toBeNull();
     expect(screen.queryByLabelText('Add a comment')).toBeNull();
     expect(screen.queryByRole('button', { name: /comments$/ })).toBeNull();
   });
