@@ -8,6 +8,7 @@ import { renderWithTheme } from '../setup/render';
 
 const mockPush = jest.fn();
 const mockAddComment = jest.fn();
+const mockCommentsOff = jest.fn();
 let mockItem: FeedRow | null = null;
 let mockComments: CommentRow[] = [];
 
@@ -30,6 +31,7 @@ jest.mock('@/features/social/api', () => ({
   useDeleteComment: () => mutation(),
   useCheer: () => mutation(),
   useHideFeedItem: () => mutation(),
+  useSetCommentsOff: () => mutation(mockCommentsOff),
   useBlockUser: () => mutation(),
   useReport: () => ({ ...mutation(), isSuccess: false, isError: false, reset: jest.fn() }),
 }));
@@ -48,6 +50,7 @@ const row = (p: Partial<FeedRow> = {}): FeedRow => ({
   my_cheer: null,
   comment_count: 1,
   is_mine: false,
+  comments_off: false,
   ...p,
 });
 
@@ -139,6 +142,8 @@ describe('post screen', () => {
         created_at: '2026-11-17T08:00:00Z',
         removed: false,
         can_delete: false,
+        flagged: false,
+        is_mine: false,
       },
       {
         id: 'c2',
@@ -150,6 +155,8 @@ describe('post screen', () => {
         created_at: '2026-11-17T09:00:00Z',
         removed: true,
         can_delete: false,
+        flagged: false,
+        is_mine: false,
       },
     ];
     await renderWithTheme(<FeedItemScreen />);
@@ -158,6 +165,59 @@ describe('post screen', () => {
     await fireEvent.changeText(screen.getByLabelText('Add a comment'), '  Nice one  ');
     await fireEvent.press(screen.getByRole('button', { name: 'Send comment' }));
     expect(mockAddComment.mock.calls[0]![0]).toEqual({ itemId: 'item-1', body: 'Nice one' });
+  });
+
+  const comment = (p: Partial<CommentRow>): CommentRow => ({
+    id: 'c1',
+    author: 'u3',
+    handle: 'bo',
+    display_name: 'Bo',
+    avatar_color: 'sky',
+    body: 'Jebeno brzo!',
+    created_at: '2026-11-17T08:00:00Z',
+    removed: false,
+    can_delete: false,
+    flagged: false,
+    is_mine: false,
+    ...p,
+  });
+
+  it('gives every comment a visible ⋯ menu that fits who you are', async () => {
+    // On your own post: someone's possibly rude comment can be removed and reported.
+    mockItem = row({ is_mine: true, owner: 'me' });
+    mockComments = [comment({ can_delete: true, flagged: true })];
+    await renderWithTheme(<FeedItemScreen />);
+    expect(screen.getByText('May be rude')).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: "Options for Bo's comment" }));
+    expect(await screen.findByRole('button', { name: 'Remove comment' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Report comment' })).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Remove comment' }));
+    expect(await screen.findByText(/You can remove any comment on your post/)).toBeTruthy();
+  });
+
+  it('your own comment on someone else’s post can only be removed', async () => {
+    mockComments = [comment({ can_delete: true, is_mine: true })];
+    await renderWithTheme(<FeedItemScreen />);
+    await fireEvent.press(screen.getByRole('button', { name: 'Options for your comment' }));
+    expect(await screen.findByRole('button', { name: 'Remove comment' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Report comment' })).toBeNull();
+  });
+
+  it('with comments off, only cheers remain', async () => {
+    mockItem = row({ comments_off: true, comment_count: 0 });
+    await renderWithTheme(<FeedItemScreen />);
+    expect(screen.getByText('Comments are turned off for this post.')).toBeTruthy();
+    expect(screen.queryByLabelText('Add a comment')).toBeNull();
+    expect(screen.queryByRole('button', { name: /comments$/ })).toBeNull();
+  });
+
+  it('the owner turns comments off from the post menu', async () => {
+    mockItem = row({ is_mine: true, owner: 'me' });
+    await renderWithTheme(<FeedItemScreen />);
+    await fireEvent.press(screen.getByRole('button', { name: /More/ }));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Turn off comments' }));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Turn off' }));
+    expect(mockCommentsOff.mock.calls[0]![0]).toEqual({ id: 'item-1', off: true });
   });
 
   it('explains a post that is no longer available', async () => {

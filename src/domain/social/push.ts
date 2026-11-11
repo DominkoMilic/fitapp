@@ -3,7 +3,7 @@
  * Edge Function (copied by scripts/sync-shared.mjs). Texts never contain numbers or health details.
  */
 
-export type PushType = 'cheer' | 'comment' | 'request' | 'accept';
+export type PushType = 'cheer' | 'comment' | 'comment_flagged' | 'request' | 'accept';
 
 /** Repeated events on the same topic within this window are batched into the next push. */
 export const BATCH_WINDOW_MS = 15 * 60_000;
@@ -46,6 +46,12 @@ export function pushText(
       return { title: 'New cheer', body: `${actors} cheered your ${thing}` };
     case 'comment':
       return { title: 'New comment', body: `${actors} commented on your ${thing}` };
+    case 'comment_flagged':
+      // Never the comment itself: it may be rude, and pushes show on the lock screen.
+      return {
+        title: 'Check a comment',
+        body: `A comment on your ${thing} may be rude. Open it to keep or remove it.`,
+      };
     case 'request':
       return { title: 'Friend request', body: `${actors} wants to be friends` };
     case 'accept':

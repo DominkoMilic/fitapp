@@ -20,8 +20,8 @@ select lives_ok($$ select public.set_cheer((select id from item), 'clap') $$, 'c
 select is((select cheers from public.get_feed(null, 20, null)), '{"clap": 1}'::jsonb, 'one cheer per person');
 select is((select my_cheer from public.get_feed(null, 20, null)), 'clap', 'your own cheer is shown');
 select isnt(public.add_comment((select id from item), '  Great session!  '), null, 'a friend can comment');
-select throws_ok($$ select public.add_comment((select id from item), 'what a shit workout') $$,
-  'P0001', 'not_allowed', 'comments pass the word filter');
+select throws_ok($$ select public.add_comment((select id from item), 'you are a whore') $$,
+  'P0001', 'not_allowed', 'comments with blocked words (slurs, hate) are refused');
 select throws_ok($$ select public.add_comment((select id from item), repeat('a', 281)) $$,
   '23514', null, 'comments are at most 280 characters');
 select is((select body from public.list_comments((select id from item))), 'Great session!', 'comments are trimmed and listed');

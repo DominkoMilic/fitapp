@@ -194,6 +194,7 @@ export type Database = {
           created_at: string;
           deleted_at: string | null;
           feed_item_id: string;
+          flagged: boolean;
           id: string;
         };
         ComputedFields: never;
@@ -203,6 +204,7 @@ export type Database = {
           created_at?: string;
           deleted_at?: string | null;
           feed_item_id: string;
+          flagged?: boolean;
           id?: string;
         };
         Update: {
@@ -211,6 +213,7 @@ export type Database = {
           created_at?: string;
           deleted_at?: string | null;
           feed_item_id?: string;
+          flagged?: boolean;
           id?: string;
         };
         Relationships: [
@@ -474,6 +477,7 @@ export type Database = {
       feed_items: {
         Row: {
           audience: string;
+          comments_off_at: string | null;
           created_at: string;
           hidden_at: string | null;
           hidden_reason: string | null;
@@ -488,6 +492,7 @@ export type Database = {
         ComputedFields: never;
         Insert: {
           audience: string;
+          comments_off_at?: string | null;
           created_at?: string;
           hidden_at?: string | null;
           hidden_reason?: string | null;
@@ -501,6 +506,7 @@ export type Database = {
         };
         Update: {
           audience?: string;
+          comments_off_at?: string | null;
           created_at?: string;
           hidden_at?: string | null;
           hidden_reason?: string | null;
@@ -896,13 +902,16 @@ export type Database = {
       };
       social_blocked_words: {
         Row: {
+          severity: string;
           word: string;
         };
         ComputedFields: never;
         Insert: {
+          severity?: string;
           word: string;
         };
         Update: {
+          severity?: string;
           word?: string;
         };
         Relationships: [];
@@ -967,6 +976,7 @@ export type Database = {
           milestones_audience: string;
           notify_cheers: boolean;
           notify_comments: boolean;
+          notify_flagged: boolean;
           notify_requests: boolean;
           share_volume: boolean;
           updated_at: string;
@@ -983,6 +993,7 @@ export type Database = {
           milestones_audience?: string;
           notify_cheers?: boolean;
           notify_comments?: boolean;
+          notify_flagged?: boolean;
           notify_requests?: boolean;
           share_volume?: boolean;
           updated_at?: string;
@@ -998,6 +1009,7 @@ export type Database = {
           milestones_audience?: string;
           notify_cheers?: boolean;
           notify_comments?: boolean;
+          notify_flagged?: boolean;
           notify_requests?: boolean;
           share_volume?: boolean;
           updated_at?: string;
@@ -1499,6 +1511,7 @@ export type Database = {
         Args: { item: string; me: string };
         Returns: {
           audience: string;
+          comments_off_at: string | null;
           created_at: string;
           hidden_at: string | null;
           hidden_reason: string | null;
@@ -1523,6 +1536,7 @@ export type Database = {
           avatar_color: string;
           cheers: Json;
           comment_count: number;
+          comments_off: boolean;
           created_at: string;
           display_name: string;
           handle: string;
@@ -1541,6 +1555,7 @@ export type Database = {
           avatar_color: string;
           cheers: Json;
           comment_count: number;
+          comments_off: boolean;
           created_at: string;
           display_name: string;
           handle: string;
@@ -1596,8 +1611,10 @@ export type Database = {
           can_delete: boolean;
           created_at: string;
           display_name: string;
+          flagged: boolean;
           handle: string;
           id: string;
+          is_mine: boolean;
           removed: boolean;
         }[];
       };
@@ -1629,6 +1646,7 @@ export type Database = {
       };
       send_friend_request: { Args: { p_handle: string }; Returns: string };
       set_cheer: { Args: { p_item: string; p_kind: string }; Returns: undefined };
+      set_comments_off: { Args: { p_id: string; p_off: boolean }; Returns: undefined };
       show_my_posts: { Args: { p_kind: string }; Returns: number };
       social_active: { Args: { u: string }; Returns: boolean };
       social_avatar_color: { Args: { uid: string }; Returns: string };
@@ -1649,6 +1667,7 @@ export type Database = {
       social_related: { Args: { a: string; b: string }; Returns: boolean };
       social_relationship: { Args: { me: string; other: string }; Returns: string };
       social_text_ok: { Args: { t: string }; Returns: boolean };
+      social_word_hits: { Args: { p_severity: string; t: string }; Returns: boolean };
       unblock_user: { Args: { other: string }; Returns: undefined };
       workout_snapshot: { Args: { s: Json; share_volume: boolean }; Returns: Json };
     };

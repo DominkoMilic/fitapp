@@ -55,6 +55,7 @@ export const SOCIAL_ERRORS = {
   handle_taken: 'That name is taken. Try another.',
   handle_reserved: 'That name is reserved. Try another.',
   identity_locked: 'Your username can’t be changed.',
+  comments_off: 'Comments are turned off for this post.',
   not_allowed: 'That text isn’t allowed. Please change it.',
   social_disabled: 'Social is unavailable right now. Please try again later.',
   social_off: 'Turn on Social in Settings → App features first.',

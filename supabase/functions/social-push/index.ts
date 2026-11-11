@@ -10,15 +10,19 @@ const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
 const Body = z.object({
-  type: z.enum(['cheer', 'comment', 'request', 'accept']),
+  type: z.enum(['cheer', 'comment', 'comment_flagged', 'request', 'accept']),
   recipient: z.string().uuid(),
   actor: z.string().uuid(),
   itemId: z.string().uuid().nullable().optional(),
 });
 
-const SETTING: Record<PushType, 'notify_cheers' | 'notify_comments' | 'notify_requests'> = {
+const SETTING: Record<
+  PushType,
+  'notify_cheers' | 'notify_comments' | 'notify_flagged' | 'notify_requests'
+> = {
   cheer: 'notify_cheers',
   comment: 'notify_comments',
+  comment_flagged: 'notify_flagged',
   request: 'notify_requests',
   accept: 'notify_requests',
 };
@@ -54,7 +58,8 @@ Deno.serve(async (req) => {
     return json({ error: 'forbidden' }, 403);
   const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return json({ error: 'invalid_body' }, 400);
-  const { type, recipient, actor, itemId } = parsed.data;
+  const { recipient, actor, itemId } = parsed.data;
+  let type: PushType = parsed.data.type;
 
   try {
     const [{ data: settings }, { data: profile }, { data: actorProfile }, { data: tokens }] =
@@ -64,6 +69,8 @@ Deno.serve(async (req) => {
         admin.from('social_profiles').select('display_name').eq('user_id', actor).maybeSingle(),
         admin.from('push_tokens').select('token').eq('user_id', recipient),
       ]);
+    // Rude-comment alerts off: such a comment is announced like any other (if comments are on).
+    if (type === 'comment_flagged' && settings?.notify_flagged === false) type = 'comment';
     if (!settings || settings[SETTING[type]] === false) return json({ skipped: 'setting' });
     if (!tokens?.length) return json({ skipped: 'no_token' });
 

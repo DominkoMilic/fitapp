@@ -3,24 +3,36 @@ import { useState } from 'react';
 import { ConfirmDialog, useToast } from '@/components/feedback';
 import { SOCIAL_ERRORS } from '@/domain/social';
 
-import { errorCode, type FeedRow, useBlockUser, useCheer, useHideFeedItem } from './api';
+import {
+  errorCode,
+  type FeedRow,
+  useBlockUser,
+  useCheer,
+  useHideFeedItem,
+  useSetCommentsOff,
+} from './api';
 import { ActionSheet } from './components/ActionSheet';
 import { CheerPicker } from './components/CheerPicker';
 import { ReportSheet } from './components/ReportSheet';
 
 /**
  * Everything a feed card can do besides opening: cheer (tap / long-press), and the ⋯ menu —
- * Report and Block for other people's posts, Remove from feed for your own (spec 33.5).
+ * Report and Block for other people's posts; for your own, turn comments off or on and Remove from
+ * feed (spec 33.5).
  */
 export function usePostActions(onRemoved?: () => void) {
   const showToast = useToast((s) => s.show);
   const cheer = useCheer();
   const hide = useHideFeedItem();
   const block = useBlockUser();
+  const commentsOff = useSetCommentsOff();
   const [menu, setMenu] = useState<FeedRow | null>(null);
   const [picker, setPicker] = useState<FeedRow | null>(null);
   const [report, setReport] = useState<FeedRow | null>(null);
-  const [confirm, setConfirm] = useState<{ row: FeedRow; what: 'hide' | 'block' } | null>(null);
+  const [confirm, setConfirm] = useState<{
+    row: FeedRow;
+    what: 'hide' | 'block' | 'comments_off';
+  } | null>(null);
   const onError = (e: unknown) => showToast(SOCIAL_ERRORS[errorCode(e)]);
 
   const toggleCheer = (row: FeedRow) =>
@@ -35,6 +47,19 @@ export function usePostActions(onRemoved?: () => void) {
         actions={
           menu?.is_mine
             ? [
+                menu.comments_off
+                  ? {
+                      label: 'Turn comments back on',
+                      onPress: () =>
+                        commentsOff.mutate(
+                          { id: menu.id, off: false },
+                          { onSuccess: () => showToast('Comments are on again'), onError },
+                        ),
+                    }
+                  : {
+                      label: 'Turn off comments',
+                      onPress: () => setConfirm({ row: menu, what: 'comments_off' }),
+                    },
                 {
                   label: 'Remove from feed',
                   destructive: true,
@@ -84,6 +109,25 @@ export function usePostActions(onRemoved?: () => void) {
             onError,
             onSettled: () => setConfirm(null),
           })
+        }
+      />
+      <ConfirmDialog
+        visible={confirm?.what === 'comments_off'}
+        title="Turn off comments?"
+        message="Comments on this post will be hidden and no one can add new ones. Cheers still work. You can turn them back on from ⋯ and the hidden comments come back."
+        confirmLabel="Turn off"
+        loading={commentsOff.isPending}
+        onCancel={() => setConfirm(null)}
+        onConfirm={() =>
+          confirm &&
+          commentsOff.mutate(
+            { id: confirm.row.id, off: true },
+            {
+              onSuccess: () => showToast('Comments are off for this post'),
+              onError,
+              onSettled: () => setConfirm(null),
+            },
+          )
         }
       />
       <ConfirmDialog

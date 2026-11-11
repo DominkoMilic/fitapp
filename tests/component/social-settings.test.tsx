@@ -43,6 +43,7 @@ jest.mock('@/features/social/api', () => ({
       notify_cheers: true,
       notify_comments: true,
       notify_requests: true,
+      notify_flagged: true,
     },
     isPending: false,
     isError: false,

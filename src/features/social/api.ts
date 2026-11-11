@@ -219,6 +219,7 @@ export interface SocialSetup {
     | 'notify_cheers'
     | 'notify_comments'
     | 'notify_requests'
+    | 'notify_flagged'
   >;
 }
 
@@ -363,6 +364,8 @@ const feedRow = z.object({
   my_cheer: z.string().nullable(),
   comment_count: z.number(),
   is_mine: z.boolean(),
+  /** The owner turned comments off: none are shown and no one can add one; cheers still work. */
+  comments_off: z.boolean().default(false),
 });
 export type FeedRow = z.infer<typeof feedRow>;
 
@@ -376,6 +379,9 @@ const commentRow = z.object({
   created_at: z.string(),
   removed: z.boolean(),
   can_delete: z.boolean(),
+  /** May be rude (contains swearing); only ever true for the post owner. */
+  flagged: z.boolean().default(false),
+  is_mine: z.boolean().default(false),
 });
 export type CommentRow = z.infer<typeof commentRow>;
 
@@ -473,6 +479,12 @@ export const useAddComment = () =>
 export const useDeleteComment = () =>
   useSocialMutation<string>(async (_uid, id) => {
     unwrap(await db().rpc('delete_comment', { p_id: id }));
+  });
+
+/** Your post: turn comments off (hidden, not deleted) or back on. */
+export const useSetCommentsOff = () =>
+  useSocialMutation<{ id: string; off: boolean }>(async (_uid, { id, off }) => {
+    unwrap(await db().rpc('set_comments_off', { p_id: id, p_off: off }));
   });
 
 export const useHideFeedItem = () =>

@@ -131,19 +131,22 @@ export function FeedCard({
             </Text>
           </PressableScale>
         )}
-        <PressableScale
-          feedback="button"
-          accessibilityRole="button"
-          accessibilityLabel={`${row.comment_count} comments`}
-          onPress={openable ? open : undefined}
-          disabled={!openable}
-          style={styles.action}
-        >
-          <MessageCircle size={18} color={colors.textSecondary} />
-          <Text variant="small" color="textSecondary">
-            {row.comment_count ? String(row.comment_count) : 'Comment'}
-          </Text>
-        </PressableScale>
+        {/* Comments turned off by the owner: only cheers remain. */}
+        {row.comments_off ? null : (
+          <PressableScale
+            feedback="button"
+            accessibilityRole="button"
+            accessibilityLabel={`${row.comment_count} comments`}
+            onPress={openable ? open : undefined}
+            disabled={!openable}
+            style={styles.action}
+          >
+            <MessageCircle size={18} color={colors.textSecondary} />
+            <Text variant="small" color="textSecondary">
+              {row.comment_count ? String(row.comment_count) : 'Comment'}
+            </Text>
+          </PressableScale>
+        )}
       </View>
     </View>
   );

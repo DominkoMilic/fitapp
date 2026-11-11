@@ -185,6 +185,7 @@ export default function SocialSettingsScreen() {
         | 'notify_cheers'
         | 'notify_comments'
         | 'notify_requests'
+        | 'notify_flagged'
       >
     >,
   ) => updateSettings.mutate(patch, { onError: (e) => showToast(SOCIAL_ERRORS[errorCode(e)]) });
@@ -306,6 +307,12 @@ export default function SocialSettingsScreen() {
         label="Comments"
         value={value('notify_comments')}
         onChange={(v) => saveSetting({ notify_comments: v })}
+      />
+      <Toggle
+        label="Rude comment alerts"
+        description="When a comment on your post may be rude, so you can remove it."
+        value={value('notify_flagged')}
+        onChange={(v) => saveSetting({ notify_flagged: v })}
       />
       <Toggle
         label="Friend requests"

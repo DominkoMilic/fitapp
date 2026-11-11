@@ -315,3 +315,10 @@ Record activity (opened from Training → +) and the first screen of every neste
 ## 2026-11-21: Home shows the latest weigh-in as Now
 
 A "Now" figure that differed from what the scale showed felt wrong. Home's Now is the latest weigh-in (with when it was); goal progress, kg down/to go, milestones and goal reached keep using the 7-day average (one day's water swing doesn't move them), shown as a small line under the bar. Matches the Progress tab's separate Current weight and 7-day average tiles.
+
+## 2026-11-22: Comment moderation
+
+1. **Flag swearing, don't ban.** Automatic bans can't tell a joke between friends from abuse, and a wrong ban has no one to appeal to. Swearing in comments is accepted and flagged, and the post owner gets an alert (which they can turn off) so they decide. Slurs, hate, sexual-violence and self-harm words stay refused. Names, handles and bios refuse both.
+2. **Croatian/regional words** were added, and č ć š ž đ are folded before matching (the old filter split words at them, so "pička" passed).
+3. **Post owners can turn comments off.** The comments are hidden, not deleted, so turning comments back on restores them (consistent with hiding earlier posts). Cheers remain.
+4. Legal version 2026-11-22: privacy and terms describe the automatic word check, owner alerts and comment removal.

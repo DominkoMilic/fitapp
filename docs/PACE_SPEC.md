@@ -1603,6 +1603,10 @@ Friends, a feed of shared training, clubs, challenges and effort-only leaderboar
 ### 33.7 Moderation, privacy and accounts
 
 - Word filter for handles, club names, bios and comments, shared between app and database (`src/domain/social/filter.ts`, synced by `scripts/sync-shared.mjs`), enforced by database triggers.
+- **Two severities (2026-11-22, `20261122000100_social_comment_moderation.sql`):** *block* words (slurs, hate, sexual violence, self-harm; English and Croatian/Bosnian/Serbian) are always refused. *Flag* words (swearing) are refused in names, handles and bios; in comments they are accepted and the comment is **flagged**. Matching folds look-alikes and č ć š ž đ, and a listed word of 4+ letters also matches words starting with it. There are no automatic bans.
+- **Rude comment alert:** a flagged comment sends the post owner one push, "Check a comment", saying "A comment on your <post> may be rude. Open it to keep or remove it." It never includes the text. The comment shows an amber **May be rude** tag to the owner only. Settings → Social and privacy → **Rude comment alerts** (on by default); when it is off, the comment is announced like any other comment.
+- **Who removes a comment:** its author, and the owner of the post (any comment on their post). Every comment has a visible ⋯ menu: your own comment shows Remove; on your post someone else's shows Remove and Report; elsewhere it shows Report. Long press opens the same menu.
+- **Comments off:** on your own post, ⋯ → **Turn off comments** hides the existing comments (they are not deleted) and refuses new ones (`comments_off`); cheers still work. **Turn comments back on** shows them again. The feed hides the comment button while comments are off.
 - Rate limits (`edge_rate_limits`): friend requests 30/day, comments 60/hour, club creation 5/day, handle search 60/hour.
 - Reports queue reviewed in the Supabase dashboard per the runbook in `docs/release/operations.md`; bans set `social_profiles.banned_at` (hidden everywhere, social writes refused).
 - Privacy policy and terms gain a social section (what others can see, community rules, reporting); legal version bump; store forms updated for user-generated content and other users seeing activity.
@@ -1645,6 +1649,7 @@ Friends, a feed of shared training, clubs, challenges and effort-only leaderboar
 
 ### 33.10 Testing
 
+- Comment moderation: `99_social_comment_moderation.test.sql` (block vs flag, Croatian and look-alike folding, owner-only flag, comments off and on), the word lists kept in sync with the app (`tests/unit/domain/social.test.ts`), and the post screen menus (`tests/component/social-feed.test.tsx`).
 - pgTAP per table group (`supabase/tests/database/93_social_*.test.sql`): visibility for owner / friend / stranger / blocked / club member / banned; feed triggers; snapshot whitelist; caps and freezing; ownership transfer.
 - Unit (`src/domain/social`): handle rules and filter, audience resolution, snapshot builder, ranking (ties, opt-out), challenge progress (caps, windows, time zones), push batching text.
 - Component: setup sheet defaults off, feed card shows no forbidden fields, cheer toggle, safety menus.

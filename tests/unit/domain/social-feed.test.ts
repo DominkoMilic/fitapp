@@ -89,6 +89,12 @@ describe('push rules (shared with the social-push function)', () => {
     expect(shouldBatch(now - BATCH_WINDOW_MS, now)).toBe(false);
   });
 
+  it('asks the post owner to check a possibly rude comment without quoting it', () => {
+    const t = pushText('comment_flagged', ['Ana'], 1, 'activity');
+    expect(t.title).toBe('Check a comment');
+    expect(t.body).toBe('A comment on your activity may be rude. Open it to keep or remove it.');
+  });
+
   it('keeps quiet between 22:00 and 06:00', () => {
     expect(inQuietHours(22 * 60)).toBe(true);
     expect(inQuietHours(3 * 60)).toBe(true);

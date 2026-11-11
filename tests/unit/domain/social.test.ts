@@ -3,6 +3,10 @@ import { join } from 'node:path';
 
 import {
   BLOCKED_WORDS,
+  commentAllowed,
+  FLAGGED_WORDS,
+  isFlagged,
+  REGIONAL_BLOCKED_WORDS,
   RESERVED_HANDLES,
   groupFriendships,
   initials,
@@ -22,11 +26,11 @@ import {
 
 const MIGRATIONS = join(__dirname, '../../../supabase/migrations');
 
-function seededList(begin: string, end: string): string[] {
-  const file = readdirSync(MIGRATIONS).find((f) => f.endsWith('_social_friends.sql'));
+function seededList(begin: string, end: string, migration = '_social_friends.sql'): string[] {
+  const file = readdirSync(MIGRATIONS).find((f) => f.endsWith(migration));
   const sql = readFileSync(join(MIGRATIONS, file!), 'utf8');
   const block = sql.slice(sql.indexOf(begin), sql.indexOf(end));
-  return [...block.matchAll(/\('([^']+)'\)/g)].map((m) => m[1]!);
+  return [...block.matchAll(/\('([^']+)'(?:, '(?:flag|block)')?\)/g)].map((m) => m[1]!);
 }
 
 describe('word filter', () => {
@@ -35,6 +39,34 @@ describe('word filter', () => {
     expect(seededList('-- BEGIN RESERVED HANDLES', '-- END RESERVED HANDLES')).toEqual(
       RESERVED_HANDLES,
     );
+    const moderation = '_social_comment_moderation.sql';
+    const flagged = readFileSync(
+      join(
+        MIGRATIONS,
+        readdirSync(MIGRATIONS).find((f) => f.endsWith(moderation))!,
+      ),
+      'utf8',
+    );
+    const englishFlagged = /where word in \(([^)]+)\)/.exec(flagged)![1]!.match(/'([^']+)'/g)!;
+    expect([
+      ...englishFlagged.map((w) => w.slice(1, -1)),
+      ...seededList('-- BEGIN FLAGGED WORDS', '-- END FLAGGED WORDS', moderation).filter(
+        (w) => !englishFlagged.includes(`'${w}'`),
+      ),
+    ]).toEqual(FLAGGED_WORDS);
+    expect(
+      seededList('-- BEGIN REGIONAL BLOCKED WORDS', '-- END REGIONAL BLOCKED WORDS', moderation),
+    ).toEqual(REGIONAL_BLOCKED_WORDS);
+  });
+
+  it('accepts swearing in comments but flags it; slurs are always refused', () => {
+    expect(commentAllowed('Jebote, kakav trening')).toBe(true);
+    expect(isFlagged('Jebote, kakav trening')).toBe(true);
+    expect(isFlagged('ma p1čka')).toBe(true);
+    expect(isFlagged('Odličan trening!')).toBe(false);
+    expect(commentAllowed('peder')).toBe(false);
+    expect(commentAllowed('you whore')).toBe(false);
+    expect(textAllowed('Kreten')).toBe(false);
   });
 
   it.each([
