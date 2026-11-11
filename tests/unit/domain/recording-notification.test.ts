@@ -30,8 +30,8 @@ describe('recording notification text', () => {
   });
 
   it('leaves out the pace while there is none yet', () => {
-    expect(
-      recordingNotificationText({ ...base, type: 'walk', currentPaceSPerKm: null }).body,
-    ).toBe('1.42 km');
+    expect(recordingNotificationText({ ...base, type: 'walk', currentPaceSPerKm: null }).body).toBe(
+      '1.42 km',
+    );
   });
 });
