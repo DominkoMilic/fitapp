@@ -1,6 +1,8 @@
 import { Redirect, Stack } from 'expo-router';
 
 import { useAuth } from '@/features/auth/AuthProvider';
+import { isFirst } from '@/features/progress/StackLayout';
+import { HeaderBack } from '@/navigation/HeaderBack';
 import { stackAnimation, useTheme } from '@/theme';
 
 const TITLES: Record<string, string> = {
@@ -28,7 +30,10 @@ export default function SettingsLayout() {
   if (!initializing && !session) return <Redirect href="/welcome" />;
   return (
     <Stack
-      screenOptions={({ route }) => ({
+      screenOptions={({ route, navigation }) => ({
+        ...(isFirst(route.key, navigation)
+          ? { headerLeft: () => <HeaderBack fallback="/profile" /> }
+          : null),
         headerShown: true,
         title: TITLES[route.name] ?? '',
         headerStyle: { backgroundColor: colors.background },

@@ -3,6 +3,7 @@ import { SignedInStack } from '@/features/progress/StackLayout';
 export default function ActivityLayout() {
   return (
     <SignedInStack
+      fallback="/training"
       titles={{
         index: 'Activities',
         '[id]': 'Activity',

@@ -3,6 +3,7 @@ import { SignedInStack } from '@/features/progress/StackLayout';
 export default function TrainingLayout() {
   return (
     <SignedInStack
+      fallback="/training"
       titles={{
         add: 'Add training',
         exercises: 'Exercise library',
