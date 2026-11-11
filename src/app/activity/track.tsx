@@ -7,7 +7,10 @@ import Animated, {
   FadeInDown,
   FadeOut,
   FadeOutDown,
-  LinearTransition,
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
 
 import { Banner, ConfirmDialog, useToast } from '@/components/feedback';
@@ -226,8 +229,21 @@ function Live() {
   const [busy, setBusy] = useState(false);
   const unit = (profile?.unit_system ?? 'metric') as 'metric' | 'imperial';
   const { colors, reduceMotion } = useTheme();
-  // The map gives way smoothly when Discard slides in (paused) or out (resumed).
-  const layout = reduceMotion ? undefined : LinearTransition.duration(motion.screen);
+  // The map's own height is animated: when Discard slides in (paused) or out (resumed), the map
+  // squeezes or grows smoothly instead of jumping. Space for the map = area − bottom panel.
+  const [areaH, setAreaH] = useState(0);
+  const [panelH, setPanelH] = useState(0);
+  const mapH = useSharedValue(0);
+  const target = areaH && panelH ? Math.max(120, areaH - panelH) : 0;
+  useEffect(() => {
+    if (!target) return;
+    mapH.set(
+      reduceMotion || mapH.get() === 0
+        ? target
+        : withTiming(target, { duration: motion.screen, easing: Easing.out(Easing.cubic) }),
+    );
+  }, [target, reduceMotion, mapH]);
+  const mapStyle = useAnimatedStyle(() => ({ height: mapH.get() }));
 
   // After an app restart the OS subscription may be gone; restart it if still within the window.
   const lastActivity = Math.max(meta?.updatedAt ?? 0, points[points.length - 1]?.t ?? 0);
@@ -269,103 +285,113 @@ function Live() {
       {meta.mode === 'foreground' && !stale ? (
         <Banner message="Keep PACE open: tracking pauses when the app is in the background." />
       ) : null}
-      <Animated.View style={styles.flex} layout={layout}>
-        <RouteMap
-          pieces={pieces}
-          follow={!paused}
-          fill
-          overlay={
-            <View style={styles.badges} pointerEvents="none">
-              <View
-                style={[
-                  styles.badge,
-                  { backgroundColor: paused ? colors.warningSurface : colors.surface },
-                ]}
-              >
+      <View style={styles.area} onLayout={(e) => setAreaH(Math.round(e.nativeEvent.layout.height))}>
+        <Animated.View style={target ? mapStyle : styles.flex}>
+          <RouteMap
+            pieces={pieces}
+            follow={!paused}
+            fill
+            overlay={
+              <View style={styles.badges} pointerEvents="none">
                 <View
-                  style={[styles.dot, { backgroundColor: paused ? colors.warning : colors.danger }]}
-                />
-                <Text variant="small" style={styles.badgeText}>
-                  {paused ? 'Paused' : 'Recording'}
-                </Text>
+                  style={[
+                    styles.badge,
+                    { backgroundColor: paused ? colors.warningSurface : colors.surface },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.dot,
+                      { backgroundColor: paused ? colors.warning : colors.danger },
+                    ]}
+                  />
+                  <Text variant="small" style={styles.badgeText}>
+                    {paused ? 'Paused' : 'Recording'}
+                  </Text>
+                </View>
+                <View
+                  style={[styles.badge, { backgroundColor: colors.surface }]}
+                  accessible
+                  accessibilityLabel={`GPS signal ${QUALITY_SHORT[quality]}${quality === 'poor' ? '. Distance may be off' : ''}`}
+                >
+                  <Satellite size={16} color={qualityColor} />
+                  <Text variant="small" style={[styles.badgeText, { color: qualityColor }]}>
+                    {quality === 'poor' ? 'Weak GPS' : `GPS ${QUALITY_SHORT[quality]}`}
+                  </Text>
+                </View>
               </View>
-              <View
-                style={[styles.badge, { backgroundColor: colors.surface }]}
-                accessible
-                accessibilityLabel={`GPS signal ${QUALITY_SHORT[quality]}${quality === 'poor' ? '. Distance may be off' : ''}`}
-              >
-                <Satellite size={16} color={qualityColor} />
-                <Text variant="small" style={[styles.badgeText, { color: qualityColor }]}>
-                  {quality === 'poor' ? 'Weak GPS' : `GPS ${QUALITY_SHORT[quality]}`}
-                </Text>
-              </View>
-            </View>
-          }
-        />
-      </Animated.View>
-      <Animated.View style={styles.stats} layout={layout}>
-        <Text
-          variant="hero"
-          numeric
-          align="center"
-          accessibilityLabel={`Distance ${formatDistance(s.distanceM, unit)}`}
-        >
-          {formatDistance(s.distanceM, unit)}
-        </Text>
-        <View style={styles.pair}>
-          <Figure label="Time" value={formatClock(s.movingS)} />
-          {meta.type === 'cycle' ? (
-            <Figure label="Speed" value={formatSpeed(s.currentSpeedMps, unit)} />
-          ) : (
-            <Figure
-              label={unit === 'metric' ? 'Pace /km' : 'Pace /mi'}
-              value={formatPace(s.currentPaceSPerKm, unit)}
-            />
-          )}
-        </View>
-      </Animated.View>
-      <Animated.View style={styles.controls} layout={layout}>
-        {stale ? null : paused ? (
-          <View style={styles.flex}>
-            <Button title="Resume" loading={busy} onPress={() => void act(recorder.resume)} />
-          </View>
-        ) : (
-          <View style={styles.flex}>
-            <Button
-              title="Pause"
-              variant="secondary"
-              loading={busy}
-              onPress={() => void act(recorder.pause)}
-            />
-          </View>
-        )}
-        <View style={styles.flex}>
-          <Button
-            title="Finish"
-            variant={paused || stale ? 'secondary' : 'primary'}
-            disabled={busy}
-            onPress={() =>
-              void act(async () => {
-                await recorder.stop();
-                router.push('/activity/summary');
-              })
             }
           />
-        </View>
-      </Animated.View>
-      {/* Discard only while paused: one less button while moving. It slides up from below. */}
-      {paused || stale ? (
-        <Animated.View
-          entering={
-            reduceMotion ? FadeIn.duration(motion.normal) : FadeInDown.duration(motion.screen)
-          }
-          exiting={
-            reduceMotion ? FadeOut.duration(motion.normal) : FadeOutDown.duration(motion.screen)
-          }
-        >
-          <Button title="Discard" variant="ghost" onPress={() => setConfirmDiscard(true)} />
         </Animated.View>
-      ) : null}
+        <View
+          style={styles.panel}
+          onLayout={(e) => setPanelH(Math.round(e.nativeEvent.layout.height))}
+        >
+          <View style={styles.stats}>
+            <Text
+              variant="hero"
+              numeric
+              align="center"
+              accessibilityLabel={`Distance ${formatDistance(s.distanceM, unit)}`}
+            >
+              {formatDistance(s.distanceM, unit)}
+            </Text>
+            <View style={styles.pair}>
+              <Figure label="Time" value={formatClock(s.movingS)} />
+              {meta.type === 'cycle' ? (
+                <Figure label="Speed" value={formatSpeed(s.currentSpeedMps, unit)} />
+              ) : (
+                <Figure
+                  label={unit === 'metric' ? 'Pace /km' : 'Pace /mi'}
+                  value={formatPace(s.currentPaceSPerKm, unit)}
+                />
+              )}
+            </View>
+          </View>
+          <View style={styles.controls}>
+            {stale ? null : paused ? (
+              <View style={styles.flex}>
+                <Button title="Resume" loading={busy} onPress={() => void act(recorder.resume)} />
+              </View>
+            ) : (
+              <View style={styles.flex}>
+                <Button
+                  title="Pause"
+                  variant="secondary"
+                  loading={busy}
+                  onPress={() => void act(recorder.pause)}
+                />
+              </View>
+            )}
+            <View style={styles.flex}>
+              <Button
+                title="Finish"
+                variant={paused || stale ? 'secondary' : 'primary'}
+                disabled={busy}
+                onPress={() =>
+                  void act(async () => {
+                    await recorder.stop();
+                    router.push('/activity/summary');
+                  })
+                }
+              />
+            </View>
+          </View>
+          {/* Discard only while paused: one less button while moving. It slides up from below. */}
+          {paused || stale ? (
+            <Animated.View
+              entering={
+                reduceMotion ? FadeIn.duration(motion.normal) : FadeInDown.duration(motion.screen)
+              }
+              exiting={
+                reduceMotion ? FadeOut.duration(motion.normal) : FadeOutDown.duration(motion.screen)
+              }
+            >
+              <Button title="Discard" variant="ghost" onPress={() => setConfirmDiscard(true)} />
+            </Animated.View>
+          ) : null}
+        </View>
+      </View>
       <ConfirmDialog
         visible={confirmDiscard}
         title="Discard this activity?"
@@ -412,7 +438,9 @@ const styles = StyleSheet.create({
   },
   badgeText: { fontWeight: '600' },
   dot: { width: 8, height: 8, borderRadius: 4 },
-  stats: { gap: spacing.xs, paddingTop: spacing.xs },
+  area: { flex: 1, overflow: 'hidden' },
+  panel: { gap: spacing.md, paddingTop: spacing.md },
+  stats: { gap: spacing.xs },
   pair: { flexDirection: 'row' },
   figure: { flex: 1, alignItems: 'center' },
   controls: { flexDirection: 'row', gap: spacing.sm },
