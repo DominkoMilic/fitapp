@@ -9,6 +9,7 @@ import { usePreparedWorkoutStore } from '@/features/training/prepared-workout-st
 import { pointBuffer } from '@/services/location/point-buffer';
 import { stopTracking } from '@/services/location/tracker';
 import { notifier } from '@/services/notifications/notifier';
+import { clearRecordingNotification } from '@/services/notifications/recording-notification';
 import { clearExportFiles } from '@/services/share/share-file';
 
 /**
@@ -28,6 +29,7 @@ export async function clearLocalData(
     stopTracking().catch(() => undefined),
     notifier.cancelAllReminders(),
     notifier.cancelRestEnd(),
+    clearRecordingNotification(),
     AsyncStorage.removeItem('pace.active-recording-id'),
     // Saved reads for offline start (src/services/query-client.ts).
     AsyncStorage.removeItem('pace.query-cache'),

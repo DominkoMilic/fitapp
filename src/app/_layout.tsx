@@ -15,6 +15,7 @@ import { AuthProvider, useAuth } from '@/features/auth/AuthProvider';
 import { useRestTimerNotification } from '@/features/notifications/useRestTimerNotification';
 import { SyncProvider } from '@/features/sync/SyncProvider';
 import '@/services/location/location-task';
+import '@/features/activity/recording-actions';
 import {
   connectQueryOnlineState,
   createQueryClient,

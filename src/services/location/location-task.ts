@@ -33,6 +33,10 @@ if (Platform.OS !== 'web' && !TaskManager.isTaskDefined(LOCATION_TASK)) {
         const id = await AsyncStorage.getItem(ACTIVE_RECORDING_KEY);
         if (!id) return;
         await pointBuffer.append(id, data.locations.filter((l) => !l.mocked).map(toRawPoint));
+        // Live time and distance in the notification, at most every 5 s.
+        const { refreshRecordingNotification } =
+          await import('@/features/activity/live-notification');
+        await refreshRecordingNotification({ throttleMs: 5000 });
       } catch {
         // Never throw from a background task; the next delivery will try again.
       }

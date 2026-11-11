@@ -9,6 +9,8 @@ import { Platform } from 'react-native';
 
 import type { ActivityType } from '@/domain/activity/met';
 
+import { quietLocationChannel } from '@/services/notifications/recording-notification';
+
 import { ACTIVE_RECORDING_KEY, LOCATION_TASK, toRawPoint } from './location-task';
 import { pointBuffer } from './point-buffer';
 
@@ -19,7 +21,9 @@ let foregroundSub: Location.LocationSubscription | null = null;
 const options = (type: ActivityType) => ({
   accuracy: type === 'run' ? Location.Accuracy.BestForNavigation : Location.Accuracy.High,
   timeInterval: 2000,
-  distanceInterval: 5,
+  // 0: positions keep coming while standing still, so the notification's time stays current
+  // (the GPS filter ignores the jitter).
+  distanceInterval: 0,
 });
 
 export async function permissionState() {
@@ -47,14 +51,16 @@ export async function startTracking(activityId: string, type: ActivityType): Pro
   const { background } = await permissionState();
   if (Platform.OS !== 'web' && background) {
     if (await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK)) return 'background';
+    // The system notification stays quiet; the recording notification carries the details.
+    await quietLocationChannel();
     await Location.startLocationUpdatesAsync(LOCATION_TASK, {
       ...options(type),
       activityType: Location.ActivityType.Fitness,
       pausesUpdatesAutomatically: false,
       showsBackgroundLocationIndicator: true,
       foregroundService: {
-        notificationTitle: 'PACE is recording',
-        notificationBody: `Your ${type === 'cycle' ? 'ride' : type} is being tracked.`,
+        notificationTitle: 'Location in use',
+        notificationBody: 'For the walk, run or ride you are recording.',
         notificationColor: '#34D399',
       },
     });

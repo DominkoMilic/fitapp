@@ -98,6 +98,8 @@ export const notifier: Notifier = {
 
   onTap(cb) {
     const open = (res: Notifications.NotificationResponse | null) => {
+      // Action buttons (e.g. Pause on the recording notification) are handled where they live.
+      if (res && res.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER) return;
       const href = res?.notification.request.content.data?.href;
       if (typeof href === 'string' && href.startsWith('/')) cb(href);
     };

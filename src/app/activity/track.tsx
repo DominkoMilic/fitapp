@@ -20,6 +20,10 @@ import { gpsQuality } from '@/domain/activity/gps-filter';
 import type { ActivityType } from '@/domain/activity/met';
 import { canResume, liveStats } from '@/domain/activity/recording';
 import { QUALITY_SHORT, RECORDABLE_TYPES } from '@/features/activity/labels';
+import {
+  refreshRecordingNotification,
+  setRecordingUnit,
+} from '@/features/activity/live-notification';
 import { recorder } from '@/features/activity/recorder';
 import { useActiveRecording } from '@/features/activity/recording-store';
 import { RouteMap } from '@/features/activity/RouteMap';
@@ -251,6 +255,16 @@ function Live() {
   useEffect(() => {
     if (!stale) void recorder.ensureTracking().catch(() => undefined);
   }, [stale]);
+  // The notification shows distance in the user's units and keeps its time current while open.
+  useEffect(() => {
+    void setRecordingUnit(unit);
+  }, [unit]);
+  const recordingNow = meta?.status === 'recording';
+  useEffect(() => {
+    if (!recordingNow) return;
+    const t = setInterval(() => void refreshRecordingNotification({ throttleMs: 4000 }), 5000);
+    return () => clearInterval(t);
+  }, [recordingNow]);
 
   if (!meta || !recording) return null;
   const s = liveStats(recording, now, current?.kg ?? null);
