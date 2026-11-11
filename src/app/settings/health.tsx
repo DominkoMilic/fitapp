@@ -86,7 +86,7 @@ export default function HealthSettings() {
   const lastMutation = [upsert, remove, removeAll].find((m) => m.status !== 'idle');
 
   return (
-    <Screen edges={['bottom']}>
+    <Screen locked={upsert.isPending || recordConsent.isPending} edges={['bottom']}>
       <Banner tone="info" title="Not medical advice" message={DISCLAIMER} />
       {lastMutation ? <SaveState status={lastMutation.status} error={lastMutation.error} /> : null}
       {!consent.data ? (

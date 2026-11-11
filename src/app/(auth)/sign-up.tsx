@@ -29,7 +29,7 @@ export default function SignUp() {
   });
 
   return (
-    <Screen>
+    <Screen locked={formState.isSubmitting}>
       <Text variant="heading" accessibilityRole="header">
         Create your account
       </Text>

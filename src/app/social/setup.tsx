@@ -162,7 +162,7 @@ export default function SocialSetupScreen() {
     );
 
   return (
-    <Screen edges={['bottom']} footer={footer}>
+    <Screen locked={checking || complete.isPending} edges={['bottom']} footer={footer}>
       <Text variant="small" color="textSecondary">
         Step {step + 1} of 3
       </Text>

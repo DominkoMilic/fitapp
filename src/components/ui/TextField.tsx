@@ -12,6 +12,7 @@ import Animated, {
 import { motion, radius, spacing, TOUCH_TARGET, typography, useTheme } from '@/theme';
 
 import { FieldError } from './FieldError';
+import { useFormLocked } from './FormLock';
 
 import { Text } from './Text';
 
@@ -59,6 +60,7 @@ export function TextField({
   ...rest
 }: TextFieldProps) {
   const { colors, reduceMotion } = useTheme();
+  const locked = useFormLocked();
   const secure = !!rest.secureTextEntry;
   const [revealed, setRevealed] = useState(false);
   const hasError = !!error || !!invalid;
@@ -93,6 +95,7 @@ export function TextField({
           {...keyboardDefaults(rest)}
           {...rest}
           secureTextEntry={secure && !revealed}
+          editable={locked ? false : rest.editable}
         />
         {suffix ? (
           <Text variant="body" color="textSecondary">

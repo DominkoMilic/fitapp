@@ -47,6 +47,7 @@ export default function AddWorkout() {
 
   return (
     <Screen
+      locked={submit.busy}
       edges={['bottom']}
       footer={
         <Button title="Add to calendar" loading={submit.busy} onPress={() => void submit.run()} />

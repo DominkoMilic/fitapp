@@ -10,7 +10,7 @@ import {
   LoadingState,
   useToast,
 } from '@/components/feedback';
-import { ListScreen, Text, TextField } from '@/components/ui';
+import { FormLock, ListScreen, Text, TextField } from '@/components/ui';
 import { relativeDay, SOCIAL_ERRORS } from '@/domain/social';
 import { useToday } from '@/features/dashboard/useToday';
 import {
@@ -150,7 +150,7 @@ export default function FeedItemScreen() {
         )}
         footer={
           <View style={styles.composer}>
-            <View style={styles.flex}>
+            <FormLock locked={add.isPending} style={styles.flex}>
               <TextField
                 label="Add a comment"
                 value={text}
@@ -159,7 +159,7 @@ export default function FeedItemScreen() {
                 multiline
                 hint={`${text.length}/${MAX}`}
               />
-            </View>
+            </FormLock>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Send comment"

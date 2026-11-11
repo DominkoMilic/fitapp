@@ -1,8 +1,17 @@
-import { fireEvent, screen } from '@testing-library/react-native';
+import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { useState } from 'react';
 
 import { Banner, EmptyState } from '@/components/feedback';
-import { Button, NumberField, ProgressBar, SegmentedControl } from '@/components/ui';
+import {
+  Button,
+  Chip,
+  FormLock,
+  NumberField,
+  ProgressBar,
+  SegmentedControl,
+  TextField,
+  Toggle,
+} from '@/components/ui';
 import { spokenLabel } from '@/components/ui/Button';
 import { resolveScheme } from '@/theme';
 
@@ -126,5 +135,37 @@ describe('button spoken labels (audit: glyphs are not read aloud)', () => {
     expect(spokenLabel('+ Add set')).toBe('Add set');
     expect(spokenLabel('Saved ✓ (tap to remove)')).toBe('Saved (tap to remove)');
     expect(spokenLabel('‹ Prev')).toBe('Prev');
+  });
+});
+
+describe('FormLock (inputs blocked while saving)', () => {
+  it('makes fields read-only and ignores presses while locked', async () => {
+    const onToggle = jest.fn();
+    const onType = jest.fn();
+    const Form = () => {
+      const [locked, setLocked] = useState(true);
+      return (
+        <>
+          <Button title="Unlock" onPress={() => setLocked(false)} />
+          <FormLock locked={locked}>
+            <TextField label="Weight" value="80" onChangeText={onType} />
+            <Chip label="Morning" onPress={onToggle} />
+            <Toggle label="Remind me" value={false} onChange={onToggle} />
+          </FormLock>
+        </>
+      );
+    };
+    await renderWithTheme(<Form />);
+    expect(screen.getByLabelText('Weight').props.editable).toBe(false);
+    fireEvent.press(screen.getByRole('checkbox', { name: 'Morning' }));
+    fireEvent.press(screen.getByRole('switch', { name: 'Remind me' }));
+    expect(onToggle).not.toHaveBeenCalled();
+    expect(screen.getByTestId('form-locked')).toBeTruthy();
+
+    fireEvent.press(screen.getByRole('button', { name: 'Unlock' }));
+    await waitFor(() => expect(screen.queryByTestId('form-locked')).toBeNull());
+    expect(screen.getByLabelText('Weight').props.editable).not.toBe(false);
+    fireEvent.press(screen.getByRole('checkbox', { name: 'Morning' }));
+    expect(onToggle).toHaveBeenCalledTimes(1);
   });
 });

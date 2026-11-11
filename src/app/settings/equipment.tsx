@@ -65,6 +65,7 @@ function EquipmentForm({ initial }: { initial: Equipment[] }) {
   };
   return (
     <Screen
+      locked={replace.isPending}
       edges={['bottom']}
       footer={
         <Button

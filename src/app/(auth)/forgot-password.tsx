@@ -29,7 +29,7 @@ export default function ForgotPassword() {
   });
 
   return (
-    <Screen>
+    <Screen locked={formState.isSubmitting}>
       <Text variant="heading" accessibilityRole="header">
         Reset your password
       </Text>

@@ -74,7 +74,7 @@ export default function ManualActivity() {
   };
 
   return (
-    <Screen edges={['bottom']}>
+    <Screen locked={saving} edges={['bottom']}>
       <SegmentedControl
         options={TYPES}
         value={type}

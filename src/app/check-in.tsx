@@ -108,6 +108,7 @@ function CheckinForm({ today, existing }: { today: string; existing: Checkin | u
 
   return (
     <Screen
+      locked={submit.busy}
       edges={['bottom']}
       footer={
         saved ? (

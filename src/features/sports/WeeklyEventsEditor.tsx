@@ -13,6 +13,7 @@ import {
   SectionHeader,
   Text,
   TextField,
+  FormLock,
 } from '@/components/ui';
 import { categoryLabel, intensityLabel } from '@/domain/format';
 import { sportCategory } from '@/domain/sports/catalogue';
@@ -89,45 +90,47 @@ export function WeeklyEventsEditor({ sports }: { sports: readonly string[] }) {
       {draft ? (
         <Card raised>
           {error ? <Banner tone="danger" message={error} /> : null}
-          <TextField
-            label="Name (optional)"
-            value={draft.title}
-            onChangeText={(title) => setDraft({ ...draft, title })}
-            maxLength={80}
-          />
-          <CommitmentTypePicker
-            sports={sports}
-            value={draft.category}
-            onChange={(category, intensity) => setDraft({ ...draft, category, intensity })}
-          />
-          <ChipGroup
-            accessibilityLabel="Day of the week"
-            single
-            options={WEEKDAYS}
-            selected={[String(draft.weekday) as (typeof WEEKDAYS)[number]['value']]}
-            onToggle={(v) => setDraft({ ...draft, weekday: Number(v) })}
-          />
-          <View style={styles.row}>
-            <View style={styles.flex}>
-              <TextField
-                label="Start time (HH:MM)"
-                value={draft.localTime}
-                onChangeText={(localTime) => setDraft({ ...draft, localTime })}
-                keyboardType="numbers-and-punctuation"
-                maxLength={5}
-              />
+          <FormLock locked={create.isPending}>
+            <TextField
+              label="Name (optional)"
+              value={draft.title}
+              onChangeText={(title) => setDraft({ ...draft, title })}
+              maxLength={80}
+            />
+            <CommitmentTypePicker
+              sports={sports}
+              value={draft.category}
+              onChange={(category, intensity) => setDraft({ ...draft, category, intensity })}
+            />
+            <ChipGroup
+              accessibilityLabel="Day of the week"
+              single
+              options={WEEKDAYS}
+              selected={[String(draft.weekday) as (typeof WEEKDAYS)[number]['value']]}
+              onToggle={(v) => setDraft({ ...draft, weekday: Number(v) })}
+            />
+            <View style={styles.row}>
+              <View style={styles.flex}>
+                <TextField
+                  label="Start time (HH:MM)"
+                  value={draft.localTime}
+                  onChangeText={(localTime) => setDraft({ ...draft, localTime })}
+                  keyboardType="numbers-and-punctuation"
+                  maxLength={5}
+                />
+              </View>
+              <View style={styles.flex}>
+                <NumberField
+                  label="Duration"
+                  suffix="min"
+                  decimal={false}
+                  precision={0}
+                  value={draft.durationMinutes}
+                  onChangeValue={(v) => setDraft({ ...draft, durationMinutes: v ?? 0 })}
+                />
+              </View>
             </View>
-            <View style={styles.flex}>
-              <NumberField
-                label="Duration"
-                suffix="min"
-                decimal={false}
-                precision={0}
-                value={draft.durationMinutes}
-                onChangeValue={(v) => setDraft({ ...draft, durationMinutes: v ?? 0 })}
-              />
-            </View>
-          </View>
+          </FormLock>
           <Button title="Add to my week" loading={create.isPending} onPress={add} />
           <Button title="Cancel" variant="ghost" onPress={() => setDraft(null)} />
         </Card>

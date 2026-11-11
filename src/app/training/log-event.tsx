@@ -97,6 +97,7 @@ export default function LogEvent() {
 
   return (
     <Screen
+      locked={saving}
       edges={['bottom']}
       footer={<Button title="Save" loading={saving} onPress={() => void onSave()} />}
     >

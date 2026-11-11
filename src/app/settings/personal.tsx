@@ -73,6 +73,7 @@ function PersonalForm({ profile }: { profile: Profile }) {
 
   return (
     <Screen
+      locked={update.isPending}
       edges={['bottom']}
       footer={<Button title="Save" loading={update.isPending} onPress={save} />}
     >

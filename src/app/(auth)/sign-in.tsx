@@ -27,7 +27,7 @@ export default function SignIn() {
   });
 
   return (
-    <Screen>
+    <Screen locked={formState.isSubmitting}>
       <Text variant="heading" accessibilityRole="header">
         Sign in
       </Text>

@@ -39,6 +39,7 @@ export function OnboardingStep({
 
   return (
     <Screen
+      locked={!!loading}
       footer={
         <>
           <Button title={continueLabel} loading={loading} onPress={onContinue} />

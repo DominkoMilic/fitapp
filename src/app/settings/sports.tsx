@@ -34,6 +34,7 @@ function Form({ initial }: { initial: string[] }) {
   const changed = sports.join(',') !== initial.join(',');
   return (
     <Screen
+      locked={update.isPending}
       edges={['bottom']}
       footer={
         <Button

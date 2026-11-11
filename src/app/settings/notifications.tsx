@@ -81,7 +81,7 @@ function Form({ initial }: { initial: NotificationPrefs }) {
   };
 
   return (
-    <Screen edges={['bottom']}>
+    <Screen locked={save.isPending} edges={['bottom']}>
       {permission === 'unsupported' ? (
         <Banner message="Reminders are delivered by the PACE mobile app. Your choices here are saved and used on your phone." />
       ) : permission === 'denied' ? (

@@ -80,6 +80,7 @@ export default function NewExercise() {
 
   return (
     <Screen
+      locked={submit.busy}
       edges={['bottom']}
       footer={
         <Button title="Save exercise" loading={submit.busy} onPress={() => void submit.run()} />

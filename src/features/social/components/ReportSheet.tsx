@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
-import { Button, ChipGroup, Text, TextField } from '@/components/ui';
+import { Button, ChipGroup, FormLock, Text, TextField } from '@/components/ui';
 import { ModalShell } from '@/components/ui/ModalShell';
 import { SOCIAL_ERRORS } from '@/domain/social';
 import { envResult } from '@/config/env';
@@ -93,20 +93,22 @@ export function ReportSheet({
               <Text variant="small" color="textSecondary">
                 They won’t know who reported them.
               </Text>
-              <ChipGroup
-                options={REASONS}
-                selected={reason ? [reason] : []}
-                onToggle={(v) => setReason(v)}
-                accessibilityLabel="Reason"
-                single
-              />
-              <TextField
-                label="Details (optional)"
-                value={note}
-                onChangeText={setNote}
-                maxLength={500}
-                multiline
-              />
+              <FormLock locked={report.isPending}>
+                <ChipGroup
+                  options={REASONS}
+                  selected={reason ? [reason] : []}
+                  onToggle={(v) => setReason(v)}
+                  accessibilityLabel="Reason"
+                  single
+                />
+                <TextField
+                  label="Details (optional)"
+                  value={note}
+                  onChangeText={setNote}
+                  maxLength={500}
+                  multiline
+                />
+              </FormLock>
               {report.isError ? (
                 <Text variant="small" color="danger" accessibilityRole="alert">
                   {SOCIAL_ERRORS[errorCode(report.error)]}

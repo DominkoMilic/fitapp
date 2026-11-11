@@ -128,6 +128,7 @@ function Form({
 
   return (
     <Screen
+      locked={submit.busy}
       edges={['bottom']}
       footer={
         <Button title="Save changes" loading={submit.busy} onPress={() => void submit.run()} />

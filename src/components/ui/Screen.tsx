@@ -10,6 +10,8 @@ import { type Edge, SafeAreaInsetsContext, SafeAreaView } from 'react-native-saf
 
 import { spacing, useTheme } from '@/theme';
 
+import { FormLock } from './FormLock';
+
 /** Space kept between the focused field and the keyboard (or the footer above it). */
 const FIELD_GAP = spacing.lg;
 
@@ -35,7 +37,14 @@ export function Screen({
   scroll = true,
   edges = ['top', 'bottom'],
   footer,
-}: PropsWithChildren<{ scroll?: boolean; edges?: Edge[]; footer?: React.ReactNode }>) {
+  locked,
+}: PropsWithChildren<{
+  scroll?: boolean;
+  edges?: Edge[];
+  footer?: React.ReactNode;
+  /** While saving: the content (not the footer with the Save button) can't be edited. */
+  locked?: boolean;
+}>) {
   const { colors } = useTheme();
   // Context (not the hook) so screens rendered without a provider (tests) still work.
   const insets = useContext(SafeAreaInsetsContext);
@@ -47,6 +56,14 @@ export function Screen({
   // by the keyboard, so the footer moves down by it to sit right on the keyboard.
   const bottomInset = edges.includes('bottom') ? (insets?.bottom ?? 0) : 0;
 
+  const content =
+    locked === undefined ? (
+      children
+    ) : (
+      <FormLock locked={locked} style={styles.grow}>
+        {children}
+      </FormLock>
+    );
   const body = scroll ? (
     <KeyboardAwareScrollView
       ref={scrollRef}
@@ -66,11 +83,11 @@ export function Screen({
       keyboardDismissMode="interactive"
       bottomOffset={FIELD_GAP + (footer ? footerHeight - bottomInset : 0)}
     >
-      {children}
+      {content}
     </KeyboardAwareScrollView>
   ) : (
     <KeyboardAvoidingView behavior="padding" style={[styles.content, styles.flex]}>
-      {children}
+      {content}
     </KeyboardAvoidingView>
   );
   return (
@@ -95,6 +112,7 @@ export function Screen({
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  grow: { flexGrow: 1 },
   content: { padding: spacing.md, gap: spacing.md, flexGrow: 1 },
   footer: { padding: spacing.md, gap: spacing.xs, borderTopWidth: StyleSheet.hairlineWidth },
 });

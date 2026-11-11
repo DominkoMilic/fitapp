@@ -56,6 +56,7 @@ function SeriesForm({ e }: { e: RecurringEvent }) {
 
   return (
     <Screen
+      locked={update.isPending || end.isPending}
       edges={['bottom']}
       footer={
         <Button title="Save for all future sessions" loading={update.isPending} onPress={save} />

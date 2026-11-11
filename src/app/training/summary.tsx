@@ -133,6 +133,7 @@ export default function WorkoutSummary() {
 
   return (
     <Screen
+      locked={saving}
       edges={['bottom']}
       footer={
         <>

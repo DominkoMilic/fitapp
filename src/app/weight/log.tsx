@@ -99,6 +99,7 @@ function WeightForm({
 
   return (
     <Screen
+      locked={saving}
       edges={['bottom']}
       footer={
         <>

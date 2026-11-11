@@ -114,6 +114,7 @@ function GoalForm({ goal, currentKg }: { goal: Goal | null; currentKg: number })
   const rates = v.goalType === 'lose_weight' ? [0.25, 0.5, 0.75, 1.0] : [0.1, 0.15, 0.25];
   return (
     <Screen
+      locked={change.isPending}
       edges={['bottom']}
       footer={<Button title="Save goal" loading={change.isPending} onPress={save} />}
     >

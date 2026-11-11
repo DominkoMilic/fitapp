@@ -34,6 +34,7 @@ function TrainingForm({ prefs }: { prefs: Preferences | null }) {
 
   return (
     <Screen
+      locked={update.isPending}
       edges={['bottom']}
       footer={
         <Button

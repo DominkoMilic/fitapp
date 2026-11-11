@@ -56,7 +56,7 @@ export default function ChangePassword() {
   };
 
   return (
-    <Screen edges={['bottom']}>
+    <Screen locked={formState.isSubmitting} edges={['bottom']}>
       {error ? <Banner tone="danger" message={error} /> : null}
       {resetSent ? (
         <Banner

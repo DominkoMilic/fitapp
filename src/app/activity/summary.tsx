@@ -71,7 +71,7 @@ export default function ActivitySummaryScreen() {
   };
 
   return (
-    <Screen edges={['bottom']}>
+    <Screen locked={saving} edges={['bottom']}>
       <Text variant="heading">{ACTIVITY_LABEL[s.type]}</Text>
       <Text variant="small" color="textSecondary">
         {QUALITY_LABEL[s.quality]} · {s.pointsValid} of {s.pointsTotal} points used
