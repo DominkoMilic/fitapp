@@ -49,8 +49,8 @@ select throws_ok($$ select public.delete_comment((select c.id from public.commen
 -- Author removes the comment: it stays as "removed" without text.
 select tests.authenticate_as('f0000000-0000-0000-0000-0000000000b2');
 select lives_ok($$ select public.delete_comment((select c.id from public.comments c limit 1)) $$, 'the author removes it');
-select is((select body is null and removed from public.list_comments((select id from item))), true,
-  'a removed comment keeps no text');
+select is((select count(*)::int from public.comments), 0,
+  'a removed comment is deleted completely (no placeholder)');
 
 -- Blocking and hiding
 select tests.authenticate_as('f0000000-0000-0000-0000-0000000000b1');

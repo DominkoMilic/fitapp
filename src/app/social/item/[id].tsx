@@ -128,7 +128,7 @@ export default function FeedItemScreen() {
           )
         }
         renderItem={(c) => (
-          <Pressable onLongPress={() => !c.removed && setMenu(c)} style={styles.comment}>
+          <Pressable onLongPress={() => setMenu(c)} style={styles.comment}>
             <Avatar name={c.display_name} color={c.avatar_color} size={32} />
             <View style={styles.flex}>
               <View style={styles.meta}>
@@ -138,25 +138,17 @@ export default function FeedItemScreen() {
                 {/* Swearing was found: the post owner decides whether to keep it. */}
                 {c.flagged ? <StatusTag label="May be rude" tone="warning" /> : null}
               </View>
-              {c.removed ? (
-                <Text variant="body" color="textSecondary" style={styles.removed}>
-                  Comment removed
-                </Text>
-              ) : (
-                <Text variant="body">{c.body}</Text>
-              )}
+              <Text variant="body">{c.body}</Text>
             </View>
-            {c.removed ? null : (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`Options for ${c.is_mine ? 'your' : `${c.display_name}'s`} comment`}
-                onPress={() => setMenu(c)}
-                hitSlop={4}
-                style={styles.more}
-              >
-                <MoreHorizontal size={20} color={colors.textSecondary} />
-              </Pressable>
-            )}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Options for ${c.is_mine ? 'your' : `${c.display_name}'s`} comment`}
+              onPress={() => setMenu(c)}
+              hitSlop={4}
+              style={styles.more}
+            >
+              <MoreHorizontal size={20} color={colors.textSecondary} />
+            </Pressable>
           </Pressable>
         )}
         footer={
@@ -235,8 +227,8 @@ export default function FeedItemScreen() {
               title="Remove this comment?"
               message={
                 removing?.is_mine
-                  ? 'It will show as “Comment removed” for everyone.'
-                  : 'You can remove any comment on your post. It will show as “Comment removed” for everyone.'
+                  ? 'It will be deleted for everyone.'
+                  : 'You can remove any comment on your post. It will be deleted for everyone.'
               }
               confirmLabel="Remove"
               destructive
@@ -269,7 +261,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: -spacing.xs,
   },
-  removed: { fontStyle: 'italic' },
   composer: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.xs },
   send: {
     width: TOUCH_TARGET,

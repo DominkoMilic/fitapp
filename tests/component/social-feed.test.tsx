@@ -130,7 +130,7 @@ describe('feed card', () => {
 });
 
 describe('post screen', () => {
-  it('lists comments, shows removed ones without text, and sends a comment', async () => {
+  it('lists comments and sends a comment', async () => {
     mockComments = [
       {
         id: 'c1',
@@ -145,23 +145,10 @@ describe('post screen', () => {
         flagged: false,
         is_mine: false,
       },
-      {
-        id: 'c2',
-        author: 'u4',
-        handle: 'cy',
-        display_name: 'Cy',
-        avatar_color: 'lime',
-        body: null,
-        created_at: '2026-11-17T09:00:00Z',
-        removed: true,
-        can_delete: false,
-        flagged: false,
-        is_mine: false,
-      },
     ];
     await renderWithTheme(<FeedItemScreen />);
     expect(screen.getByText('Great pace!')).toBeTruthy();
-    expect(screen.getByText('Comment removed')).toBeTruthy();
+    expect(screen.queryByText('Comment removed')).toBeNull();
     await fireEvent.changeText(screen.getByLabelText('Add a comment'), '  Nice one  ');
     await fireEvent.press(screen.getByRole('button', { name: 'Send comment' }));
     expect(mockAddComment.mock.calls[0]![0]).toEqual({ itemId: 'item-1', body: 'Nice one' });

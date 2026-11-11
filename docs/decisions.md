@@ -322,3 +322,7 @@ A "Now" figure that differed from what the scale showed felt wrong. Home's Now i
 2. **Croatian/regional words** were added, and č ć š ž đ are folded before matching (the old filter split words at them, so "pička" passed).
 3. **Post owners can turn comments off.** The comments are hidden, not deleted, so turning comments back on restores them (consistent with hiding earlier posts). Cheers remain.
 4. Legal version 2026-11-22: privacy and terms describe the automatic word check, owner alerts and comment removal.
+
+## 2026-11-23: Removed comments disappear completely
+
+Replaces the soft removal of 2026-11-19 (decision 4), at the product owner's request. A placeholder ("Comment removed") kept drawing attention to what was removed. Removing a comment now deletes the row; existing placeholders were deleted by the migration. While comments are off, the post screen doesn't invite anyone to comment.
