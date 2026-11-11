@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { ChevronRight, ClipboardCheck, Scale } from 'lucide-react-native';
+import { ChevronRight, Dumbbell, Scale } from 'lucide-react-native';
 import { StyleSheet, View } from 'react-native';
 
 import { ErrorState, LoadingState } from '@/components/feedback';
@@ -22,6 +22,9 @@ import { useActivePlan, useProfile, useRecurringEvents } from '@/features/profil
 import { SyncBanner } from '@/features/sync/SyncBanner';
 import { useWeightStats } from '@/features/weight/useWeightStats';
 import { ResumeWorkoutCard } from '@/features/training/ResumeWorkoutCard';
+import { useActiveWorkout } from '@/features/training/active-workout-store';
+import { useScheduledWorkouts } from '@/features/training/schedule-api';
+import { useAuth } from '@/features/auth/AuthProvider';
 import { radius, spacing, TOUCH_TARGET, useTheme } from '@/theme';
 import { formatLongWeekday, intensityLabel } from '@/domain/format';
 import { goalJourney } from '@/domain/weight/tone';
@@ -102,6 +105,8 @@ export default function Home() {
   const events = useRecurringEvents();
   const stats = useWeightStats('30D');
   const checkins = useCheckins();
+  const active = useActiveWorkout(useAuth().session?.user.id);
+  const todayRows = useScheduledWorkouts(today, today).rows;
 
   const queries = [profile, plan, events, stats.goal];
   if (queries.some((q) => q.isPending))
@@ -134,6 +139,18 @@ export default function Home() {
       ? goalJourney(stats.startKg, stats.current.kg, stats.targetKg)
       : null;
   const dateLabel = formatLongWeekday(today);
+  // Quick log: resume a workout in progress, start today's planned one, or log one done earlier.
+  const planned = todayRows.find(
+    (r) => r.status === 'planned' && (r.kind === 'workout' || r.kind === 'recovery'),
+  );
+  const workoutAction = active
+    ? { label: 'Resume workout', go: () => router.push('/training/session') }
+    : planned
+      ? {
+          label: 'Start workout',
+          go: () => router.push({ pathname: '/training/workout/[id]', params: { id: planned.id } }),
+        }
+      : { label: 'Log workout', go: () => router.push('/training/log-workout') };
 
   return (
     <Screen edges={['top']}>
@@ -172,20 +189,6 @@ export default function Home() {
       <SyncBanner />
       <GoalReachedCard />
       <CoachCards />
-
-      <SectionHeader title="Quick log" />
-      <View style={styles.row}>
-        <QuickAction
-          label="Log weight"
-          icon={<Scale size={22} color={colors.accent} />}
-          onPress={() => router.push('/weight/log')}
-        />
-        <QuickAction
-          label="Check-in"
-          icon={<ClipboardCheck size={22} color={colors.accent} />}
-          onPress={() => router.push('/check-in')}
-        />
-      </View>
 
       <SectionHeader title="Your progress" />
       <Card
@@ -227,6 +230,20 @@ export default function Home() {
           </Text>
         ) : null}
       </Card>
+
+      <SectionHeader title="Quick log" />
+      <View style={styles.row}>
+        <QuickAction
+          label="Log weight"
+          icon={<Scale size={22} color={colors.accent} />}
+          onPress={() => router.push('/weight/log')}
+        />
+        <QuickAction
+          label={workoutAction.label}
+          icon={<Dumbbell size={22} color={colors.accent} />}
+          onPress={workoutAction.go}
+        />
+      </View>
 
       {!checkedInToday && checkins.isSuccess ? (
         <>

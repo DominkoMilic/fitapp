@@ -55,7 +55,7 @@ appId: ${APP_ID}
 - assertVisible: 'Your starting plan'
 - assertVisible: 'Your goal'
 - tapOn: 'Save and start'
-# Home: the quick actions are always above the fold (coach cards can push 'Today' down)
+# Home: progress and the quick actions are near the top (coach cards can push 'Today' down)
 - extendedWaitUntil:
-    visible: 'Check-in'
+    visible: 'Log weight'
     timeout: 20000
