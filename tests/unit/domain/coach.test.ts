@@ -382,24 +382,24 @@ describe('notification planner (spec 17)', () => {
       expect.objectContaining({ date: addDays(TODAY, 1), minute: 19 * 60 }),
     ]);
   });
-  it('#7 quiet hours: moved to 07:00 if still useful, otherwise dropped', () => {
+  it('#7 quiet hours: moved to 06:00 if still useful, otherwise dropped', () => {
     const n = {
       id: 'x',
       kind: 'workout' as const,
       date: TODAY,
-      minute: 6 * 60 + 30,
+      minute: 5 * 60 + 30,
       title: '',
       body: '',
       href: '',
     };
-    expect(applyQuietHours(n, 7 * 60 + 30)?.minute).toBe(7 * 60);
-    expect(applyQuietHours(n, 6 * 60 + 50)).toBeNull();
+    expect(applyQuietHours(n, 6 * 60 + 30)?.minute).toBe(6 * 60);
+    expect(applyQuietHours(n, 5 * 60 + 50)).toBeNull();
     expect(applyQuietHours({ ...n, minute: 22 * 60 }, null)).toBeNull();
     const out = plan({
-      events: [ev({ time: '06:30' }), ev({ id: 'b', date: addDays(TODAY, 1), time: '07:30' })],
+      events: [ev({ time: '05:30' }), ev({ id: 'b', date: addDays(TODAY, 1), time: '06:30' })],
     });
     expect(out.filter((x) => x.kind === 'workout').map((x) => [x.date, x.minute])).toEqual([
-      [addDays(TODAY, 1), 7 * 60],
+      [addDays(TODAY, 1), 6 * 60],
     ]);
   });
   it('at most 4 per day, most important kept', () => {
@@ -501,9 +501,10 @@ describe('stored reminder preferences', () => {
     expect(p.workout).toEqual(DEFAULT_PREFS.workout);
   });
   it('quiet hours are not selectable', () => {
-    expect(isAllowedTime('07:00')).toBe(true);
+    expect(isAllowedTime('06:00')).toBe(true);
+    expect(isAllowedTime('05:55')).toBe(false);
     expect(isAllowedTime('21:59')).toBe(true);
     expect(isAllowedTime('22:00')).toBe(false);
-    expect(isAllowedTime('06:59')).toBe(false);
+    expect(isAllowedTime('05:59')).toBe(false);
   });
 });

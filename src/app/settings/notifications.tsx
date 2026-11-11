@@ -65,7 +65,7 @@ function Form({ initial }: { initial: NotificationPrefs }) {
   const onSave = () => {
     if (!TIME.test(weighIn)) return setError('Use a 24-hour time like 07:30.');
     if (!isAllowedTime(weighIn))
-      return setError('Reminders can be between 07:00 and 21:59 (quiet hours are 22:00–07:00).');
+      return setError('Reminders can be between 06:00 and 21:55 (quiet hours are 22:00–06:00).');
     setError(null);
     const next: NotificationPrefs = {
       ...prefs,
@@ -141,7 +141,7 @@ function Form({ initial }: { initial: NotificationPrefs }) {
       />
 
       <Text variant="caption" color="textSecondary">
-        At most 4 reminders a day, none between 22:00 and 07:00. Reminders never show your weight or
+        At most 4 reminders a day, none between 22:00 and 06:00. Reminders never show your weight or
         health details on the lock screen. The rest timer alerts you during workouts.
       </Text>
       {error ? <Banner tone="danger" message={error} /> : null}

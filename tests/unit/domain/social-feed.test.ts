@@ -89,10 +89,11 @@ describe('push rules (shared with the social-push function)', () => {
     expect(shouldBatch(now - BATCH_WINDOW_MS, now)).toBe(false);
   });
 
-  it('keeps quiet between 22:00 and 07:00', () => {
+  it('keeps quiet between 22:00 and 06:00', () => {
     expect(inQuietHours(22 * 60)).toBe(true);
     expect(inQuietHours(3 * 60)).toBe(true);
-    expect(inQuietHours(7 * 60)).toBe(false);
+    expect(inQuietHours(6 * 60)).toBe(false);
+    expect(inQuietHours(5 * 60 + 59)).toBe(true);
     expect(inQuietHours(21 * 60 + 59)).toBe(false);
   });
 

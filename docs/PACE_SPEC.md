@@ -615,7 +615,7 @@ Contents: weekly average weight (start of week vs end), trend, sessions complete
 
 Meal and water reminders were archived with nutrition; old stored settings for them are ignored.
 
-Rules: quiet hours 22:00–07:00; global cap 4 per day (rest timer excluded); notification permission asked only when the user turns on the first reminder. Reconcile on app start and after any schedule/preference/timezone change: cancel all PACE-scheduled notifications and schedule the next 14 days, staying under iOS's 64 pending notification limit. Notification text never includes weight or health details (lock screen privacy).
+Rules: quiet hours 22:00–06:00; global cap 4 per day (rest timer excluded); notification permission asked only when the user turns on the first reminder. Reconcile on app start and after any schedule/preference/timezone change: cancel all PACE-scheduled notifications and schedule the next 14 days, staying under iOS's 64 pending notification limit. Notification text never includes weight or health details (lock screen privacy).
 
 ---
 
@@ -1377,7 +1377,7 @@ Calorie and macro edge cases are archived with nutrition. Goal date: no date wit
 4. Injury active + match tomorrow → S3 shown, R1 still shown (rest), never "play" advice (T).
 5. Notification permission denied → in-app only; settings explain how to enable.
 6. More than 64 notifications needed → schedule nearest 14 days within limit (T).
-7. Quiet hours → reminders moved to 07:00 or dropped if obsolete (T).
+7. Quiet hours → reminders moved to 06:00 or dropped if obsolete (T).
 8. Timezone change → reconcile reschedules all.
 
 ### 28.10 Sync and data lifecycle
@@ -1621,7 +1621,7 @@ Friends, a feed of shared training, clubs, challenges and effort-only leaderboar
 - **Triggers:** a new item needs the type shared, social active and (for workouts) not abandoned; edits update an existing item even if sharing was switched off later. **Switching a type off** asks "Hide your earlier … too?" (Hide them / Keep them, `hide_my_posts`); **switching it back on** offers to show the posts hidden that way again (`hidden_post_count`, `show_my_posts`). `hidden_reason` keeps posts removed one by one ("Remove from feed") removed; abandoning or deleting the source deletes the item; `exercise_sets` changes refresh the set count; weight milestones (`weight_lost_*`, `weight_reached_*`, `goal_target`, `goal_secondary`, `weigh_in_30`, category `weight`) are never shared; social off or deleting the social profile deletes your items.
 - **Who sees an item:** the owner, and accepted friends (audience friends) while neither has blocked the other, neither is banned and the item isn't removed (`can_view_feed`). Clubs join in 8C.
 - **Functions:** `get_feed(before, max ≤ 30, owner)` (cursor on `created_at`), `get_feed_item`, `list_comments`, `set_cheer` / `remove_cheer` (120/hour; not on your own post), `add_comment` (60/hour), `delete_comment` (author or post owner), `hide_feed_item` (owner).
-- **Push (8B-2):** `social_notify` is called by triggers on cheers, comments and friend requests/accepts and does nothing until `push_enabled` is on, `pg_net` exists and `push_config` has the function URL and secret. `social-push` checks the recipient's setting, batches events on the same topic within 15 minutes and during quiet hours (22:00–07:00 in the recipient's time zone) into the next push ("Ana and 3 others cheered your run"), allows 20 pushes per hour per person, sends names and the type only, removes tokens Expo reports as unregistered, and opens `/social/item/<id>`.
+- **Push (8B-2):** `social_notify` is called by triggers on cheers, comments and friend requests/accepts and does nothing until `push_enabled` is on, `pg_net` exists and `push_config` has the function URL and secret. `social-push` checks the recipient's setting, batches events on the same topic within 15 minutes and during quiet hours (22:00–06:00 in the recipient's time zone) into the next push ("Ana and 3 others cheered your run"), allows 20 pushes per hour per person, sends names and the type only, removes tokens Expo reports as unregistered, and opens `/social/item/<id>`.
 - **Export** includes your feed items, cheers and comments; push tokens and push batching state are technical and not exported.
 - **Push (8B-2, live):** EAS project `@dominko/pace`, FCM V1 key on Expo, `google-services.json` in the app (git-ignored), `pg_net`, `push_config` (function URL and a database-generated secret the function reads itself), `social-push` deployed with JWT verification off, `app_config.push_enabled = true`. Pushes are sent with **high priority** on the Android channel **"Friends"** (`social`), which the app creates at start-up because Android drops pushes for a channel that doesn't exist. The app registers its token while signed in with social on and removes it on sign-out.
 

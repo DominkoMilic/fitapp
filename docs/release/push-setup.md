@@ -45,4 +45,4 @@ To stop all social pushes at once: `update app_config set value = 'false' where 
 
 ## 7. Test
 
-Build the app (needs the projectId from step 1), sign in as Dev, have Dev Two cheer and comment through the SQL editor, and check: one push for many cheers, nothing between 22:00 and 07:00, tapping opens the post, no numbers or health details in the text.
+Build the app (needs the projectId from step 1), sign in as Dev, have Dev Two cheer and comment through the SQL editor, and check: one push for many cheers, nothing between 22:00 and 06:00, tapping opens the post, no numbers or health details in the text.

@@ -19,5 +19,5 @@ export function readPrefs(raw: unknown): NotificationPrefs {
   return r.success ? r.data : DEFAULT_PREFS;
 }
 
-/** Times reminders may be set to (quiet hours 22:00–07:00 excluded). */
-export const isAllowedTime = (t: string) => t >= '07:00' && t < '22:00';
+/** Times reminders may be set to (quiet hours 22:00–06:00 excluded). */
+export const isAllowedTime = (t: string) => t >= '06:00' && t < '22:00';

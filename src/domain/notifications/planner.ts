@@ -26,7 +26,7 @@ export const NOTIFY = {
   /** iOS allows 64 pending; keep room for the rest timer. */
   maxPending: 60,
   quietStart: 22 * 60,
-  quietEnd: 7 * 60,
+  quietEnd: 6 * 60,
   defaultWorkoutTime: 9 * 60,
   matchEveTime: 19 * 60,
   weeklyReportTime: 9 * 60,
@@ -69,7 +69,7 @@ export const hm = (t: string): number => {
 const isMatch = isMatchCategory;
 
 /**
- * Applies quiet hours (22:00–07:00): reminders before 07:00 move to 07:00 if still before the event
+ * Applies quiet hours (22:00–06:00): reminders before 06:00 move to 06:00 if still before the event
  * they remind about, otherwise they're dropped; reminders from 22:00 are dropped (spec 28.9 #7).
  */
 export function applyQuietHours(

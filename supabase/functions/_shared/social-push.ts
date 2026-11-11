@@ -9,7 +9,7 @@ export type PushType = 'cheer' | 'comment' | 'request' | 'accept';
 /** Repeated events on the same topic within this window are batched into the next push. */
 export const BATCH_WINDOW_MS = 15 * 60_000;
 export const QUIET_START_MIN = 22 * 60;
-export const QUIET_END_MIN = 7 * 60;
+export const QUIET_END_MIN = 6 * 60;
 
 export function inQuietHours(minuteOfDay: number): boolean {
   return minuteOfDay >= QUIET_START_MIN || minuteOfDay < QUIET_END_MIN;

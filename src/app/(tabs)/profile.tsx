@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import { ShieldCheck, SlidersHorizontal, UserRound } from 'lucide-react-native';
 import { useState } from 'react';
 
 import { Banner, ConfirmDialog } from '@/components/feedback';
@@ -41,7 +42,7 @@ export default function ProfileTab() {
         />
       ) : null}
 
-      <SectionHeader title="You" />
+      <SectionHeader title="You" icon={UserRound} />
       <ListItem title="Personal information" onPress={() => router.push('/settings/personal')} />
       <ListItem
         title="Goal"
@@ -50,7 +51,7 @@ export default function ProfileTab() {
       />
       <ListItem title="Health and injuries" onPress={() => router.push('/settings/health')} />
 
-      <SectionHeader title="Preferences" />
+      <SectionHeader title="Preferences" icon={SlidersHorizontal} />
       <ListItem
         title="Training setup"
         subtitle="Sports, schedule and equipment"
@@ -71,7 +72,7 @@ export default function ProfileTab() {
       <ListItem title="Reminders" onPress={() => router.push('/settings/notifications')} />
       <ListItem title="Appearance" onPress={() => router.push('/settings/appearance')} />
 
-      <SectionHeader title="Account" />
+      <SectionHeader title="Account" icon={ShieldCheck} />
       <ListItem title="Change password" onPress={() => router.push('/settings/password')} />
       <ListItem
         title="Data and privacy"
