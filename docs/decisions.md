@@ -311,3 +311,7 @@ GPS check on the Samsung (stationary, 2026-11-21): background recording with the
 ## 2026-11-21: Back on the first screen of every stack
 
 Record activity (opened from Training → +) and the first screen of every nested stack had no back arrow, because a native header only shows one when its own stack has history. They now get a shared `HeaderBack` (back with history, else the parent tab: activity/training → Training, progress/reports/weight/measurements → Progress, social → Social, settings → Profile).
+
+## 2026-11-21: Home shows the latest weigh-in as Now
+
+A "Now" figure that differed from what the scale showed felt wrong. Home's Now is the latest weigh-in (with when it was); goal progress, kg down/to go, milestones and goal reached keep using the 7-day average (one day's water swing doesn't move them), shown as a small line under the bar. Matches the Progress tab's separate Current weight and 7-day average tiles.

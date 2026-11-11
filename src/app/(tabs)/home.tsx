@@ -58,6 +58,12 @@ function QuickAction({
   );
 }
 
+/** "today", "yesterday" or "3 days ago" for the latest weigh-in. */
+function weighedWhen(date: string, today: string): string {
+  const days = Math.round((Date.parse(today) - Date.parse(date)) / 86_400_000);
+  return days <= 0 ? 'today' : days === 1 ? 'yesterday' : `${days} days ago`;
+}
+
 /** One labelled number in the Start · Now · Goal row. */
 function Figure({
   label,
@@ -143,6 +149,7 @@ export default function Home() {
       ? goalJourney(stats.startKg, stats.current.kg, stats.targetKg)
       : null;
   const dateLabel = formatLongWeekday(today);
+  const latest = stats.daily.length ? stats.daily[stats.daily.length - 1]! : null;
   // Quick log: resume a workout in progress, start today's planned one, or log one done earlier.
   const planned = todayRows.find(
     (r) => r.status === 'planned' && (r.kind === 'workout' || r.kind === 'recovery'),
@@ -204,10 +211,11 @@ export default function Home() {
         {/* Where you started, where you are, where you're going. */}
         <View style={styles.journey}>
           <Figure label="Start" value={stats.startKg} unit={u} disp={disp} />
+          {/* The number you saw on the scale; the progress below uses the 7-day average. */}
           <Figure
             label="Now"
-            note={stats.current?.basis === 'average' ? '7-day avg' : undefined}
-            value={stats.current?.kg ?? null}
+            note={latest ? weighedWhen(latest.date, today) : undefined}
+            value={latest?.kg ?? null}
             unit={u}
             disp={disp}
             strong
@@ -229,7 +237,12 @@ export default function Home() {
             {`${disp(journey.moved).toFixed(1)} ${u} ${journey.direction}`}
             {journey.toGo !== null ? ` · ${disp(journey.toGo).toFixed(1)} ${u} to go` : ''}
           </Text>
-        ) : stats.current?.basis === 'single' ? (
+        ) : null}
+        {stats.current?.basis === 'average' ? (
+          <Text variant="caption" color="textSecondary">
+            7-day avg {disp(stats.current.kg).toFixed(1)} {u} · used for your progress
+          </Text>
+        ) : stats.current?.basis === 'single' && !journey ? (
           <Text variant="small" color="textSecondary">
             Log 3+ days for an average
           </Text>
