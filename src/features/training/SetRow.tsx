@@ -27,7 +27,8 @@ export function SetRow({
   tracking: TrackingType;
   metric: boolean;
   onChange: (patch: Partial<ActiveSet>) => void;
-  onToggle: () => void;
+  /** Marks the set done; left out when planning a workout before it starts. */
+  onToggle?: () => void;
   /** Shown when the set may be removed. */
   onRemove?: () => void;
   /** Timed sets in a live workout: start a countdown for this hold. */
@@ -103,13 +104,15 @@ export function SetRow({
             onPress={onStartHold}
           />
         ) : null}
-        <Button
-          title={set.completed ? '✓' : 'Done'}
-          variant={set.completed ? 'primary' : 'secondary'}
-          fullWidth={false}
-          accessibilityLabel={`Set ${n} ${set.completed ? 'completed, tap to undo' : 'mark as done'}`}
-          onPress={onToggle}
-        />
+        {onToggle ? (
+          <Button
+            title={set.completed ? '✓' : 'Done'}
+            variant={set.completed ? 'primary' : 'secondary'}
+            fullWidth={false}
+            accessibilityLabel={`Set ${n} ${set.completed ? 'completed, tap to undo' : 'mark as done'}`}
+            onPress={onToggle}
+          />
+        ) : null}
         {onRemove ? (
           <Pressable
             onPress={onRemove}

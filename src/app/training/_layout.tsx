@@ -10,6 +10,7 @@ export default function TrainingLayout() {
         'exercise-new': 'New exercise',
         calendar: 'Calendar',
         'workout/[id]': 'Workout',
+        prepare: 'Edit workout',
         session: 'Workout',
         summary: 'Workout summary',
         'history/index': 'History',

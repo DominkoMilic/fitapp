@@ -29,6 +29,12 @@ import { formatClock, useNow } from '@/hooks/useNow';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useProfile } from '@/features/profile/api';
 import { useActiveWorkout, useActiveWorkoutStore } from '@/features/training/active-workout-store';
+import { useToday } from '@/features/dashboard/useToday';
+import { formatLongWeekday } from '@/domain/format';
+import {
+  usePreparedWorkout,
+  usePreparedWorkoutStore,
+} from '@/features/training/prepared-workout-store';
 import { useLastSets } from '@/features/training/last-performance';
 import { useScheduledWorkout } from '@/features/training/schedule-api';
 import { useSessions } from '@/features/training/session-api';
@@ -51,6 +57,12 @@ export default function WorkoutSession() {
   const sessions = useSessions();
   const { lastSets } = useLastSets();
   const setStore = useActiveWorkoutStore((s) => s.set);
+  const { today } = useToday();
+  // Edited before starting (Edit before starting); the 20-minute version starts from its own plan.
+  const prepared = usePreparedWorkout(userId, template ? undefined : scheduledId);
+  const clearPrepared = usePreparedWorkoutStore((s) => s.clear);
+  // A planned workout can't be started before its day (spec 10.4).
+  const notYet = !!scheduled && scheduled.scheduled_date > today;
   const [resumeAnyway, setResumeAnyway] = useState(false);
   // After a workout is saved or discarded the store is cleared while this screen may still be
   // mounted underneath the summary; it must not start another workout (phantom workout bug).
@@ -63,7 +75,21 @@ export default function WorkoutSession() {
   // Start a new workout unless one is already running.
   useEffect(() => {
     if (!userId || !built || sessions.isPending) return;
-    if (active || finishedSinceOpened) return;
+    if (active || finishedSinceOpened || notYet) return;
+    if (prepared && scheduled) {
+      const now = Date.now();
+      setStore({
+        ...prepared,
+        id: randomUUID(),
+        startedAt: now,
+        pausedAt: null,
+        pausedMs: 0,
+        currentIndex: 0,
+        restEndsAt: null,
+      });
+      clearPrepared(scheduled.id);
+      return;
+    }
     setStore(
       createActiveWorkout({
         id: randomUUID(),
@@ -82,6 +108,9 @@ export default function WorkoutSession() {
     sessions.isPending,
     active,
     finishedSinceOpened,
+    notYet,
+    prepared,
+    clearPrepared,
     scheduledId,
     scheduled,
     lastSets,
@@ -106,6 +135,18 @@ export default function WorkoutSession() {
     );
   }
   if (active) return <Runner />;
+  if (notYet && scheduled) {
+    return (
+      <Screen edges={['bottom']}>
+        <EmptyState
+          title="Not today yet"
+          message={`This workout is planned for ${formatLongWeekday(scheduled.scheduled_date)}. You can start it on the day.`}
+          actionLabel="Back to Training"
+          onAction={() => router.replace('/training')}
+        />
+      </Screen>
+    );
+  }
   if (finishedSinceOpened) {
     return (
       <Screen edges={['bottom']}>

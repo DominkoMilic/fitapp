@@ -26,12 +26,15 @@ export function WorkoutEditor({
   onChange,
   metric,
   addedDone = false,
+  planning = false,
 }: {
   workout: ActiveWorkout;
   onChange: (next: ActiveWorkout) => void;
   metric: boolean;
   /** Logging afterwards: exercises you add start with their sets ticked (you already did them). */
   addedDone?: boolean;
+  /** Before a workout starts: sets can be changed but not ticked off. */
+  planning?: boolean;
 }) {
   const { lastSets } = useLastSets();
   const [picking, setPicking] = useState(false);
@@ -39,7 +42,11 @@ export function WorkoutEditor({
   return (
     <View style={styles.stack}>
       {w.exercises.length === 0 ? (
-        <Text color="textSecondary">No exercises yet. Add what you did.</Text>
+        <Text color="textSecondary">
+          {planning
+            ? 'No exercises yet. Add some to start.'
+            : 'No exercises yet. Add what you did.'}
+        </Text>
       ) : null}
       {w.exercises.map((ex, i) => (
         <AnimatedRow key={keys[i]}>
@@ -71,7 +78,11 @@ export function WorkoutEditor({
                 tracking={ex.tracking}
                 metric={metric}
                 onChange={(patch) => onChange(updateSet(w, i, k, patch))}
-                onToggle={() => onChange(updateSet(w, i, k, { completed: !s.completed }))}
+                onToggle={
+                  planning
+                    ? undefined
+                    : () => onChange(updateSet(w, i, k, { completed: !s.completed }))
+                }
                 onRemove={ex.sets.length > 1 ? () => onChange(removeSet(w, i, k)) : undefined}
               />
             ))}

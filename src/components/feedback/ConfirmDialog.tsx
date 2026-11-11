@@ -16,6 +16,7 @@ export function ConfirmDialog({
   loading,
   onConfirm,
   onCancel,
+  secondary,
 }: {
   visible: boolean;
   title: string;
@@ -26,6 +27,8 @@ export function ConfirmDialog({
   loading?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+  /** A second choice between confirm and cancel (e.g. "Skip anyway"). */
+  secondary?: { label: string; onPress: () => void };
 }) {
   const { colors, reduceMotion } = useTheme();
   return (
@@ -66,6 +69,14 @@ export function ConfirmDialog({
               loading={loading}
               onPress={onConfirm}
             />
+            {secondary ? (
+              <Button
+                title={secondary.label}
+                variant="secondary"
+                onPress={secondary.onPress}
+                disabled={loading}
+              />
+            ) : null}
             <Button title={cancelLabel} variant="ghost" onPress={onCancel} disabled={loading} />
           </View>
         </Animated.View>

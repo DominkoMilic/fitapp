@@ -51,3 +51,19 @@ it('adds push-ups the plan did not include, ticks a set and removes one', async 
   await fireEvent.press(screen.getByRole('button', { name: 'Remove set 2' }));
   expect(latest!.exercises[0]!.sets).toHaveLength(sets - 1);
 });
+
+it('before a workout starts, sets can be changed but not ticked off', async () => {
+  function Planning() {
+    const [w, setW] = useState<ActiveWorkout>(() => ({
+      ...emptyWorkout({ id: 'w', userId: 'u', title: 'Plan', startedAt: 0 }),
+    }));
+    return <WorkoutEditor workout={w} onChange={setW} metric planning />;
+  }
+  await renderWithTheme(<Planning />);
+  expect(screen.getByText('No exercises yet. Add some to start.')).toBeTruthy();
+  await fireEvent.press(screen.getByRole('button', { name: 'Add an exercise' }));
+  await fireEvent.changeText(screen.getByLabelText('Search exercises'), 'squat');
+  await fireEvent.press(screen.getAllByText(/squat/i).find((n) => n.props.children !== 'squat')!);
+  expect(screen.queryByRole('button', { name: /mark as done/ })).toBeNull();
+  expect(screen.getAllByLabelText(/^Set 1 reps/).length).toBeGreaterThan(0);
+});

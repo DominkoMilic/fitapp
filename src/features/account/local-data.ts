@@ -5,6 +5,7 @@ import { useRecordingStore } from '@/features/activity/recording-store';
 import { useDismissals } from '@/features/coach/dismissals';
 import { useOnboardingDraft } from '@/features/onboarding/draft-store';
 import { useActiveWorkoutStore } from '@/features/training/active-workout-store';
+import { usePreparedWorkoutStore } from '@/features/training/prepared-workout-store';
 import { pointBuffer } from '@/services/location/point-buffer';
 import { stopTracking } from '@/services/location/tracker';
 import { notifier } from '@/services/notifications/notifier';
@@ -43,6 +44,9 @@ export async function clearLocalData(
     }
     if (useActiveWorkoutStore.getState().workout?.userId === userId)
       useActiveWorkoutStore.getState().set(null);
+    usePreparedWorkoutStore.setState((s) => ({
+      drafts: Object.fromEntries(Object.entries(s.drafts).filter(([, w]) => w.userId !== userId)),
+    }));
     useDismissals.setState((s) => {
       const { [userId]: _gone, ...rest } = s.byUser;
       return { byUser: rest };
