@@ -301,3 +301,9 @@ Replaces decision 2 of 2026-11-19 ("existing posts keep their audience"), at the
 5. **Home:** Your progress comes before Quick log; the Check-in quick action became Start/Log workout (the Daily check-in card stays).
 6. **Training tab:** week strip with one selected day instead of the whole week as cards; the injury notice opens Health.
 7. **Planned workouts:** editable before starting (kept on this phone for that occurrence, not synced: the plan itself doesn't change, so another phone just shows the planned version); no starting or logging before the day; "Move to another day" removed (no other screen moves workouts; planning a one-off workout still works); Skip first suggests the 20-minute version, with the safety line about illness and pain.
+
+## 2026-11-21: Google Maps on Android
+
+Android preview builds now use a Google Maps SDK key (project `pace-c46ed`, restricted to the app package and signing SHA-1, Maps SDK for Android only), so routes are drawn on a real map instead of the plain route shape. The key lives only in `.env.local` / EAS environment variables. The privacy policy already names Google Maps map tiles, so the legal version is unchanged.
+
+GPS check on the Samsung (stationary, 2026-11-21): background recording with the screen locked, pause/resume, recovery after a force-stop and discard all work; GPS stops after discard. Fixed: the live map opened on the whole continent (now street level on your location), the second stats row overflowed narrow screens (now one compact card), and Home had no card for a recording in progress. Known, unchanged: indoors, GPS wander can add ~20 m over a few minutes standing still (the filter ignores moves smaller than half the reported accuracy), and calories count all unpaused time.

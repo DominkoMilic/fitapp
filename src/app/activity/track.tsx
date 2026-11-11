@@ -278,19 +278,23 @@ function Live() {
           caption="Estimate"
         />
       </View>
-      <View style={styles.row}>
-        <StatTile label="Total time" value={formatClock(s.elapsedS)} />
+      {/* Three smaller figures in one card: three full tiles don't fit a 360 dp screen. */}
+      <Card style={styles.mini}>
+        <MiniStat label="Total time" value={formatClock(s.elapsedS)} />
         {meta.type === 'cycle' ? (
-          <StatTile label="Avg speed" value={formatSpeed(s.avgSpeedMps, unit)} />
+          <MiniStat label="Avg speed" value={formatSpeed(s.avgSpeedMps, unit)} />
         ) : (
-          <StatTile
+          <MiniStat
             label="Avg pace"
-            value={formatPace(s.avgPaceSPerKm, unit)}
-            unit={unit === 'metric' ? '/km' : '/mi'}
+            value={
+              s.avgPaceSPerKm === null
+                ? '—'
+                : `${formatPace(s.avgPaceSPerKm, unit)} ${unit === 'metric' ? '/km' : '/mi'}`
+            }
           />
         )}
-        <StatTile label="GPS" value={QUALITY_SHORT[quality]} />
-      </View>
+        <MiniStat label="GPS" value={QUALITY_SHORT[quality]} />
+      </Card>
       <RouteMap pieces={pieces} follow={!paused} height={220} />
       <View style={styles.row}>
         {stale ? null : paused ? (
@@ -341,7 +345,22 @@ function Live() {
   );
 }
 
+function MiniStat({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.miniItem} accessible accessibilityLabel={`${label}: ${value}`}>
+      <Text variant="small" color="textSecondary" numberOfLines={1}>
+        {label}
+      </Text>
+      <Text variant="title" numeric numberOfLines={1} adjustsFontSizeToFit>
+        {value}
+      </Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  mini: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.sm },
+  miniItem: { flex: 1, gap: 2 },
   hero: { alignItems: 'center', gap: spacing.xs, paddingVertical: spacing.md },
   row: { flexDirection: 'row', gap: spacing.md, justifyContent: 'center' },
 });

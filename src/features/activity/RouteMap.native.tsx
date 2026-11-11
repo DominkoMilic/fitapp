@@ -11,6 +11,8 @@ const hasAndroidKey = !!(Constants.expoConfig?.extra as { hasAndroidMapsKey?: bo
   ?.hasAndroidMapsKey;
 
 const toCoord = (p: LatLng) => ({ latitude: p.lat, longitude: p.lng });
+/** Street level: a walk or run around the block fills the map. */
+const FOLLOW_ZOOM = 16;
 
 /** Apple Maps on iOS, Google Maps on Android when a key is configured, else an SVG shape. */
 export function RouteMap({
@@ -27,11 +29,15 @@ export function RouteMap({
   const coords = useMemo(() => pieces.map((p) => p.map(toCoord)), [pieces]);
   const all = useMemo(() => coords.flat(), [coords]);
   const last = all[all.length - 1];
+  // Before the first route point the map would open on the whole world: it centres on the phone's
+  // location once instead.
+  const centred = useRef(false);
 
   useEffect(() => {
     if (!all.length || !ref.current) return;
     if (follow && last) {
-      ref.current.animateCamera({ center: last }, { duration: 500 });
+      ref.current.animateCamera({ center: last, zoom: FOLLOW_ZOOM }, { duration: 500 });
+      centred.current = true;
     } else {
       ref.current.fitToCoordinates(all, {
         edgePadding: { top: 32, right: 32, bottom: 32, left: 32 },
@@ -48,8 +54,19 @@ export function RouteMap({
         ref={ref}
         style={StyleSheet.absoluteFill}
         showsUserLocation={follow}
+        onUserLocationChange={(e) => {
+          const c = e.nativeEvent.coordinate;
+          if (!follow || centred.current || !c || !ref.current) return;
+          centred.current = true;
+          ref.current.animateCamera(
+            { center: { latitude: c.latitude, longitude: c.longitude }, zoom: FOLLOW_ZOOM },
+            { duration: 0 },
+          );
+        }}
         initialCamera={
-          last ? { center: last, zoom: 15, heading: 0, pitch: 0, altitude: 1500 } : undefined
+          last
+            ? { center: last, zoom: FOLLOW_ZOOM, heading: 0, pitch: 0, altitude: 1500 }
+            : undefined
         }
         accessibilityLabel="Route map"
       >

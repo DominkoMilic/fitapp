@@ -453,6 +453,8 @@ Fields as in schema (Section 20). Searchable by name, filterable by category, mu
 
 Pick type (walk/run/cycle) → permission check → "Acquiring GPS" (shows accuracy) → Start → live screen (elapsed time, moving time, distance, current speed/pace, average pace/speed, estimated kcal, GPS quality, map) → Pause/Resume → Finish (confirm) or Discard (confirm) → Summary → Save.
 
+Live screen layout: distance as the hero, Pace and Calories as two tiles, then Total time · Avg pace · GPS as three smaller figures in one card (three full tiles don't fit a 360 dp screen), then the map. The live map opens at street level (zoom 16) on the phone's location and follows it; paused, it fits the whole route with start and finish markers. On Android the map is Google Maps when `GOOGLE_MAPS_ANDROID_API_KEY` is set (preview builds have one), otherwise the route shape. A recording in progress shows an amber **Recording** card on Home and Training ("Open recording").
+
 ### 11.2 Permissions
 
 - Foreground permission requested at the first activity start, with a pre-prompt explaining why.

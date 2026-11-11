@@ -9,7 +9,7 @@
 - [ ] Production Auth password policy: minimum 8 characters, **Lowercase, uppercase letters and digits** (matches the in-app checklist and `supabase/config.toml`).
 - [ ] Production Auth: **remove `exp://**`** from redirect URLs (only needed for Expo Go in development); turn on **Secure password change**; keep PKCE (the app refuses raw-token links).
 - [ ] Backups/PITR and monitoring as in `operations.md`.
-- [ ] EAS environment variables per environment (`npx eas-cli@latest env:create`): `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `EXPO_PUBLIC_SUPPORT_EMAIL` (production requires it), optional `GOOGLE_MAPS_ANDROID_API_KEY` (restricted to the package and signing certificate).
+- [ ] EAS environment variables per environment (`npx eas-cli@latest env:create`): `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `EXPO_PUBLIC_SUPPORT_EMAIL` (production requires it), optional `GOOGLE_MAPS_ANDROID_API_KEY` (restricted to the package and signing certificate). The preview key (Google Cloud project `pace-c46ed`, Maps SDK for Android only) is restricted to `app.pace.fitness.preview` + the current signing SHA-1; add the Play App Signing SHA-1 (and the production package) before a store release, or the map shows grey tiles.
 - [ ] Apple Developer and Google Play developer accounts; create the app records (bundle id `app.pace.fitness`).
 
 ## Quality gates

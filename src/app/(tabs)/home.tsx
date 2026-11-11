@@ -22,6 +22,7 @@ import { useActivePlan, useProfile, useRecurringEvents } from '@/features/profil
 import { SyncBanner } from '@/features/sync/SyncBanner';
 import { useWeightStats } from '@/features/weight/useWeightStats';
 import { ResumeWorkoutCard } from '@/features/training/ResumeWorkoutCard';
+import { ResumeActivityCard } from '@/features/activity/ResumeActivityCard';
 import { useActiveWorkout } from '@/features/training/active-workout-store';
 import { useScheduledWorkouts, useScheduleGeneration } from '@/features/training/schedule-api';
 import { useAuth } from '@/features/auth/AuthProvider';
@@ -189,6 +190,7 @@ export default function Home() {
       </PressableScale>
 
       <ResumeWorkoutCard />
+      <ResumeActivityCard />
       <SyncBanner />
       <GoalReachedCard />
       <CoachCards />
