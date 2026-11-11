@@ -38,6 +38,7 @@ jest.mock('@/features/social/api', () => ({
       milestones_audience: 'private',
       challenge_results_audience: 'private',
       share_volume: false,
+      share_route_shape: false,
       friend_requests_from: 'everyone',
       in_leaderboards: false,
       notify_cheers: true,
@@ -98,4 +99,9 @@ it('turning a type on asks nothing when nothing was hidden', async () => {
     fireEvent.press(screen.getByRole('switch', { name: 'Milestones' }));
   });
   expect(screen.queryByText(/again\?/)).toBeNull();
+});
+
+it('offers to share the route shape only while walks, runs and rides are shared', async () => {
+  await renderWithTheme(<SocialSettingsScreen />);
+  expect(screen.queryByRole('switch', { name: 'Share route shape' })).toBeNull();
 });

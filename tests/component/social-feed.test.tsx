@@ -82,6 +82,42 @@ describe('feed card', () => {
     expect(onCheer).toHaveBeenCalled();
   });
 
+  const card = (r: FeedRow) => (
+    <FeedCard
+      row={r}
+      today="2026-11-18"
+      onCheer={jest.fn()}
+      onPickCheer={jest.fn()}
+      onMore={jest.fn()}
+    />
+  );
+
+  it('shows no route shape unless the owner shared it', async () => {
+    await renderWithTheme(card(row()));
+    expect(screen.queryByLabelText('Route shape')).toBeNull();
+  });
+
+  it('draws the shared route shape', async () => {
+    await renderWithTheme(
+      card(
+        row({
+          snapshot: {
+            type: 'run',
+            distance_km: 5.21,
+            shape: [
+              [
+                [0, 500],
+                [500, 0],
+                [1000, 500],
+              ],
+            ],
+          },
+        }),
+      ),
+    );
+    expect(screen.getByLabelText('Route shape')).toBeTruthy();
+  });
+
   it('long-press opens the cheer choice', async () => {
     const onPick = jest.fn();
     await renderWithTheme(

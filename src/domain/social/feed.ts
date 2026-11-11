@@ -7,7 +7,7 @@ import { formatDayMonth } from '../format';
  */
 export const FEED_SNAPSHOT_KEYS = {
   workout: ['title', 'category', 'duration_min', 'sets', 'volume_kg'],
-  activity: ['type', 'distance_km', 'moving_min', 'pace_s_per_km', 'manual'],
+  activity: ['type', 'distance_km', 'moving_min', 'pace_s_per_km', 'manual', 'shape'],
   milestone: ['title'],
 } as const;
 
@@ -51,6 +51,25 @@ export function feedTitle(kind: string, snapshot: Record<string, unknown>): stri
 }
 
 /** The detail line: "45 min · 9 sets · 1,200 kg" or "5.21 km · 28 min · 5:23 /km". */
+/**
+ * The shared route shape of an activity (pieces of [x, y] in a 0–1000 box), or null. Anything
+ * malformed is ignored rather than drawn.
+ */
+export function feedShape(snapshot: Record<string, unknown>): number[][][] | null {
+  const s = snapshot.shape;
+  if (!Array.isArray(s)) return null;
+  const pieces = s
+    .filter(Array.isArray)
+    .map((piece: unknown[]) =>
+      piece.filter(
+        (p): p is number[] =>
+          Array.isArray(p) && p.length === 2 && p.every((n) => typeof n === 'number'),
+      ),
+    )
+    .filter((piece) => piece.length > 1);
+  return pieces.length ? pieces : null;
+}
+
 export function feedDetail(kind: string, snapshot: Record<string, unknown>): string {
   const parts: string[] = [];
   if (kind === 'workout') {

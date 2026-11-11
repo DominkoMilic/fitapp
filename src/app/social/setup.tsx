@@ -31,7 +31,7 @@ export const NEVER_SHARED = [
   'Weight, body measurements and goal numbers',
   'Check-ins, pain, injuries and health',
   'Notes',
-  'GPS routes and where you start or finish',
+  'Maps and locations of your routes, where you start or finish',
   'The time of day you train (only the date is shown)',
 ];
 
@@ -215,7 +215,7 @@ export default function SocialSetupScreen() {
           ) : null}
           <Toggle
             label="Walks, runs and rides"
-            description="Type, distance, moving time and pace. Never the route."
+            description="Type, distance, moving time and pace. Never a map or location."
             value={share.activities}
             onChange={(v) => setShare((s) => ({ ...s, activities: v }))}
           />

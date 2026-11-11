@@ -1,3 +1,4 @@
+import { routeShape } from '@/domain/activity/route-shape';
 import { useQuery } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
 
@@ -74,6 +75,7 @@ export function useActivityActions() {
   return {
     /** Activity row first, then its route file (outbox order 1 → 2). */
     save: async ({ id, summary: s, track, localDate, source, notes }: SaveActivityInput) => {
+      const pieces = track?.pieces.filter((p) => p.length > 1) ?? [];
       await write({
         id: randomUUID(),
         entity: 'activities',
@@ -98,9 +100,10 @@ export function useActivityActions() {
           points_accepted: s.pointsValid,
           source,
           notes,
+          // The line only (0–1000 box, no coordinates); shared only if the user opts in.
+          route_shape: source === 'gps' ? routeShape(pieces) : null,
         },
       });
-      const pieces = track?.pieces.filter((p) => p.length > 1) ?? [];
       const route: RouteFile | null = pieces.length ? encodeRoute(pieces) : null;
       if (route && route.pieces.length) {
         await write({

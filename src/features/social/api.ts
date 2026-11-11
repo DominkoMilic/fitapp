@@ -214,6 +214,7 @@ export interface SocialSetup {
     | 'milestones_audience'
     | 'challenge_results_audience'
     | 'share_volume'
+    | 'share_route_shape'
     | 'in_leaderboards'
     | 'friend_requests_from'
     | 'notify_cheers'

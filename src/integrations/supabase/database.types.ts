@@ -23,6 +23,7 @@ export type Database = {
           points_accepted: number;
           points_total: number;
           route_deleted_at: string | null;
+          route_shape: Json | null;
           route_storage_path: string | null;
           source: string;
           started_at: string;
@@ -49,6 +50,7 @@ export type Database = {
           points_accepted?: number;
           points_total?: number;
           route_deleted_at?: string | null;
+          route_shape?: Json | null;
           route_storage_path?: string | null;
           source: string;
           started_at: string;
@@ -74,6 +76,7 @@ export type Database = {
           points_accepted?: number;
           points_total?: number;
           route_deleted_at?: string | null;
+          route_shape?: Json | null;
           route_storage_path?: string | null;
           source?: string;
           started_at?: string;
@@ -978,6 +981,7 @@ export type Database = {
           notify_comments: boolean;
           notify_flagged: boolean;
           notify_requests: boolean;
+          share_route_shape: boolean;
           share_volume: boolean;
           updated_at: string;
           user_id: string;
@@ -995,6 +999,7 @@ export type Database = {
           notify_comments?: boolean;
           notify_flagged?: boolean;
           notify_requests?: boolean;
+          share_route_shape?: boolean;
           share_volume?: boolean;
           updated_at?: string;
           user_id: string;
@@ -1011,6 +1016,7 @@ export type Database = {
           notify_comments?: boolean;
           notify_flagged?: boolean;
           notify_requests?: boolean;
+          share_route_shape?: boolean;
           share_volume?: boolean;
           updated_at?: string;
           user_id?: string;
@@ -1496,7 +1502,7 @@ export type Database = {
     };
     Functions: {
       accept_friend_request: { Args: { other: string }; Returns: string };
-      activity_snapshot: { Args: { a: Json }; Returns: Json };
+      activity_snapshot: { Args: { a: Json; with_shape: boolean }; Returns: Json };
       add_comment: { Args: { p_body: string; p_item: string }; Returns: string };
       are_friends: { Args: { a: string; b: string }; Returns: boolean };
       block_user: { Args: { other: string }; Returns: undefined };

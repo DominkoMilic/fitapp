@@ -29,7 +29,7 @@ export function parseEnv(raw: Record<string, string | undefined>): EnvResult {
     appEnv: raw.EXPO_PUBLIC_APP_ENV ?? 'development',
     supabaseUrl: raw.EXPO_PUBLIC_SUPABASE_URL ?? '',
     supabaseAnonKey: raw.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '',
-    legalVersion: raw.EXPO_PUBLIC_LEGAL_VERSION ?? '2026-11-22',
+    legalVersion: raw.EXPO_PUBLIC_LEGAL_VERSION ?? '2026-11-24',
     supportEmail: raw.EXPO_PUBLIC_SUPPORT_EMAIL || undefined,
   });
   if (result.success) return { ok: true, env: result.data };

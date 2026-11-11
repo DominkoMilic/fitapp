@@ -64,7 +64,7 @@ const AUDIENCES: readonly Audience[] = [
     kind: 'activity',
     label: 'Walks, runs and rides',
     noun: 'walks, runs and rides',
-    description: 'Distance, time and pace. Never the route.',
+    description: 'Distance, time and pace. Never a map or location.',
   },
   {
     key: 'milestones_audience',
@@ -180,6 +180,7 @@ export default function SocialSettingsScreen() {
         SocialSettings,
         | AudienceKey
         | 'share_volume'
+        | 'share_route_shape'
         | 'in_leaderboards'
         | 'friend_requests_from'
         | 'notify_cheers'
@@ -284,6 +285,14 @@ export default function SocialSettingsScreen() {
           label="Include lifted volume"
           value={value('share_volume')}
           onChange={(v) => saveSetting({ share_volume: v })}
+        />
+      ) : null}
+      {value('activities_audience') !== 'private' ? (
+        <Toggle
+          label="Share route shape"
+          description="Friends see the line of your route, never a map or where it was."
+          value={value('share_route_shape')}
+          onChange={(v) => saveSetting({ share_route_shape: v })}
         />
       ) : null}
       <Toggle

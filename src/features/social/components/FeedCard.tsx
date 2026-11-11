@@ -4,11 +4,19 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/ui';
 import { PressableScale } from '@/components/ui/PressableScale';
-import { cheerEmoji, cheerTotal, feedDetail, feedTitle, relativeDay } from '@/domain/social';
+import {
+  cheerEmoji,
+  cheerTotal,
+  feedDetail,
+  feedShape,
+  feedTitle,
+  relativeDay,
+} from '@/domain/social';
 import { radius, spacing, TOUCH_TARGET, useTheme } from '@/theme';
 
 import type { FeedRow } from '../api';
 import { Avatar } from './Avatar';
+import { RouteShape } from './RouteShape';
 
 const KIND_ICON = { workout: Dumbbell, activity: Activity, milestone: Trophy } as const;
 
@@ -36,6 +44,7 @@ export function FeedCard({
   const Icon = KIND_ICON[row.kind as keyof typeof KIND_ICON] ?? Activity;
   const title = feedTitle(row.kind, row.snapshot);
   const detail = feedDetail(row.kind, row.snapshot);
+  const shape = row.kind === 'activity' ? feedShape(row.snapshot) : null;
   const day = relativeDay(row.local_date, today);
   const total = cheerTotal(row.cheers);
   const kinds = Object.keys(row.cheers).filter((k) => (row.cheers[k] ?? 0) > 0);
@@ -77,6 +86,8 @@ export function FeedCard({
           ) : null}
         </View>
       </View>
+      {/* Shared only if the owner turned on "Share route shape": the line, never a map. */}
+      {shape ? <RouteShape shape={shape} /> : null}
     </>
   );
 

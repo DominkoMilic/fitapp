@@ -7,7 +7,7 @@ import { envResult } from '@/config/env';
 
 export type LegalDocId = 'privacy' | 'terms' | 'disclaimer' | 'licences';
 
-export const LEGAL_UPDATED = '22 November 2026';
+export const LEGAL_UPDATED = '24 November 2026';
 
 const supportEmail = envResult.ok ? envResult.env.supportEmail : undefined;
 /** How to reach the operator; the store listings always carry a support contact too. */
@@ -43,7 +43,7 @@ export const LEGAL_DOCS: Record<LegalDocId, Doc> = {
       },
       {
         heading: 'Social features (optional)',
-        body: 'Social is off until you turn it on. When you do, people can find you by your handle and see your name, handle, colour, short bio and number of friends. Your friends see only the types of activity you choose to share (all off at first), as a short summary: for a workout its name, type, duration and number of sets (and lifted volume if you choose); for a walk, run or ride its distance, moving time and pace; or a milestone’s title. Friends can cheer and comment; comments are visible to you and your friends. Comments are checked automatically against a list of words: slurs and hateful words are refused, and if a comment on your post contains swearing we may alert you so you can keep or remove it (the alert never shows the comment text, and you can turn it off). You can remove any comment on your posts or turn comments off for a post. Weight, body measurements, goals, check-ins, pain, injuries, health, notes, GPS routes and the time of day you train are never shared. When you send a friend request, block someone or report something, we store that so the feature works and to keep people safe; reports are reviewed by us within 24 hours. You can turn social off (your friends are kept) or delete your social profile (handle, friends and requests are removed) at any time in Settings → Social and privacy, and deleting your account removes all of it.',
+        body: 'Social is off until you turn it on. When you do, people can find you by your handle and see your name, handle, colour, short bio and number of friends. Your friends see only the types of activity you choose to share (all off at first), as a short summary: for a workout its name, type, duration and number of sets (and lifted volume if you choose); for a walk, run or ride its distance, moving time and pace, and, only if you turn on “Share route shape”, the line of the route drawn without a map (scaled so it can’t be placed on a map, with no coordinates); or a milestone’s title. Friends can cheer and comment; comments are visible to you and your friends. Comments are checked automatically against a list of words: slurs and hateful words are refused, and if a comment on your post contains swearing we may alert you so you can keep or remove it (the alert never shows the comment text, and you can turn it off). You can remove any comment on your posts or turn comments off for a post. Weight, body measurements, goals, check-ins, pain, injuries, health, notes, maps and locations of your routes, and the time of day you train are never shared. When you send a friend request, block someone or report something, we store that so the feature works and to keep people safe; reports are reviewed by us within 24 hours. You can turn social off (your friends are kept) or delete your social profile (handle, friends and requests are removed) at any time in Settings → Social and privacy, and deleting your account removes all of it.',
       },
       {
         heading: 'Where your data is stored and who processes it',
