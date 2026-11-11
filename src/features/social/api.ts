@@ -9,7 +9,12 @@ import {
 import { useSyncExternalStore } from 'react';
 import { z } from 'zod';
 
-import { type Relationship, type SocialErrorCode, socialErrorCode } from '@/domain/social';
+import {
+  handleFor,
+  type Relationship,
+  type SocialErrorCode,
+  socialErrorCode,
+} from '@/domain/social';
 import { envResult } from '@/config/env';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { profileKeys } from '@/features/profile/api';
@@ -200,9 +205,8 @@ export async function isHandleAvailable(handle: string): Promise<boolean> {
 // ---------------------------------------------------------------------------------------------
 
 export interface SocialSetup {
-  handle: string;
+  /** The username; ignored when the profile already exists (it can't be changed). */
   displayName: string;
-  avatarColor: string;
   settings: Pick<
     TablesUpdate<'social_settings'>,
     | 'workouts_audience'
@@ -221,22 +225,21 @@ export interface SocialSetup {
 /** Creates (or updates) the profile and settings, records the consent and switches social on. */
 export const useCompleteSocialSetup = () =>
   useSocialMutation<SocialSetup>(async (uid, s) => {
-    const profile = {
-      handle: s.handle,
-      display_name: s.displayName.trim(),
-      avatar_color: s.avatarColor,
-    };
-    // Users may not change user_id, so an existing profile is updated rather than upserted.
+    // The handle and colour are set by the database from the username; an existing profile
+    // (social turned on again) keeps its identity.
     const existing = unwrap(
       await db().from('social_profiles').select('user_id').eq('user_id', uid).maybeSingle(),
     );
-    unwrap(
-      existing
-        ? await db().from('social_profiles').update(profile).eq('user_id', uid)
-        : await db()
-            .from('social_profiles')
-            .insert({ user_id: uid, ...profile }),
-    );
+    if (!existing)
+      unwrap(
+        await db()
+          .from('social_profiles')
+          .insert({
+            user_id: uid,
+            display_name: s.displayName.trim(),
+            handle: handleFor(s.displayName),
+          }),
+      );
     unwrap(
       await db()
         .from('social_settings')
@@ -255,10 +258,8 @@ export const useCompleteSocialSetup = () =>
 
 export const useUpdateSocialProfile = () =>
   useSocialMutation<
-    Pick<
-      TablesUpdate<'social_profiles'>,
-      'handle' | 'display_name' | 'avatar_color' | 'bio' | 'discoverable'
-    >
+    // Only these can change; the username, handle and colour are fixed (spec 33.8).
+    Pick<TablesUpdate<'social_profiles'>, 'bio' | 'discoverable'>
   >(async (uid, values) => {
     unwrap(await db().from('social_profiles').update(values).eq('user_id', uid));
   });

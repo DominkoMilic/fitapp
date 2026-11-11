@@ -1,4 +1,4 @@
-/** Avatar colours a social profile can pick (same keys as the database check). */
+/** Avatar colours, assigned from the user id (same keys and order as the database). */
 export const AVATAR_COLORS = {
   mint: '#34D399',
   sky: '#38BDF8',
@@ -12,6 +12,15 @@ export const AVATAR_COLORS = {
 
 export type AvatarColor = keyof typeof AVATAR_COLORS;
 export const AVATAR_COLOR_KEYS = Object.keys(AVATAR_COLORS) as AvatarColor[];
+
+/**
+ * The colour the database assigns to a user (social_avatar_color): the first 32 bits of the id
+ * pick one of the 8 colours. Used to preview the avatar before the profile exists.
+ */
+export function avatarColorFor(userId: string): AvatarColor {
+  const n = parseInt(userId.replace(/-/g, '').slice(0, 8), 16);
+  return AVATAR_COLOR_KEYS[Number.isFinite(n) ? n % AVATAR_COLOR_KEYS.length : 0] ?? 'slate';
+}
 
 export function avatarHex(key: string): string {
   return AVATAR_COLORS[key as AvatarColor] ?? AVATAR_COLORS.slate;

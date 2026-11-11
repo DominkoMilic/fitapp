@@ -10,24 +10,12 @@ import {
   ListItem,
   Screen,
   SectionHeader,
+  FormLock,
   Text,
   TextField,
   Toggle,
 } from '@/components/ui';
-import { PressableScale } from '@/components/ui/PressableScale';
-import {
-  AVATAR_COLOR_KEYS,
-  avatarHex,
-  BIO_MAX,
-  DISPLAY_NAME_MAX,
-  HANDLE_ERROR_TEXT,
-  HANDLE_MAX,
-  normaliseHandle,
-  SOCIAL_ERRORS,
-  validateBio,
-  validateDisplayName,
-  validateHandle,
-} from '@/domain/social';
+import { BIO_MAX, SOCIAL_ERRORS, validateBio } from '@/domain/social';
 import { useFeatures } from '@/features/profile/features';
 import {
   errorCode,
@@ -45,7 +33,7 @@ import {
 } from '@/features/social/api';
 import { Avatar } from '@/features/social/components/Avatar';
 import { OfflineNote } from '@/features/social/components/OfflineNote';
-import { spacing, TOUCH_TARGET, useTheme } from '@/theme';
+import { spacing } from '@/theme';
 
 type AudienceKey =
   | 'workouts_audience'
@@ -96,7 +84,6 @@ const AUDIENCES: readonly Audience[] = [
 
 /** Settings → Social and privacy (spec 33.5). */
 export default function SocialSettingsScreen() {
-  const { colors } = useTheme();
   const me = useMySocialProfile();
   const settings = useSocialSettings();
   const features = useFeatures();
@@ -108,11 +95,8 @@ export default function SocialSettingsScreen() {
   const showToast = useToast((s) => s.show);
 
   const [editing, setEditing] = useState(false);
-  const [name, setName] = useState('');
-  const [handle, setHandle] = useState('');
   const [bio, setBio] = useState('');
-  const [color, setColor] = useState('mint');
-  const [errors, setErrors] = useState<{ name?: string; handle?: string; bio?: string }>({});
+  const [errors, setErrors] = useState<{ bio?: string }>({});
   const [confirm, setConfirm] = useState<'off' | 'delete' | null>(null);
   // After switching a type off: offer to hide its earlier posts; after switching it on: offer to
   // show again the ones hidden that way.
@@ -157,28 +141,14 @@ export default function SocialSettingsScreen() {
     );
 
   const startEdit = () => {
-    setName(p.display_name);
-    setHandle(p.handle);
     setBio(p.bio ?? '');
-    setColor(p.avatar_color);
     setErrors({});
     setEditing(true);
   };
 
   const saveProfile = () => {
-    const n = validateDisplayName(name);
-    const h = validateHandle(handle);
     const b = validateBio(bio);
     const next = {
-      name:
-        n === 'required'
-          ? 'Enter a name.'
-          : n === 'too_long'
-            ? `At most ${DISPLAY_NAME_MAX} characters.`
-            : n
-              ? 'That name is not allowed.'
-              : undefined,
-      handle: h ? HANDLE_ERROR_TEXT[h] : undefined,
       bio:
         b === 'too_long'
           ? `At most ${BIO_MAX} characters.`
@@ -187,14 +157,9 @@ export default function SocialSettingsScreen() {
             : undefined,
     };
     setErrors(next);
-    if (next.name || next.handle || next.bio) return;
+    if (next.bio) return;
     updateProfile.mutate(
-      {
-        display_name: name.trim(),
-        handle: normaliseHandle(handle),
-        bio: bio.trim() || null,
-        avatar_color: color,
-      },
+      { bio: bio.trim() || null },
       {
         onSuccess: () => {
           setEditing(false);
@@ -202,8 +167,7 @@ export default function SocialSettingsScreen() {
         },
         onError: (e) => {
           const code = errorCode(e);
-          if (code === 'handle_taken' || code === 'handle_reserved')
-            setErrors({ handle: SOCIAL_ERRORS[code] });
+          if (code === 'not_allowed') setErrors({ bio: SOCIAL_ERRORS[code] });
           else showToast(SOCIAL_ERRORS[code]);
         },
       },
@@ -234,57 +198,31 @@ export default function SocialSettingsScreen() {
       {!online ? <OfflineNote /> : null}
 
       <SectionHeader title="Your social profile" />
+      {/* The username, handle and colour are fixed (spec 33.8); only the bio can change. */}
+      <View style={styles.me}>
+        <Avatar name={p.display_name} color={p.avatar_color} size={56} />
+        <View style={styles.flex}>
+          <Text variant="title">{p.display_name}</Text>
+          <Text variant="small" color="textSecondary">
+            @{p.handle}
+          </Text>
+        </View>
+      </View>
       {editing ? (
         <>
-          <View style={styles.center}>
-            <Avatar name={name || '?'} color={color} size={64} />
-          </View>
-          <TextField
-            label="Name"
-            value={name}
-            onChangeText={setName}
-            maxLength={DISPLAY_NAME_MAX}
-            error={errors.name}
-          />
-          <TextField
-            label="Handle"
-            value={handle}
-            onChangeText={(v) => setHandle(v.replace(/\s/g, '').toLowerCase())}
-            maxLength={HANDLE_MAX + 1}
-            autoCapitalize="none"
-            autoCorrect={false}
-            error={errors.handle}
-            hint="Changing it breaks invite links you already sent."
-          />
-          <TextField
-            label="Bio (optional)"
-            value={bio}
-            onChangeText={setBio}
-            maxLength={BIO_MAX}
-            multiline
-            error={errors.bio}
-            hint={`${bio.length}/${BIO_MAX}`}
-          />
-          <View style={styles.colors} accessibilityRole="radiogroup">
-            {AVATAR_COLOR_KEYS.map((k) => (
-              <PressableScale
-                key={k}
-                accessibilityRole="radio"
-                accessibilityLabel={`Colour ${k}`}
-                accessibilityState={{ selected: color === k }}
-                onPress={() => setColor(k)}
-                style={[
-                  styles.swatch,
-                  {
-                    backgroundColor: avatarHex(k),
-                    borderColor: color === k ? colors.textPrimary : 'transparent',
-                  },
-                ]}
-              />
-            ))}
-          </View>
+          <FormLock locked={updateProfile.isPending}>
+            <TextField
+              label="Bio (optional)"
+              value={bio}
+              onChangeText={setBio}
+              maxLength={BIO_MAX}
+              multiline
+              error={errors.bio}
+              hint={`${bio.length}/${BIO_MAX}`}
+            />
+          </FormLock>
           <Button
-            title="Save profile"
+            title="Save bio"
             loading={updateProfile.isPending}
             disabled={!online}
             onPress={saveProfile}
@@ -293,19 +231,10 @@ export default function SocialSettingsScreen() {
         </>
       ) : (
         <>
-          <View style={styles.me}>
-            <Avatar name={p.display_name} color={p.avatar_color} size={56} />
-            <View style={styles.flex}>
-              <Text variant="title">{p.display_name}</Text>
-              <Text variant="small" color="textSecondary">
-                @{p.handle}
-              </Text>
-            </View>
-          </View>
           {p.bio ? <Text variant="body">{p.bio}</Text> : null}
           <ListItem
-            title="Edit profile"
-            subtitle="Name, handle, bio and colour"
+            title={p.bio ? 'Edit bio' : 'Add a bio'}
+            subtitle="Your username and colour can’t be changed."
             onPress={startEdit}
           />
         </>
@@ -492,14 +421,6 @@ export default function SocialSettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  center: { alignItems: 'center' },
   me: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   flex: { flex: 1 },
-  colors: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  swatch: {
-    width: TOUCH_TARGET,
-    height: TOUCH_TARGET,
-    borderRadius: TOUCH_TARGET / 2,
-    borderWidth: 3,
-  },
 });

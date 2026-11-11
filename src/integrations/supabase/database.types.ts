@@ -1631,6 +1631,7 @@ export type Database = {
       set_cheer: { Args: { p_item: string; p_kind: string }; Returns: undefined };
       show_my_posts: { Args: { p_kind: string }; Returns: number };
       social_active: { Args: { u: string }; Returns: boolean };
+      social_avatar_color: { Args: { uid: string }; Returns: string };
       social_caller: { Args: { active: boolean }; Returns: string };
       social_friend_count: { Args: { u: string }; Returns: number };
       social_handle_available: { Args: { p_handle: string }; Returns: boolean };

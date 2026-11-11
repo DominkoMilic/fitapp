@@ -6,14 +6,16 @@ import {
   RESERVED_HANDLES,
   groupFriendships,
   initials,
+  avatarColorFor,
   avatarHex,
   normaliseHandle,
   primaryAction,
   socialErrorCode,
-  suggestHandle,
+  suggestSocialName,
+  handleFor,
+  validateSocialName,
   textAllowed,
   validateBio,
-  validateDisplayName,
   validateHandle,
   type FriendRow,
 } from '@/domain/social';
@@ -71,19 +73,33 @@ describe('handles', () => {
     expect(validateHandle(h)).toBe(err);
   });
 
-  it('suggests a handle from the display name', () => {
-    expect(suggestHandle('Ana Marić')).toBe('ana.maric');
-    expect(suggestHandle('Đuro  Đaković')).toBe('duro.dakovic');
-    expect(suggestHandle('Jo')).toBe('');
-    expect(suggestHandle('Admin')).toBe('');
-    expect(suggestHandle('A very long name indeed here').length).toBeLessThanOrEqual(20);
+  it.each([
+    ['Dominko', null],
+    ['DoMInKo_99', null],
+    ['Do Minko', 'characters'],
+    ['Marić', 'characters'],
+    ['Jo', 'too_short'],
+    ['A'.repeat(21), 'too_long'],
+    ['ADMIN', 'reserved'],
+    ['Shit', 'not_allowed'],
+  ])('validateSocialName(%p) → %p', (n, err) => {
+    expect(validateSocialName(n)).toBe(err);
   });
 
-  it('validates names and bios', () => {
-    expect(validateDisplayName('  ')).toBe('required');
-    expect(validateDisplayName('x'.repeat(41))).toBe('too_long');
-    expect(validateDisplayName('Shit')).toBe('not_allowed');
-    expect(validateDisplayName('Ana')).toBeNull();
+  it('derives the handle from the username, so names are unique regardless of case', () => {
+    expect(handleFor('Dominko')).toBe('dominko');
+    expect(handleFor('DoMInKo')).toBe(handleFor('dominko'));
+  });
+
+  it('suggests a username from the profile name', () => {
+    expect(suggestSocialName('Ana Marić')).toBe('AnaMaric');
+    expect(suggestSocialName('Đuro  Đaković')).toBe('DuroDakovic');
+    expect(suggestSocialName('Jo')).toBe('');
+    expect(suggestSocialName('Admin')).toBe('');
+    expect(suggestSocialName('A very long name indeed here').length).toBeLessThanOrEqual(20);
+  });
+
+  it('validates bios', () => {
     expect(validateBio('x'.repeat(141))).toBe('too_long');
     expect(validateBio('Running and futsal')).toBeNull();
   });
@@ -134,5 +150,11 @@ describe('avatars', () => {
   it('falls back to slate for unknown colours', () => {
     expect(avatarHex('mint')).toBe('#34D399');
     expect(avatarHex('nope')).toBe('#94A3B8');
+  });
+
+  it('assigns the same colour as the database (first 32 bits of the id)', () => {
+    expect(avatarColorFor('00000003-0000-0000-0000-000000000000')).toBe('rose');
+    expect(avatarColorFor('00000008-0000-0000-0000-000000000000')).toBe('mint');
+    expect(avatarColorFor('ffffffff-0000-0000-0000-000000000000')).toBe('slate');
   });
 });

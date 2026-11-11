@@ -36,6 +36,9 @@ jest.mock('@/navigation/back', () => ({ goBack: jest.fn() }));
 jest.mock('@/features/profile/api', () => ({
   useProfile: () => ({ data: { display_name: 'Ana Marić' } }),
 }));
+jest.mock('@/features/auth/AuthProvider', () => ({
+  useAuth: () => ({ session: { user: { id: '00000003-0000-0000-0000-000000000000' } } }),
+}));
 jest.mock('@/features/social/api', () => ({
   errorCode: () => 'unknown',
   isHandleAvailable: () => Promise.resolve(mockAvailable),
@@ -73,9 +76,13 @@ describe('social setup', () => {
     mockMe = null;
   });
 
-  it('suggests a handle, shares nothing by default, and records only what was chosen', async () => {
+  it('suggests a username, shares nothing by default, and records only what was chosen', async () => {
     await renderWithTheme(<SocialSetupScreen />);
-    expect(screen.getByDisplayValue('ana.maric')).toBeTruthy();
+    // One username without spaces; the handle is its lowercase form, the colour is assigned.
+    expect(screen.getByDisplayValue('AnaMaric')).toBeTruthy();
+    expect(screen.getByText('@anamaric')).toBeTruthy();
+    expect(screen.queryByLabelText(/^Handle/)).toBeNull();
+    expect(screen.queryByRole('radio', { name: /^Colour/ })).toBeNull();
     await press('Next');
     await screen.findByText('What friends see');
 
@@ -94,7 +101,7 @@ describe('social setup', () => {
     await press('Turn on social');
 
     const setup = mockComplete.mock.calls[0]![0] as SocialSetup;
-    expect(setup.handle).toBe('ana.maric');
+    expect(setup.displayName).toBe('AnaMaric');
     expect(setup.settings).toEqual({
       workouts_audience: 'private',
       activities_audience: 'friends',
@@ -106,20 +113,22 @@ describe('social setup', () => {
     });
   });
 
-  it('explains handle problems before going on', async () => {
+  it('explains username problems before going on', async () => {
     await renderWithTheme(<SocialSetupScreen />);
-    await fireEvent.changeText(screen.getByLabelText(/^Handle/), 'admin');
+    await fireEvent.changeText(screen.getByLabelText(/^Username/), 'Admin');
     await press('Next');
-    expect(screen.getByText('That handle is reserved. Try another.')).toBeTruthy();
+    expect(screen.getByText('That name is reserved. Try another.')).toBeTruthy();
+
+    // Spaces can't be typed at all.
+    await fireEvent.changeText(screen.getByLabelText(/^Username/), 'Do Minko');
+    expect(screen.getByDisplayValue('DoMinko')).toBeTruthy();
 
     mockAvailable = false;
-    await fireEvent.changeText(screen.getByLabelText(/^Handle/), 'taken_one');
+    await fireEvent.changeText(screen.getByLabelText(/^Username/), 'Taken_One');
     await act(async () => {
       fireEvent.press(screen.getByRole('button', { name: 'Next' }));
     });
-    await waitFor(() =>
-      expect(screen.getByText('That handle is taken. Try another.')).toBeTruthy(),
-    );
+    await waitFor(() => expect(screen.getByText('That name is taken. Try another.')).toBeTruthy());
     expect(screen.queryByText('What friends see')).toBeNull();
   });
 });

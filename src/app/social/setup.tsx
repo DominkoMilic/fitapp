@@ -1,23 +1,18 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { Check } from 'lucide-react-native';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { Button, Card, Screen, Text, TextField, Toggle } from '@/components/ui';
-import { PressableScale } from '@/components/ui/PressableScale';
 import {
-  AVATAR_COLOR_KEYS,
-  type AvatarColor,
-  avatarHex,
-  DISPLAY_NAME_MAX,
-  HANDLE_ERROR_TEXT,
+  avatarColorFor,
   HANDLE_MAX,
-  normaliseHandle,
+  handleFor,
   SOCIAL_ERRORS,
-  suggestHandle,
-  validateDisplayName,
-  validateHandle,
+  SOCIAL_NAME_ERROR_TEXT,
+  suggestSocialName,
+  validateSocialName,
 } from '@/domain/social';
+import { useAuth } from '@/features/auth/AuthProvider';
 import { useProfile } from '@/features/profile/api';
 import { Avatar } from '@/features/social/components/Avatar';
 import { OfflineNote } from '@/features/social/components/OfflineNote';
@@ -29,7 +24,7 @@ import {
   useMySocialProfile,
   useOnline,
 } from '@/features/social/api';
-import { spacing, TOUCH_TARGET, useTheme } from '@/theme';
+import { spacing } from '@/theme';
 
 /** What can never be shared, shown before anything is chosen (spec 3.4). */
 export const NEVER_SHARED = [
@@ -40,12 +35,6 @@ export const NEVER_SHARED = [
   'The time of day you train (only the date is shown)',
 ];
 
-const NAME_ERRORS = {
-  required: 'Enter a name.',
-  too_long: `At most ${DISPLAY_NAME_MAX} characters.`,
-  not_allowed: 'That name is not allowed. Try another.',
-} as const;
-
 type ShareKey = 'workouts' | 'activities' | 'milestones' | 'challenges';
 
 /**
@@ -53,23 +42,20 @@ type ShareKey = 'workouts' | 'activities' | 'milestones' | 'challenges';
  * and friend requests. Finishing records the social consent and opens the Social tab.
  */
 export default function SocialSetupScreen() {
-  const { colors } = useTheme();
   const { then } = useLocalSearchParams<{ then?: string }>();
   const own = useProfile().data;
+  const userId = useAuth().session?.user.id ?? '';
   const existing = useMySocialProfile().data;
   const online = useOnline();
   const complete = useCompleteSocialSetup();
 
   const [step, setStep] = useState(0);
-  const [name, setName] = useState(existing?.display_name ?? own?.display_name ?? '');
-  const [handle, setHandle] = useState(
-    existing?.handle ?? suggestHandle(existing?.display_name ?? own?.display_name ?? ''),
+  // The username is chosen once. When social is turned on again, the existing identity is kept.
+  const [name, setName] = useState(
+    existing?.display_name ?? suggestSocialName(own?.display_name ?? ''),
   );
-  const [color, setColor] = useState<AvatarColor>(
-    (existing?.avatar_color as AvatarColor | undefined) ?? 'mint',
-  );
+  const color = existing?.avatar_color ?? avatarColorFor(userId);
   const [nameError, setNameError] = useState<string>();
-  const [handleError, setHandleError] = useState<string>();
   const [checking, setChecking] = useState(false);
   const [share, setShare] = useState<Record<ShareKey, boolean>>({
     workouts: false,
@@ -82,20 +68,19 @@ export default function SocialSetupScreen() {
   const [requests, setRequests] = useState(true);
 
   const nextFromIdentity = async () => {
-    const n = validateDisplayName(name);
-    const h = validateHandle(handle);
-    setNameError(n ? NAME_ERRORS[n] : undefined);
-    setHandleError(h ? HANDLE_ERROR_TEXT[h] : undefined);
-    if (n || h) return;
+    if (existing) return setStep(1);
+    const n = validateSocialName(name);
+    setNameError(n ? SOCIAL_NAME_ERROR_TEXT[n] : undefined);
+    if (n) return;
     setChecking(true);
     try {
-      if (!(await isHandleAvailable(normaliseHandle(handle)))) {
-        setHandleError(SOCIAL_ERRORS.handle_taken);
+      if (!(await isHandleAvailable(handleFor(name)))) {
+        setNameError(SOCIAL_ERRORS.handle_taken);
         return;
       }
       setStep(1);
     } catch (e) {
-      setHandleError(SOCIAL_ERRORS[errorCode(e)]);
+      setNameError(SOCIAL_ERRORS[errorCode(e)]);
     } finally {
       setChecking(false);
     }
@@ -104,9 +89,7 @@ export default function SocialSetupScreen() {
   const finish = () => {
     const audience = (on: boolean) => (on ? 'friends' : 'private');
     const setup: SocialSetup = {
-      handle: normaliseHandle(handle),
-      displayName: name,
-      avatarColor: color,
+      displayName: name.trim(),
       settings: {
         workouts_audience: audience(share.workouts),
         activities_audience: audience(share.activities),
@@ -125,7 +108,7 @@ export default function SocialSetupScreen() {
       onError: (e) => {
         const code = errorCode(e);
         if (code === 'handle_taken' || code === 'handle_reserved' || code === 'not_allowed') {
-          setHandleError(SOCIAL_ERRORS[code]);
+          setNameError(SOCIAL_ERRORS[code]);
           setStep(0);
         }
       },
@@ -174,59 +157,36 @@ export default function SocialSetupScreen() {
             How friends see you
           </Text>
           <Text variant="body" color="textSecondary">
-            Friends find you by your handle. Only your name, handle and colour are visible to them.
+            Pick your username. Friends find you by it, and only your username and colour are
+            visible to them.
           </Text>
           <View style={styles.preview}>
-            <Avatar name={name || '?'} color={color} size={64} />
+            <Avatar name={name.trim() || '?'} color={color} size={64} />
+            <Text variant="title" accessibilityLiveRegion="polite">
+              {name.trim() ? `@${handleFor(name)}` : '@'}
+            </Text>
           </View>
-          <TextField
-            label="Name"
-            value={name}
-            onChangeText={(v) => {
-              setName(v);
-              setNameError(undefined);
-            }}
-            maxLength={DISPLAY_NAME_MAX}
-            autoComplete="name"
-            error={nameError}
-          />
-          <TextField
-            label="Handle"
-            value={handle}
-            onChangeText={(v) => {
-              setHandle(v.replace(/\s/g, '').toLowerCase());
-              setHandleError(undefined);
-            }}
-            maxLength={HANDLE_MAX + 1}
-            autoCapitalize="none"
-            autoCorrect={false}
-            hint="3–20 characters: letters, numbers, _ and ."
-            error={handleError}
-            onSubmitEditing={() => void nextFromIdentity()}
-          />
-          <Text variant="small" color="textSecondary">
-            Colour
-          </Text>
-          <View style={styles.colors} accessibilityRole="radiogroup">
-            {AVATAR_COLOR_KEYS.map((k) => (
-              <PressableScale
-                key={k}
-                accessibilityRole="radio"
-                accessibilityLabel={`Colour ${k}`}
-                accessibilityState={{ selected: color === k }}
-                onPress={() => setColor(k)}
-                style={[
-                  styles.swatch,
-                  {
-                    backgroundColor: avatarHex(k),
-                    borderColor: color === k ? colors.textPrimary : 'transparent',
-                  },
-                ]}
-              >
-                {color === k ? <Check size={18} color="#0B0D10" /> : null}
-              </PressableScale>
-            ))}
-          </View>
+          {existing ? (
+            <Text variant="body" color="textSecondary">
+              You are {existing.display_name}. Your username stays the same.
+            </Text>
+          ) : (
+            <TextField
+              label="Username"
+              value={name}
+              onChangeText={(v) => {
+                setName(v.replace(/\s/g, ''));
+                setNameError(undefined);
+              }}
+              maxLength={HANDLE_MAX}
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="username"
+              hint="3–20 letters, numbers, _ or . without spaces. It can’t be changed later."
+              error={nameError}
+              onSubmitEditing={() => void nextFromIdentity()}
+            />
+          )}
         </>
       ) : null}
 
@@ -329,14 +289,5 @@ export default function SocialSetupScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   footerRow: { flexDirection: 'row', gap: spacing.sm, alignItems: 'center' },
-  preview: { alignItems: 'center', paddingVertical: spacing.xs },
-  colors: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  swatch: {
-    width: TOUCH_TARGET,
-    height: TOUCH_TARGET,
-    borderRadius: TOUCH_TARGET / 2,
-    borderWidth: 3,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  preview: { alignItems: 'center', paddingVertical: spacing.xs, gap: spacing.xs },
 });

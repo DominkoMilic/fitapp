@@ -1,6 +1,6 @@
 -- Social profiles: handle rules, word filter, who can see a profile, search (spec 33, Phase 8A).
 begin;
-select plan(24);
+select plan(30);
 
 select tests.social_user('eeeeeeee-0000-0000-0000-0000000000a1', 'alice');
 select tests.social_user('eeeeeeee-0000-0000-0000-0000000000a2', 'bob');
@@ -13,34 +13,54 @@ insert into public.blocks (blocker, blocked)
   values ('eeeeeeee-0000-0000-0000-0000000000a6', 'eeeeeeee-0000-0000-0000-0000000000a2');
 select tests.create_user('eeeeeeee-0000-0000-0000-0000000000f1', 'new@example.com');
 
--- Creating a profile
+-- Creating a profile: one username; the handle and colour come from it
 select tests.authenticate_as('eeeeeeee-0000-0000-0000-0000000000f1');
-select throws_ok($$ insert into public.social_profiles (user_id, handle, display_name)
-                    values ('eeeeeeee-0000-0000-0000-0000000000f1', 'support', 'Help') $$,
-  'P0001', 'handle_reserved', 'reserved handles are refused');
-select throws_ok($$ insert into public.social_profiles (user_id, handle, display_name)
-                    values ('eeeeeeee-0000-0000-0000-0000000000f1', 'sh1tlord', 'Me') $$,
+select throws_ok($$ insert into public.social_profiles (user_id, display_name)
+                    values ('eeeeeeee-0000-0000-0000-0000000000f1', 'Support') $$,
+  'P0001', 'handle_reserved', 'reserved names are refused, in any case');
+select throws_ok($$ insert into public.social_profiles (user_id, display_name)
+                    values ('eeeeeeee-0000-0000-0000-0000000000f1', 'sh1tlord') $$,
   'P0001', 'not_allowed', 'blocked words are refused, also with look-alike characters');
-select throws_ok($$ insert into public.social_profiles (user_id, handle, display_name)
-                    values ('eeeeeeee-0000-0000-0000-0000000000f1', 'newbie', 'Fuck off') $$,
-  'P0001', 'not_allowed', 'the display name is filtered too');
-select throws_ok($$ insert into public.social_profiles (user_id, handle, display_name)
-                    values ('eeeeeeee-0000-0000-0000-0000000000f1', 'no spaces!', 'Me') $$,
-  '23514', null, 'handles use only a-z, 0-9, _ and .');
-select throws_ok($$ insert into public.social_profiles (user_id, handle, display_name)
-                    values ('eeeeeeee-0000-0000-0000-0000000000a2', 'imposter', 'Bob') $$,
+select throws_ok($$ insert into public.social_profiles (user_id, display_name)
+                    values ('eeeeeeee-0000-0000-0000-0000000000f1', 'New Person') $$,
+  '23514', null, 'usernames have no spaces');
+select throws_ok($$ insert into public.social_profiles (user_id, display_name)
+                    values ('eeeeeeee-0000-0000-0000-0000000000f1', 'Ana!') $$,
+  '23514', null, 'usernames use only letters, digits, _ and .');
+select throws_ok($$ insert into public.social_profiles (user_id, display_name)
+                    values ('eeeeeeee-0000-0000-0000-0000000000a2', 'Imposter') $$,
   '42501', null, 'nobody can create a profile for someone else');
-select throws_ok($$ insert into public.social_profiles (user_id, handle, display_name)
-                    values ('eeeeeeee-0000-0000-0000-0000000000f1', 'alice', 'Alice 2') $$,
-  '23505', null, 'handles are unique');
+select throws_ok($$ insert into public.social_profiles (user_id, display_name)
+                    values ('eeeeeeee-0000-0000-0000-0000000000f1', 'ALICE') $$,
+  '23505', null, 'usernames are unique regardless of case (ALICE = alice)');
+select throws_ok($$ insert into public.social_profiles (user_id, display_name, avatar_color)
+                    values ('eeeeeeee-0000-0000-0000-0000000000f1', 'Newbie', 'rose') $$,
+  '42501', null, 'the colour cannot be chosen');
 select lives_ok($$ insert into public.social_profiles (user_id, handle, display_name)
-                   values ('eeeeeeee-0000-0000-0000-0000000000f1', 'Newbie', 'New Person') $$,
+                   values ('eeeeeeee-0000-0000-0000-0000000000f1', 'something_else', 'NewBie') $$,
   'a user creates their own profile');
-select is((select handle from public.social_profiles where user_id = 'eeeeeeee-0000-0000-0000-0000000000f1'),
-  'newbie', 'handles are stored lower-case');
+select is((select handle || ' ' || display_name || ' ' || avatar_color
+           from public.social_profiles where user_id = 'eeeeeeee-0000-0000-0000-0000000000f1'),
+  'newbie NewBie ' || public.social_avatar_color('eeeeeeee-0000-0000-0000-0000000000f1'),
+  'the handle is the lowercase username and the colour is assigned');
+select throws_ok($$ update public.social_profiles set display_name = 'NEWBIE'
+                    where user_id = 'eeeeeeee-0000-0000-0000-0000000000f1' $$,
+  '42501', null, 'the username cannot be changed');
+select throws_ok($$ update public.social_profiles set avatar_color = 'rose'
+                    where user_id = 'eeeeeeee-0000-0000-0000-0000000000f1' $$,
+  '42501', null, 'the colour cannot be changed');
+select lives_ok($$ update public.social_profiles set bio = 'Runner'
+                   where user_id = 'eeeeeeee-0000-0000-0000-0000000000f1' $$,
+  'the bio can still be changed');
 select throws_ok($$ update public.social_profiles set banned_at = null
                     where user_id = 'eeeeeeee-0000-0000-0000-0000000000f1' $$,
   '42501', null, 'users cannot change their ban');
+select tests.clear_authentication();
+select throws_ok($$ update public.social_profiles set handle = 'renamed'
+                    where user_id = 'eeeeeeee-0000-0000-0000-0000000000f1' $$,
+  'P0001', 'identity_locked', 'not even the server changes an identity by accident');
+select is(public.social_avatar_color('00000003-0000-0000-0000-000000000000'), 'rose',
+  'the colour comes from the first 32 bits of the id (3 % 8 → rose)');
 
 -- Seeing profiles and settings
 select tests.authenticate_as('eeeeeeee-0000-0000-0000-0000000000a2');
