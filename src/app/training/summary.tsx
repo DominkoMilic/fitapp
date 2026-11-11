@@ -8,12 +8,7 @@ import { Button, Screen, SegmentedControl, StatTile, Text } from '@/components/u
 import { localDateInTimezone } from '@/domain/calculations/dates';
 import { summarize } from '@/domain/training/active-workout';
 import { estimateCalories, sessionMet } from '@/domain/training/session';
-import {
-  clockText,
-  type DurationMode,
-  manualTiming,
-  TIMING_ERROR_TEXT,
-} from '@/domain/training/workout-log';
+import { clockText, type DurationMode, manualTiming } from '@/domain/training/workout-log';
 import { formatClock } from '@/hooks/useNow';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { minuteInTimezone } from '@/features/coach/time';
@@ -186,7 +181,7 @@ export default function WorkoutSummary() {
           value={customValue}
           onChange={setCustom}
           today={today}
-          error={customTiming && !customTiming.ok ? TIMING_ERROR_TEXT[customTiming.error] : null}
+          error={customTiming && !customTiming.ok ? customTiming.error : null}
         />
       ) : doubtful && mode === null ? (
         <Text variant="caption" color="textSecondary">

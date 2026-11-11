@@ -1,8 +1,10 @@
 import { StyleSheet, View } from 'react-native';
 
-import { NumberField, SegmentedControl, Text, TextField } from '@/components/ui';
+import { TimeField } from '@/components/forms/TimeField';
+import { NumberField, SegmentedControl, Text } from '@/components/ui';
 import { addDays, type IsoDate } from '@/domain/calculations/dates';
 import { formatShortDate } from '@/domain/format';
+import { TIMING_ERROR_TEXT, type TimingError } from '@/domain/training/workout-log';
 import { DateField } from '@/features/onboarding/components/DateField';
 import { spacing } from '@/theme';
 
@@ -27,10 +29,13 @@ export function TimingFields({
   value: TimingValue;
   onChange: (v: TimingValue) => void;
   today: IsoDate;
-  error?: string | null;
+  /** Shown on the field it belongs to. */
+  error?: TimingError | null;
   showDate?: boolean;
 }) {
   const yesterday = addDays(today, -1);
+  const text = error ? TIMING_ERROR_TEXT[error] : undefined;
+  const on = (...codes: TimingError[]) => (error && codes.includes(error) ? text : undefined);
   const day = value.date === today ? 'today' : value.date === yesterday ? 'yesterday' : 'earlier';
   return (
     <View style={styles.stack}>
@@ -59,19 +64,18 @@ export function TimingFields({
               max={today}
               value={value.date}
               onChange={(iso) => iso && onChange({ ...value, date: iso })}
+              error={on('date', 'too_old')}
             />
           ) : null}
         </>
       ) : null}
       <View style={styles.row}>
         <View style={styles.flex}>
-          <TextField
+          <TimeField
             label="Start time"
-            placeholder="18:30"
-            value={value.startTime}
-            onChangeText={(startTime) => onChange({ ...value, startTime })}
-            keyboardType="numbers-and-punctuation"
-            maxLength={5}
+            value={value.startTime || null}
+            onChange={(startTime) => onChange({ ...value, startTime })}
+            error={on('time', 'future')}
           />
         </View>
         <View style={styles.flex}>
@@ -82,14 +86,16 @@ export function TimingFields({
             precision={0}
             value={value.durationMinutes}
             onChangeValue={(durationMinutes) => onChange({ ...value, durationMinutes })}
+            error={on('duration')}
           />
         </View>
       </View>
-      {error ? (
+      {/* A date problem with no date field on screen is shown here instead. */}
+      {on('date', 'too_old') && day !== 'earlier' ? (
         <Text variant="small" color="danger" accessibilityRole="alert">
-          {error}
+          {text}
         </Text>
-      ) : showDate ? (
+      ) : showDate && !on('date', 'too_old') ? (
         <Text variant="caption" color="textSecondary">
           {formatShortDate(value.date)}
         </Text>

@@ -1,3 +1,4 @@
+import { TimeField } from '@/components/forms/TimeField';
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 
@@ -42,7 +43,7 @@ function SeriesForm({ e }: { e: RecurringEvent }) {
     setError(null);
     const ok = fields.show({
       ...(!title.trim() ? { title: 'Enter a name' } : {}),
-      ...(!/^([01]\d|2[0-3]):[0-5]\d$/.test(time) ? { time: 'Use HH:MM, e.g. 18:30' } : {}),
+      ...(!/^([01]\d|2[0-3]):[0-5]\d$/.test(time) ? { time: 'Pick a start time.' } : {}),
       ...(!duration || duration < 5 || duration > 300
         ? { duration: 'Duration must be 5–300 minutes' }
         : {}),
@@ -88,16 +89,14 @@ function SeriesForm({ e }: { e: RecurringEvent }) {
         selected={[String(weekday) as (typeof WEEKDAYS)[number]['value']]}
         onToggle={(v) => setWeekday(Number(v))}
       />
-      <TextField
-        label="Start time (HH:MM)"
+      <TimeField
+        label="Start time"
         value={time}
-        onChangeText={(t) => {
+        onChange={(t) => {
           setTime(t);
           fields.clear('time');
         }}
         error={fields.errors.time}
-        maxLength={5}
-        keyboardType="numbers-and-punctuation"
       />
       <NumberField
         label="Duration"

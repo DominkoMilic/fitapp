@@ -8,13 +8,7 @@ import { localDateInTimezone } from '@/domain/calculations/dates';
 import { SPORT_BY_KEY } from '@/domain/sports/catalogue';
 import { type ActiveWorkout, createActiveWorkout } from '@/domain/training/active-workout';
 import { TEMPLATE_BY_SLUG, TEMPLATES } from '@/domain/training/catalogue';
-import {
-  clockText,
-  emptyWorkout,
-  manualTiming,
-  markAllDone,
-  TIMING_ERROR_TEXT,
-} from '@/domain/training/workout-log';
+import { clockText, emptyWorkout, manualTiming, markAllDone } from '@/domain/training/workout-log';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { minuteInTimezone } from '@/features/coach/time';
 import { useProfile } from '@/features/profile/api';
@@ -211,11 +205,7 @@ function Form({
         value={timing}
         onChange={setTiming}
         today={today}
-        error={
-          !result.ok && (triedSave || timing.startTime.length >= 4)
-            ? TIMING_ERROR_TEXT[result.error]
-            : null
-        }
+        error={!result.ok && (triedSave || timing.startTime.length >= 4) ? result.error : null}
       />
 
       <SectionHeader title="Exercises" />

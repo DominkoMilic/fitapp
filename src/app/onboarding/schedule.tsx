@@ -1,3 +1,4 @@
+import { TimeField } from '@/components/forms/TimeField';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -227,12 +228,10 @@ export default function ScheduleStep() {
           />
           <View style={{ flexDirection: 'row', gap: spacing.xs }}>
             <View style={{ flex: 1 }}>
-              <TextField
-                label="Start time (HH:MM)"
+              <TimeField
+                label="Start time"
                 value={editing.localTime}
-                onChangeText={(localTime) => setEditing({ ...editing, localTime })}
-                keyboardType="numbers-and-punctuation"
-                maxLength={5}
+                onChange={(localTime) => setEditing({ ...editing, localTime })}
               />
             </View>
             <View style={{ flex: 1 }}>

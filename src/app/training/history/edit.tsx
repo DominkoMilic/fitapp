@@ -8,12 +8,7 @@ import { Button, Screen, SectionHeader, TextField } from '@/components/ui';
 import { localDateInTimezone } from '@/domain/calculations/dates';
 import type { ActiveWorkout } from '@/domain/training/active-workout';
 import { EXERCISE_BY_SLUG } from '@/domain/training/catalogue';
-import {
-  activeFromSaved,
-  clockText,
-  manualTiming,
-  TIMING_ERROR_TEXT,
-} from '@/domain/training/workout-log';
+import { activeFromSaved, clockText, manualTiming } from '@/domain/training/workout-log';
 import { minuteInTimezone } from '@/features/coach/time';
 import { useProfile } from '@/features/profile/api';
 import { EffortFields } from '@/features/training/EffortFields';
@@ -141,11 +136,7 @@ function Form({
         value={timing}
         onChange={setTiming}
         today={today}
-        error={
-          !result.ok && (triedSave || timing.startTime.length >= 4)
-            ? TIMING_ERROR_TEXT[result.error]
-            : null
-        }
+        error={!result.ok && (triedSave || timing.startTime.length >= 4) ? result.error : null}
       />
       <SectionHeader title="Exercises" />
       <WorkoutEditor workout={workout} onChange={setWorkout} metric={metric} addedDone />

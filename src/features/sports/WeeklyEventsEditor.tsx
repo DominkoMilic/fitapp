@@ -1,3 +1,4 @@
+import { TimeField } from '@/components/forms/TimeField';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -111,12 +112,10 @@ export function WeeklyEventsEditor({ sports }: { sports: readonly string[] }) {
             />
             <View style={styles.row}>
               <View style={styles.flex}>
-                <TextField
-                  label="Start time (HH:MM)"
+                <TimeField
+                  label="Start time"
                   value={draft.localTime}
-                  onChangeText={(localTime) => setDraft({ ...draft, localTime })}
-                  keyboardType="numbers-and-punctuation"
-                  maxLength={5}
+                  onChange={(localTime) => setDraft({ ...draft, localTime })}
                 />
               </View>
               <View style={styles.flex}>

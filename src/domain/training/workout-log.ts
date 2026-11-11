@@ -56,7 +56,7 @@ export function manualTiming(input: {
 
 export const TIMING_ERROR_TEXT: Record<TimingError, string> = {
   date: 'Choose a valid date.',
-  time: 'Enter the start time as HH:MM, e.g. 18:30.',
+  time: 'Pick a start time.',
   duration: `Duration must be between ${MANUAL_LIMITS.minMinutes} and ${MANUAL_LIMITS.maxMinutes} minutes.`,
   future: 'That would end in the future. Choose an earlier start time or a shorter duration.',
   too_old: `Workouts can be logged up to ${MANUAL_LIMITS.maxDaysBack} days back.`,

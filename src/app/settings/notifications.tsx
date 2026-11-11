@@ -2,23 +2,20 @@ import { useEffect, useState } from 'react';
 import { Linking } from 'react-native';
 
 import { Banner, ErrorState, LoadingState, useToast } from '@/components/feedback';
-import {
-  Button,
-  SectionHeader,
-  Screen,
-  SegmentedControl,
-  Text,
-  TextField,
-  Toggle,
-} from '@/components/ui';
+import { Button, SectionHeader, Screen, SegmentedControl, Text, Toggle } from '@/components/ui';
+import { TimeField } from '@/components/forms/TimeField';
 import type { NotificationPrefs } from '@/domain/notifications/planner';
 import { useSaveNotificationPrefs } from '@/features/notifications/api';
-import { isAllowedTime, readPrefs } from '@/features/notifications/prefs';
+import {
+  isAllowedTime,
+  readPrefs,
+  REMINDER_EARLIEST,
+  REMINDER_LATEST,
+} from '@/features/notifications/prefs';
 import { usePreferences } from '@/features/profile/api';
 import { notifier } from '@/services/notifications/notifier';
 import type { PermissionState } from '@/services/notifications/notifier.types';
 
-const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 export default function NotificationSettings() {
   const prefsQuery = usePreferences();
   if (prefsQuery.isPending)
@@ -45,6 +42,7 @@ function Form({ initial }: { initial: NotificationPrefs }) {
   const [prefs, setPrefs] = useState<NotificationPrefs>(initial);
   const [permission, setPermission] = useState<PermissionState>('undetermined');
   const [weighIn, setWeighIn] = useState(initial.weighIn.time);
+  const [timeError, setTimeError] = useState<string | undefined>();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -63,9 +61,10 @@ function Form({ initial }: { initial: NotificationPrefs }) {
   };
 
   const onSave = () => {
-    if (!TIME.test(weighIn)) return setError('Use a 24-hour time like 07:30.');
-    if (!isAllowedTime(weighIn))
-      return setError('Reminders can be between 06:00 and 21:55 (quiet hours are 22:00–06:00).');
+    // Checked on the field itself; a time saved before quiet hours changed can be out of range.
+    if (prefs.weighIn.on && !isAllowedTime(weighIn))
+      return setTimeError('Pick a time between 06:00 and 21:55 (quiet hours are 22:00–06:00).');
+    setTimeError(undefined);
     setError(null);
     const next: NotificationPrefs = {
       ...prefs,
@@ -129,7 +128,17 @@ function Form({ initial }: { initial: NotificationPrefs }) {
       <SectionHeader title="Daily" />
       <Toggle label="Weigh-in reminder" value={prefs.weighIn.on} onChange={toggle('weighIn')} />
       {prefs.weighIn.on ? (
-        <TextField label="Time" value={weighIn} onChangeText={setWeighIn} placeholder="07:30" />
+        <TimeField
+          label="Time"
+          value={weighIn}
+          onChange={(t) => {
+            setWeighIn(t);
+            setTimeError(undefined);
+          }}
+          min={REMINDER_EARLIEST}
+          max={REMINDER_LATEST}
+          error={timeError}
+        />
       ) : null}
 
       <SectionHeader title="Reports" />

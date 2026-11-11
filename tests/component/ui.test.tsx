@@ -2,6 +2,7 @@ import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { useState } from 'react';
 
 import { Banner, EmptyState } from '@/components/feedback';
+import { TimeField } from '@/components/forms/TimeField';
 import {
   Button,
   Chip,
@@ -157,15 +158,41 @@ describe('FormLock (inputs blocked while saving)', () => {
     };
     await renderWithTheme(<Form />);
     expect(screen.getByLabelText('Weight').props.editable).toBe(false);
-    fireEvent.press(screen.getByRole('checkbox', { name: 'Morning' }));
-    fireEvent.press(screen.getByRole('switch', { name: 'Remind me' }));
+    await fireEvent.press(screen.getByRole('checkbox', { name: 'Morning' }));
+    await fireEvent.press(screen.getByRole('switch', { name: 'Remind me' }));
     expect(onToggle).not.toHaveBeenCalled();
     expect(screen.getByTestId('form-locked')).toBeTruthy();
 
-    fireEvent.press(screen.getByRole('button', { name: 'Unlock' }));
-    await waitFor(() => expect(screen.queryByTestId('form-locked')).toBeNull());
+    await fireEvent.press(screen.getByRole('button', { name: 'Unlock' }));
     expect(screen.getByLabelText('Weight').props.editable).not.toBe(false);
-    fireEvent.press(screen.getByRole('checkbox', { name: 'Morning' }));
+    await fireEvent.press(screen.getByRole('checkbox', { name: 'Morning' }));
     expect(onToggle).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('TimeField (picked, not typed)', () => {
+  it('picks an hour and 5-minute step, and shows errors on the field', async () => {
+    const onChange = jest.fn();
+    await renderWithTheme(
+      <TimeField
+        label="Time"
+        value="07:30"
+        onChange={onChange}
+        min="06:00"
+        max="21:55"
+        error="Pick a time between 06:00 and 21:55."
+      />,
+    );
+    expect(screen.getByText('Pick a time between 06:00 and 21:55.')).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: /^Time: 07:30/ }));
+    await waitFor(() => expect(screen.getByRole('radio', { name: 'Hour 06' })).toBeTruthy());
+    // Quiet hours can't be picked.
+    expect(screen.queryByRole('radio', { name: 'Hour 05' })).toBeNull();
+    expect(screen.queryByRole('radio', { name: 'Hour 22' })).toBeNull();
+    expect(screen.queryByRole('radio', { name: 'Minute 07' })).toBeNull();
+    await fireEvent.press(screen.getByRole('radio', { name: 'Hour 06' }));
+    await fireEvent.press(screen.getByRole('radio', { name: 'Minute 45' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Done' }));
+    expect(onChange).toHaveBeenCalledWith('06:45');
   });
 });

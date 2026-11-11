@@ -268,7 +268,10 @@ const now = new Date().toISOString();
     .getByRole('radiogroup', { name: 'Day of the week' })
     .getByRole('radio', { name: 'Tue' })
     .click();
-  await page.getByLabel('Start time (HH:MM)').fill('20:00');
+  await page.getByRole('button', { name: /^Start time:/ }).click();
+  await page.getByRole('radio', { name: 'Hour 20' }).click();
+  await page.getByRole('radio', { name: 'Minute 00' }).click();
+  await page.getByRole('button', { name: 'Done' }).click();
   await page.getByRole('button', { name: 'Add to my week' }).click();
   await page.getByRole('checkbox', { name: 'Dumbbells' }).click();
   await page.getByRole('checkbox', { name: 'Kettlebell' }).click();

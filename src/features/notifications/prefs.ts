@@ -20,4 +20,8 @@ export function readPrefs(raw: unknown): NotificationPrefs {
 }
 
 /** Times reminders may be set to (quiet hours 22:00–06:00 excluded). */
-export const isAllowedTime = (t: string) => t >= '06:00' && t < '22:00';
+export const REMINDER_EARLIEST = '06:00';
+/** Last time in the 5-minute picker before quiet hours. */
+export const REMINDER_LATEST = '21:55';
+export const isAllowedTime = (t: string) =>
+  /^([01]\d|2[0-3]):[0-5]\d$/.test(t) && t >= REMINDER_EARLIEST && t < '22:00';
