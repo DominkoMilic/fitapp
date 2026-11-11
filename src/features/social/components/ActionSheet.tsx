@@ -9,7 +9,10 @@ import { motion, radius, spacing, useTheme } from '@/theme';
 
 export interface SheetAction {
   label: string;
+  /** Removes something for good: solid red. */
   destructive?: boolean;
+  /** Serious but not destructive (Report): red outline, so it differs from Remove or Block. */
+  caution?: boolean;
   onPress: () => void;
 }
 
@@ -61,7 +64,7 @@ export function ActionSheet({
             <Button
               key={a.label}
               title={a.label}
-              variant={a.destructive ? 'destructive' : 'secondary'}
+              variant={a.destructive ? 'destructive' : a.caution ? 'caution' : 'secondary'}
               onPress={() => {
                 onClose();
                 a.onPress();

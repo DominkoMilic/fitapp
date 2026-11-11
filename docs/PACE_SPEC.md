@@ -944,7 +944,7 @@ Spacing scale 4, 8, 12, 16, 20, 24, 32, 40. Radius 8 (inputs), 12 (buttons), 16 
 
 Button (primary, secondary, ghost, destructive; loading, disabled), IconButton, TextField, NumberField (unit-aware, locale decimal comma support), Select, SegmentedControl, Chip/ChipGroup, Toggle, Slider (RPE), DatePicker, TimePicker, Card, StatTile, ProgressRing, ProgressBar, ListItem, SectionHeader, BottomSheet, ConfirmDialog, Toast (with Undo), EmptyState, ErrorState, Skeleton, Badge (confidence, sync), Banner (warning/info), Tabs, ChartContainer (range selector + accessible summary).
 
-**Every button has a visible border** (primary: accent, secondary and ghost: border, destructive: danger), so it always reads as tappable; ghost is an outline button.
+**Every button has a visible border** (primary: accent, secondary and ghost: border, destructive: danger, caution: danger), so it always reads as tappable; ghost is an outline button. **Destructive** (solid red) removes something for good (Remove, Block, Delete); **caution** (red outline on a light red tint, red text) is serious but not destructive (Report), so the two never look the same side by side.
 
 **Dates are picked from a calendar.** `DateField` looks like the other inputs ("Tue, 10 Nov 2026" plus a calendar icon) and opens `CalendarSheet`, a bottom sheet:
 - ‹ month › arrows or a sideways swipe change the month, and the grid slides.

@@ -12,7 +12,11 @@ export const spokenLabel = (title: string) =>
     .replace(/\s+/g, ' ')
     .trim();
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'destructive';
+/**
+ * `destructive`: removes something for good (solid red). `caution`: serious but not destructive,
+ * e.g. Report (red outline on a light red tint), so it reads differently from Remove beside it.
+ */
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'destructive' | 'caution';
 
 export interface ButtonProps extends Omit<PressableProps, 'children' | 'style'> {
   title: string;
@@ -38,18 +42,21 @@ export function Button({
     secondary: colors.surfaceRaised,
     ghost: 'transparent',
     destructive: colors.danger,
+    caution: colors.dangerSurface,
   }[variant];
   const border = {
     primary: colors.accent,
     secondary: colors.border,
     ghost: colors.border,
     destructive: colors.danger,
+    caution: colors.danger,
   }[variant];
   const fg = {
     primary: colors.onAccent,
     secondary: colors.textPrimary,
     ghost: colors.accent,
     destructive: colors.onDanger,
+    caution: colors.danger,
   }[variant];
 
   return (

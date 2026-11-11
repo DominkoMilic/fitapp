@@ -92,7 +92,7 @@ export default function SocialUser() {
     ...(p.relationship === 'blocked'
       ? []
       : [{ label: 'Block', destructive: true, onPress: () => setConfirm('block') }]),
-    { label: 'Report', destructive: true, onPress: () => setReporting(true) },
+    { label: 'Report', caution: true, onPress: () => setReporting(true) },
   ];
 
   return (

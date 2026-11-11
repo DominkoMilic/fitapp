@@ -68,7 +68,7 @@ export function usePostActions(onRemoved?: () => void) {
               ]
             : menu
               ? [
-                  { label: 'Report post', destructive: true, onPress: () => setReport(menu) },
+                  { label: 'Report post', caution: true, onPress: () => setReport(menu) },
                   {
                     label: `Block ${menu.display_name}`,
                     destructive: true,

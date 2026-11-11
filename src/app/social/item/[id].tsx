@@ -209,7 +209,7 @@ export default function FeedItemScreen() {
                   ? [
                       {
                         label: 'Report comment',
-                        destructive: true,
+                        caution: true,
                         onPress: () => setReporting(menu),
                       },
                     ]
