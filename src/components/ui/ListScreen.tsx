@@ -1,4 +1,4 @@
-import { type ReactElement, type ReactNode, useState } from 'react';
+import { type ReactElement, type ReactNode, useContext, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -7,8 +7,12 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
-import { type Edge, SafeAreaView } from 'react-native-safe-area-context';
+import {
+  KeyboardAvoidingView,
+  useReanimatedKeyboardAnimation,
+} from 'react-native-keyboard-controller';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import { type Edge, SafeAreaInsetsContext, SafeAreaView } from 'react-native-safe-area-context';
 
 import { spacing, useTheme } from '@/theme';
 
@@ -57,6 +61,8 @@ export function ListScreen<T>({
   refreshing?: boolean;
 }) {
   const { colors } = useTheme();
+  // Context (not the hook) so lists rendered without a provider (tests) still work.
+  const bottomInset = useContext(SafeAreaInsetsContext)?.bottom ?? 0;
   const [shown, setShown] = useState(pageSize);
   const visible = data.length > shown ? data.slice(0, shown) : data;
   const more = data.length > visible.length;
@@ -64,57 +70,76 @@ export function ListScreen<T>({
     if (more) setShown((n) => n + pageSize);
     else if (onLoadMore && !loadingMore) onLoadMore();
   };
+  const list = (
+    <FlatList
+      data={visible}
+      keyExtractor={keyExtractor}
+      renderItem={({ item, index }) => renderItem(item, index)}
+      ListHeaderComponent={header ? <View style={styles.header}>{header}</View> : undefined}
+      ListEmptyComponent={empty ?? undefined}
+      onEndReached={nextPage}
+      onEndReachedThreshold={0.5}
+      refreshControl={
+        onRefresh ? (
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.accent}
+            colors={[colors.accent]}
+          />
+        ) : undefined
+      }
+      ListFooterComponent={
+        loadingMore ? (
+          <View style={styles.more} accessibilityLabel="Loading more">
+            <ActivityIndicator color={colors.accent} />
+          </View>
+        ) : more ? (
+          <View style={styles.more}>
+            <Text variant="small" color="textSecondary">
+              Showing {visible.length} of {data.length}
+            </Text>
+            <Button title="Show more" variant="ghost" fullWidth={false} onPress={nextPage} />
+          </View>
+        ) : undefined
+      }
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
+      initialNumToRender={15}
+      maxToRenderPerBatch={20}
+      windowSize={9}
+      removeClippedSubviews={Platform.OS === 'android'}
+    />
+  );
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: colors.background }]} edges={edges}>
-      {/* Works on Android too (edge-to-edge windows no longer resize for the keyboard). */}
-      <KeyboardAvoidingView style={styles.flex} behavior="padding">
-        <FlatList
-          data={visible}
-          keyExtractor={keyExtractor}
-          renderItem={({ item, index }) => renderItem(item, index)}
-          ListHeaderComponent={header ? <View style={styles.header}>{header}</View> : undefined}
-          ListEmptyComponent={empty ?? undefined}
-          onEndReached={nextPage}
-          onEndReachedThreshold={0.5}
-          refreshControl={
-            onRefresh ? (
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                tintColor={colors.accent}
-                colors={[colors.accent]}
-              />
-            ) : undefined
-          }
-          ListFooterComponent={
-            loadingMore ? (
-              <View style={styles.more} accessibilityLabel="Loading more">
-                <ActivityIndicator color={colors.accent} />
-              </View>
-            ) : more ? (
-              <View style={styles.more}>
-                <Text variant="small" color="textSecondary">
-                  Showing {visible.length} of {data.length}
-                </Text>
-                <Button title="Show more" variant="ghost" fullWidth={false} onPress={nextPage} />
-              </View>
-            ) : undefined
-          }
-          contentContainerStyle={styles.content}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
-          initialNumToRender={15}
-          maxToRenderPerBatch={20}
-          windowSize={9}
-          removeClippedSubviews={Platform.OS === 'android'}
-        />
-        {footer ? (
+      {footer ? (
+        // A footer (e.g. a comment box) sits directly on the keyboard: the spacer below it grows
+        // with the keyboard, so the list shrinks and what is typed stays visible.
+        <>
+          {list}
           <View style={[styles.footer, { borderTopColor: colors.border }]}>{footer}</View>
-        ) : null}
-        {overlay}
-      </KeyboardAvoidingView>
+          <KeyboardSpacer bottomInset={edges.includes('bottom') ? bottomInset : 0} />
+        </>
+      ) : (
+        // Works on Android too (edge-to-edge windows no longer resize for the keyboard).
+        <KeyboardAvoidingView style={styles.flex} behavior="padding">
+          {list}
+        </KeyboardAvoidingView>
+      )}
+      {overlay}
     </SafeAreaView>
   );
+}
+
+/** Takes the keyboard's height minus the bottom safe area it covers. */
+function KeyboardSpacer({ bottomInset }: { bottomInset: number }) {
+  const { height } = useReanimatedKeyboardAnimation();
+  const style = useAnimatedStyle(() => ({
+    height: Math.max(0, -height.get() - bottomInset),
+  }));
+  return <Animated.View style={style} />;
 }
 
 const styles = StyleSheet.create({
