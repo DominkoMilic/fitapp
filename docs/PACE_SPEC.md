@@ -254,8 +254,8 @@ docs/
 
 | Tab | Primary content |
 |---|---|
-| Home | Greeting and date (tapping opens Profile), coach cards, **Quick log** (two actions with tinted icon circles), **Your progress** (Start · Now · Goal with the progress bar and "2.7 kg down · 15.3 kg to go"), **Daily check-in** prompt, today's plan card (with the next fixed event as one "Next: …" line) |
-| Training | "+ Add" button, today, this week (prev/next), then only three links: History (workouts, games and activities together, with the month calendar), Personal records, Exercise library |
+| Home | Greeting and date (tapping opens Profile), a workout in progress (amber), coach cards, **Your progress** (Start · Now · Goal with the progress bar and "2.7 kg down · 15.3 kg to go"), **Quick log** (two actions with tinted icon circles), **Daily check-in** prompt, today's plan card (with the next fixed event as one "Next: …" line) |
+| Training | Round "+" button, one tappable notice (an injury opens Profile → Health), anything in progress (amber, "In progress" tag), a **week strip** (‹ week ›, one pill per day with a mark: planned dot, done ✓, in progress amber, skipped faded, rest ring; today outlined, the selected day filled), then only the selected day's sessions (today by default; each week opens on today or its first day), then three tiles: History (workouts, games and activities together, with the month calendar), Records, Library |
 | Social | Only when social is on (33). **Feed · Friends.** Feed: your and your friends' shared posts (paged, pull to refresh), cheers, comments. Friends: Add friends (handle search), Invite, requests (Accept / Decline), friends, sent requests. Clubs and challenges arrive in 8C–8D |
 | Progress | Weight chart + stats, Log weight, then Weight history, Body measurements, Milestones, Weekly report |
 | Profile | You: personal info, goal, health and injuries. Preferences: Training setup (sports, schedule, equipment), App features, Social and privacy (once social is set up), Reminders, Appearance. Account: Data and privacy (export, delete, legal documents), Sync status (only while changes are waiting or failed), Sign out |
@@ -266,7 +266,7 @@ docs/
 
 ### 6.3 Quick actions
 
-Home has two: **Log weight** and **Check-in**. Everything you can add on the Training side (record a walk/run/ride; log a gym or home workout, a game or practice, or a walk/run/ride without GPS; plan a workout) is behind the Training tab's **+ Add** button (`training/add`). Today's planned workout is started from its Today card. Logging must take ≤ 3 taps for repeat actions.
+Home has two: **Log weight** and a workout action: **Resume workout** while one is running, **Start workout** (opens today's planned workout) or **Log workout** when nothing is planned today. The check-in has its own Daily check-in card below. Everything you can add on the Training side (record a walk/run/ride; log a gym or home workout, a game or practice, or a walk/run/ride without GPS; plan a workout) is behind the Training tab's **+** button (`training/add`). Today's planned workout is started from its Today card. Logging must take ≤ 3 taps for repeat actions.
 
 ### 6.4 V1 screen inventory
 
@@ -413,7 +413,7 @@ Generation is idempotent: occurrences are keyed by `(recurring_event_id, schedul
 
 ### 10.3 Calendar
 
-Week view (default) and month view. Users can: view, drag or "Move to…" a workout (warn when moving onto MD-1 or adding a third consecutive hard day), mark rest day, add a one-off workout or match, add/edit recurring events ("This occurrence" vs "This and future"), edit duration, skip. Completed vs planned shown with distinct icons and colours. Rolling horizon: on app open ensure scheduled occurrences exist for the next 8 weeks.
+Week view (default) and month view. Users can: view, mark rest day, add a one-off workout or match, add/edit recurring events ("This occurrence" vs "This and future"), edit duration, skip. Completed vs planned shown with distinct icons and colours. Moving a planned workout to another day was removed on 2026-11-21: a planned day is done, skipped or kept. Rolling horizon: on app open ensure scheduled occurrences exist for the next 8 weeks.
 
 ### 10.4 Workout execution
 
@@ -423,6 +423,10 @@ Week view (default) and month view. Users can: view, drag or "Move to…" a work
 - **Add an exercise the plan didn't include** (e.g. push-ups): search the library (system and custom; exercises that clash with an injury say "not for your current injury"), inserted after the current exercise and marked "Added by you". Sets are pre-filled from the last time it was done, else its defaults. Added exercises have `targetSets = 0`, so extra work never lowers the completion rate; they can be removed. Any set can be added (max 10) or removed while not done (an exercise keeps ≥ 1 set).
 - **Timed sets** have a "Start" countdown for the hold; when it ends the set is marked done (haptic + "Hold done" announcement).
 - The workout title is shown in the header; a planned workout that is running shows "Resume workout" instead of "Start workout".
+- **Before starting** (workout screen): **Edit before starting** opens the exercise editor without set ticks (change sets, reps, weight or seconds; add, remove exercises). The edited list is kept on this phone for that occurrence only (the plan is unchanged; "Edited" tag, "Reset to the plan"), and the session starts from it. The 20-minute version starts from its own plan.
+- **Not before its day:** a planned workout dated after today shows "You can start this on <day>." instead of Start, the 20-minute version, "I already did this" and "Log this session"; the session screen refuses it too. Editing ahead is allowed. All log forms (weight, events, activities, past workouts) only accept dates up to today.
+- **Skip asks first, kindly:** "Skip this workout?" with an encouraging line (even 20 minutes keeps the rhythm going) and the safety line "If you're ill or in pain, resting is the right call." Buttons: **Try the 20-minute version** (or **Start an easy session** when there's no short version), **Skip anyway**, **Keep it**. Never pushes training through pain (spec 3).
+- **Started but not finished:** the resume card and that day's session are amber (`warning` card tone) with an **In progress** tag; tapping the session resumes it.
 - Rest timer uses absolute timestamps (survives backgrounding) and schedules a local notification for rest end.
 - Draft is persisted to SQLite after every set; reopening the app offers "Resume workout".
 - Finish: total duration (excluding pauses), exercises completed, sets, volume (Σ reps × weight for weighted sets), RPE 0–10, feeling 1–5, notes. Status = completed if ≥ 1 set completed, else "abandoned" (not counted for milestones).
@@ -951,9 +955,17 @@ Button (primary, secondary, ghost, destructive; loading, disabled), IconButton, 
 
 **Tappable cards say so.** A card with `onPress` shows a small accent "Details ›" footer, or a specific label ("Weight details", "Start check-in", "Open training", "Change goal", "View"); list-like cards (scheduled workouts) show a trailing chevron instead, like list rows. Recipe rows have a chevron too.
 
-**Card tones.** `success` = done / unlocked (completed workouts, unlocked milestones, goal reached, fully done calendar days): successSurface fill, accent border and a 5 px accent bar on the left, so it is recognisable mid-scroll and not only by its icon. `muted` = locked / not yet available: background fill and a dashed border.
+**Card tones.** `success` = done / unlocked (completed workouts, unlocked milestones, goal reached, fully done calendar days): successSurface fill, accent border and a 5 px accent bar on the left, so it is recognisable mid-scroll and not only by its icon. `warning` = started but not finished (a workout or recording in progress): warningSurface (amber) fill, amber border and bar, always with a `StatusTag` ("In progress", "Paused", "Recording"). `muted` = locked / not yet available: background fill and a dashed border.
 
-**Text fields and the keyboard.** The focused field is always scrolled above the keyboard and a screen's footer (Save/Continue) rides on top of it (`react-native-keyboard-controller`; Android edge-to-edge windows no longer resize for the keyboard). Return moves to the next field and keeps the keyboard open; a form's last field shows "done" and submits (never on destructive forms: there it only closes the keyboard). iOS shows a prev/next/done bar above the keyboard because number pads have no return key. Password and email fields are never auto-capitalised or auto-corrected, and password fields have a show/hide button.
+**Times are picked, not typed.** `TimeField` looks like the other inputs (time plus a clock icon) and opens a sheet with two columns, hours 00–23 and minutes in 5-minute steps (00, 05 … 55), plus Done. `min`/`max` hide what can't be picked (reminders: 06:00–21:55, outside quiet hours). A stored time off the 5-minute grid (07:32) is shown as it is; the picker starts at the nearest step. Used for reminders, workout start times, recurring sessions and fixed weekly events. Time errors show on the field.
+
+**Saving locks the form.** While a Save button shows its spinner, the form's fields can't be changed (`FormLock`, or `Screen locked`): presses are ignored, text fields become read-only, the keyboard closes and the fields dim to 60%. Used on every screen whose Save writes data (logs, settings, onboarding, auth, social setup, comments, reports).
+
+**Section headers in settings** carry an accent icon and accent title (Profile: You, Preferences, Account), so the groups stand apart from their rows.
+
+**Notices that point somewhere are buttons.** A `Banner` with `onPress` shows a chevron and opens the place to fix it (Training's injury notice → Profile → Health).
+
+**Text fields and the keyboard.** The focused field is always scrolled above the keyboard and a screen's footer (Save/Continue, or a list screen's comment box) rides on top of it (`react-native-keyboard-controller`; Android edge-to-edge windows no longer resize for the keyboard). Return moves to the next field and keeps the keyboard open; a form's last field shows "done" and submits (never on destructive forms: there it only closes the keyboard). iOS shows a prev/next/done bar above the keyboard because number pads have no return key. Password and email fields are never auto-capitalised or auto-corrected, and password fields have a show/hide button.
 
 Labels (buttons, segments, chips) never break inside a word: a one-word label stays on one line and shrinks to at most 85% on native if space is tight; longer labels wrap between words, at most two lines. Segments share their row by label length ("Breakfast" gets more room than "Any"). Checked at 360–384 dp widths.
 
@@ -1611,7 +1623,9 @@ Friends, a feed of shared training, clubs, challenges and effort-only leaderboar
 | `delete_social_profile()` | Profile, settings and friendships removed; social switched off; your blocks kept |
 
 - Every action except removing, blocking, reporting and deleting requires social on, a profile, no ban and the kill switch on (`social_off`, `no_profile`, `banned`, `social_disabled`). Errors are plain codes the app maps to messages.
-- **App:** setup at `social/setup` (handle suggested from your name, availability checked; sharing all off; "Never shared" list; leaderboards off; friend requests on), Social tab (Friends), `social/search`, `social/user/<handle>` (Add · Cancel · Accept/Decline · Unblock, and ⋯ Remove friend / Block / Report), invite link `pace://add/<handle>` (after sign-in and, if needed, setup), Settings → Social and privacy and Blocked people. Writes are online-only; offline, buttons are disabled with "Social needs a connection".
+- **Identity is fixed (2026-11-21, `20261121000100_social_identity.sql`):** one **username**, 3–20 letters, numbers, `_` or `.` (no spaces), chosen once at setup (suggested from your name without spaces and accents, "Ana Marić" → AnaMaric). The **handle is its lowercase form** (Dominko → @dominko), set by the database, so names are unique regardless of case. The **avatar colour is assigned** from the user id (`social_avatar_color`: first 32 bits mod 8; mirrored by `avatarColorFor`). Username, handle and colour can't be changed (column grants allow only bio and "Findable"; the trigger raises `identity_locked`); turning social off and on again keeps them. Settings → Social and privacy edits only the bio. Your private profile name (greetings) stays separate and may contain spaces.
+- **Future:** profile photos (upload, moderation, storage and deletion) replace the coloured initials later; not built.
+- **App:** setup at `social/setup` (username suggested from your name, availability checked; sharing all off; "Never shared" list; leaderboards off; friend requests on), Social tab (Friends), `social/search`, `social/user/<handle>` (Add · Cancel · Accept/Decline · Unblock, and ⋯ Remove friend / Block / Report), invite link `pace://add/<handle>` (after sign-in and, if needed, setup), Settings → Social and privacy and Blocked people. Writes are online-only; offline, buttons are disabled with "Social needs a connection".
 - The sharing choices are saved but nothing is shown to anyone until the feed (8B).
 
 ### 33.9 Phase 8B-1 as built

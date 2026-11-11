@@ -291,3 +291,13 @@ Replaces decision 2 of 2026-11-19 ("existing posts keep their audience"), at the
 2. **Social tab without a jump.** The title and Feed · Friends switch are rendered once; both parts stay mounted and the inactive one is hidden, so switching neither rebuilds the screen nor loses scroll position.
 3. **Offline start.** The read cache is now persisted (spec 18.2 always said so; it had not been built): before, opening the app with no connection left every screen on loading placeholders. Kept 3 days, successful reads only, searches excluded, removed on sign-out.
 4. Personal information and onboarding label the field "Sex" (the calorie calculation it fed was archived with nutrition).
+
+## 2026-11-21: UX batch after Phase 8B
+
+1. **Social identity is fixed.** One username (3–20 letters, numbers, `_`, `.`; no spaces) chosen once; the handle is always its lowercase form, so Dominko and DoMInKo are the same name; the avatar colour is assigned from the user id. None of the three can be changed later (fewer moving parts, no broken invite links). Existing profiles had their name set to their handle where the two didn't match (test accounts only). Profile photos are a later feature.
+2. **Quiet hours are 22:00–06:00** (were 07:00) for reminders and social pushes: many users are up before 7. The deployed `social-push` function needs redeploying with the new rule.
+3. **Times are picked** (hours + 5-minute steps) instead of typed, everywhere a time is entered; errors show on the field.
+4. **Forms lock while saving**, so no one edits values that won't be part of the save.
+5. **Home:** Your progress comes before Quick log; the Check-in quick action became Start/Log workout (the Daily check-in card stays).
+6. **Training tab:** week strip with one selected day instead of the whole week as cards; the injury notice opens Health.
+7. **Planned workouts:** editable before starting (kept on this phone for that occurrence, not synced: the plan itself doesn't change, so another phone just shows the planned version); no starting or logging before the day; "Move to another day" removed (no other screen moves workouts; planning a one-off workout still works); Skip first suggests the 20-minute version, with the safety line about illness and pain.
