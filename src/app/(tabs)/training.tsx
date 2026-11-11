@@ -1,34 +1,53 @@
 import { router } from 'expo-router';
+import { BookOpen, History, Plus, Trophy } from 'lucide-react-native';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { Banner, LoadingState } from '@/components/feedback';
-import { Button, ListItem, Screen, SectionHeader, Text } from '@/components/ui';
+import { LoadErrorBanner } from '@/components/feedback/LoadErrorBanner';
+import { Screen, Text } from '@/components/ui';
+import { PressableScale } from '@/components/ui/PressableScale';
 import { addDays } from '@/domain/calculations/dates';
+import { formatDateRange, formatLongWeekday } from '@/domain/format';
 import { weekStartOf } from '@/domain/training/records';
+import { dayMarks, defaultDay } from '@/domain/training/week-strip';
+import { ResumeActivityCard } from '@/features/activity/ResumeActivityCard';
+import { useAuth } from '@/features/auth/AuthProvider';
 import { useToday } from '@/features/dashboard/useToday';
 import { useProfile } from '@/features/profile/api';
-import { dayLabel } from '@/features/training/labels';
+import { useActiveWorkout } from '@/features/training/active-workout-store';
 import { useRestrictions } from '@/features/training/library';
 import { OccurrenceRow } from '@/features/training/OccurrenceRow';
-import { useScheduledWorkouts, useScheduleGeneration } from '@/features/training/schedule-api';
 import { ResumeWorkoutCard } from '@/features/training/ResumeWorkoutCard';
-import { ResumeActivityCard } from '@/features/activity/ResumeActivityCard';
-import { spacing } from '@/theme';
-import { EXERCISES } from '@/domain/training/catalogue';
-import { formatDateRange } from '@/domain/format';
-import { LoadErrorBanner } from '@/components/feedback/LoadErrorBanner';
+import { useScheduledWorkouts, useScheduleGeneration } from '@/features/training/schedule-api';
+import { WeekStrip } from '@/features/training/WeekStrip';
+import { radius, spacing, TOUCH_TARGET, useTheme } from '@/theme';
 
+/**
+ * Training tab (redesign 2026-11-21): a week strip on top, then only the selected day's sessions,
+ * so the screen stays calm. Anything in progress sits above the strip in amber.
+ */
 export default function Training() {
+  const { colors } = useTheme();
   const { today } = useToday();
   const { data: profile } = useProfile();
   const restrictions = useRestrictions();
   const generation = useScheduleGeneration();
+  const active = useActiveWorkout(useAuth().session?.user.id);
   const [offset, setOffset] = useState(0);
   const weekStart = addDays(weekStartOf(today, profile?.week_start === 7 ? 7 : 1), offset * 7);
   const weekEnd = addDays(weekStart, 6);
+  const [picked, setPicked] = useState<string | null>(null);
+  // A day picked in another week doesn't carry over: each week opens on today or its first day.
+  const selected =
+    picked && picked >= weekStart && picked <= weekEnd ? picked : defaultDay(weekStart, today);
   const week = useScheduledWorkouts(weekStart, weekEnd);
-  const todays = week.rows.filter((r) => r.scheduled_date === today);
+  const days = dayMarks(weekStart, week.rows, active?.scheduledId ?? null);
+  const items = week.rows.filter((r) => r.scheduled_date === selected);
+  const changeWeek = (delta: number) => {
+    setOffset(offset + delta);
+    setPicked(null);
+  };
 
   return (
     <Screen edges={['top']}>
@@ -36,12 +55,14 @@ export default function Training() {
         <Text variant="heading" accessibilityRole="header">
           Training
         </Text>
-        <Button
-          title="+ Add"
+        <PressableScale
+          accessibilityRole="button"
           accessibilityLabel="Add training: record, log or plan"
-          fullWidth={false}
           onPress={() => router.push('/training/add')}
-        />
+          style={[styles.add, { backgroundColor: colors.accent }]}
+        >
+          <Plus size={24} color={colors.onAccent} strokeWidth={2.5} />
+        </PressableScale>
       </View>
       <LoadErrorBanner
         visible={week.isError}
@@ -51,7 +72,9 @@ export default function Training() {
       {restrictions.sportRestricted ? (
         <Banner
           tone="warning"
-          message="Your plan is adjusted for a recorded injury. Update its status in Profile → Health."
+          message="Your plan is adjusted for an injury. Tap to review it in Health."
+          accessibilityHint="Opens Health and injuries"
+          onPress={() => router.push('/settings/health')}
         />
       ) : null}
       {generation.isError && week.rows.length === 0 ? (
@@ -63,88 +86,103 @@ export default function Training() {
 
       <ResumeWorkoutCard />
       <ResumeActivityCard />
-      {offset === 0 ? (
-        <>
-          <SectionHeader title="Today" />
-          {week.isPending ? (
-            <LoadingState />
-          ) : todays.length ? (
-            todays.map((w) => <OccurrenceRow key={w.id} w={w} highlight />)
-          ) : (
-            <Text color="textSecondary">Nothing planned today.</Text>
-          )}
-        </>
-      ) : null}
 
-      <View style={styles.weekNav}>
-        <Button
-          title="‹ Prev"
-          accessibilityLabel="Previous week"
-          variant="ghost"
-          fullWidth={false}
-          onPress={() => setOffset(offset - 1)}
-        />
-        <Text variant="bodyStrong">
-          {offset === 0
+      <WeekStrip
+        days={days}
+        today={today}
+        selected={selected}
+        onSelect={setPicked}
+        onPrev={() => changeWeek(-1)}
+        onNext={() => changeWeek(1)}
+        title={
+          offset === 0
             ? 'This week'
-            : formatDateRange(weekStart, weekEnd, undefined, { year: false })}
+            : formatDateRange(weekStart, weekEnd, undefined, { year: false })
+        }
+      />
+
+      <View style={styles.day}>
+        <Text variant="title" accessibilityRole="header">
+          {formatLongWeekday(selected)}
+          {selected === today ? ' · today' : ''}
         </Text>
-        <Button
-          title="Next ›"
-          accessibilityLabel="Next week"
-          variant="ghost"
-          fullWidth={false}
-          onPress={() => setOffset(offset + 1)}
+        {week.isPending ? (
+          <LoadingState />
+        ) : items.length ? (
+          items.map((w) => <OccurrenceRow key={w.id} w={w} highlight={selected === today} />)
+        ) : (
+          <Text color="textSecondary">
+            {generation.isPending ? 'Building your calendar…' : 'Nothing planned.'}
+          </Text>
+        )}
+      </View>
+
+      <View style={styles.tiles}>
+        <Tile
+          label="History"
+          icon={<History size={22} color={colors.accent} />}
+          onPress={() => router.push('/training/history')}
+        />
+        <Tile
+          label="Records"
+          icon={<Trophy size={22} color={colors.accent} />}
+          onPress={() => router.push('/training/records')}
+        />
+        <Tile
+          label="Library"
+          icon={<BookOpen size={22} color={colors.accent} />}
+          onPress={() => router.push('/training/exercises')}
         />
       </View>
-      {week.isPending ? (
-        <LoadingState />
-      ) : week.rows.length === 0 ? (
-        <Text color="textSecondary">
-          {generation.isPending ? 'Building your calendar…' : 'Nothing scheduled this week.'}
-        </Text>
-      ) : (
-        Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)).map((date) => {
-          // Today is already shown above on the current week.
-          if (offset === 0 && date === today) return null;
-          const items = week.rows.filter((r) => r.scheduled_date === date);
-          if (!items.length) return null;
-          return (
-            <View key={date} style={styles.day}>
-              <Text variant="small" color={date === today ? 'accent' : 'textSecondary'}>
-                {dayLabel(date, today)}
-              </Text>
-              {items.map((w) => (
-                <OccurrenceRow key={w.id} w={w} />
-              ))}
-            </View>
-          );
-        })
-      )}
-
-      <SectionHeader title="More" />
-      <ListItem
-        title="History"
-        subtitle="Workouts, games and activities"
-        onPress={() => router.push('/training/history')}
-      />
-      <ListItem title="Personal records" onPress={() => router.push('/training/records')} />
-      <ListItem
-        title="Exercise library"
-        subtitle={`${EXERCISES.length} exercises with instructions`}
-        onPress={() => router.push('/training/exercises')}
-      />
     </Screen>
+  );
+}
+
+function Tile({
+  label,
+  icon,
+  onPress,
+}: {
+  label: string;
+  icon: React.ReactNode;
+  onPress: () => void;
+}) {
+  const { colors } = useTheme();
+  return (
+    <PressableScale
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      style={[styles.tile, { backgroundColor: colors.surface, borderColor: colors.border }]}
+    >
+      {icon}
+      <Text variant="small" style={styles.tileLabel}>
+        {label}
+      </Text>
+    </PressableScale>
   );
 }
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  weekNav: {
-    flexDirection: 'row',
+  add: {
+    width: TOUCH_TARGET,
+    height: TOUCH_TARGET,
+    borderRadius: radius.pill,
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: spacing.sm,
+    justifyContent: 'center',
   },
-  day: { gap: spacing.xs },
+  day: { gap: spacing.sm, marginTop: spacing.xs },
+  tiles: { flexDirection: 'row', gap: spacing.xs, marginTop: spacing.md },
+  tile: {
+    flex: 1,
+    minHeight: TOUCH_TARGET + 28,
+    borderRadius: radius.card,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    padding: spacing.sm,
+  },
+  tileLabel: { fontWeight: '600' },
 });

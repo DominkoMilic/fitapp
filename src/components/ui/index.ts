@@ -16,3 +16,4 @@ export * from './AnimatedRow';
 export * from './SwipeToDismiss';
 export * from './FieldError';
 export * from './FormLock';
+export * from './StatusTag';

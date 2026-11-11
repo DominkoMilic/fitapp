@@ -25,8 +25,9 @@ export function Card({
   /**
    * `success`: done / unlocked (tinted surface, accent border and a bar on the left) so it is
    * recognisable mid-scroll, not only by its icon. `muted`: locked / not yet available.
+   * `warning`: started but not finished (amber surface, border and bar), e.g. a workout in progress.
    */
-  tone?: 'default' | 'success' | 'muted';
+  tone?: 'default' | 'success' | 'muted' | 'warning';
   /**
    * A tappable card always shows that it opens something: `label` (default) adds a small
    * "Details ›" footer (text from `actionLabel`), `chevron` a trailing chevron for list-like cards.
@@ -42,12 +43,22 @@ export function Card({
           borderColor: colors.accent,
           borderLeftWidth: 5,
         }
-      : tone === 'muted'
-        ? { backgroundColor: colors.background, borderColor: colors.border, borderStyle: 'dashed' }
-        : {
-            backgroundColor: raised ? colors.surfaceRaised : colors.surface,
-            borderColor: colors.border,
-          };
+      : tone === 'warning'
+        ? {
+            backgroundColor: colors.warningSurface,
+            borderColor: colors.warning,
+            borderLeftWidth: 5,
+          }
+        : tone === 'muted'
+          ? {
+              backgroundColor: colors.background,
+              borderColor: colors.border,
+              borderStyle: 'dashed',
+            }
+          : {
+              backgroundColor: raised ? colors.surfaceRaised : colors.surface,
+              borderColor: colors.border,
+            };
   const base = [styles.card, toneStyle, style];
   if (!onPress) return <View style={base}>{children}</View>;
   return (

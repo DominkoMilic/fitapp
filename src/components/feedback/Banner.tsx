@@ -1,7 +1,8 @@
-import { CircleCheck, Info, TriangleAlert } from 'lucide-react-native';
+import { ChevronRight, CircleCheck, Info, TriangleAlert } from 'lucide-react-native';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
+import { PressableScale } from '@/components/ui/PressableScale';
 import { Text } from '@/components/ui/Text';
 import { motion, radius, spacing, useTheme } from '@/theme';
 
@@ -15,10 +16,15 @@ export function Banner({
   tone = 'info',
   title,
   message,
+  onPress,
+  accessibilityHint,
 }: {
   tone?: BannerTone;
   title?: string;
   message: string;
+  /** Makes the banner a button (with a chevron) that opens where the issue can be fixed. */
+  onPress?: () => void;
+  accessibilityHint?: string;
 }) {
   const { colors, reduceMotion } = useTheme();
   const color = {
@@ -28,12 +34,8 @@ export function Banner({
     success: colors.accent,
   }[tone];
   const Icon = tone === 'success' ? CircleCheck : tone === 'info' ? Info : TriangleAlert;
-  return (
-    <Animated.View
-      entering={reduceMotion ? undefined : FadeInDown.duration(motion.normal)}
-      accessibilityRole={tone === 'danger' || tone === 'warning' ? 'alert' : 'text'}
-      style={[styles.banner, { borderColor: color, backgroundColor: colors.surface }]}
-    >
+  const body = (
+    <>
       <Icon size={20} color={color} />
       <View style={styles.text}>
         {title ? <Text variant="bodyStrong">{title}</Text> : null}
@@ -41,6 +43,31 @@ export function Banner({
           {message}
         </Text>
       </View>
+      {onPress ? <ChevronRight size={20} color={colors.textSecondary} /> : null}
+    </>
+  );
+  const frame = [styles.banner, { borderColor: color, backgroundColor: colors.surface }];
+  return (
+    <Animated.View entering={reduceMotion ? undefined : FadeInDown.duration(motion.normal)}>
+      {onPress ? (
+        <PressableScale
+          feedback="row"
+          accessibilityRole="button"
+          accessibilityLabel={title ? `${title}. ${message}` : message}
+          accessibilityHint={accessibilityHint}
+          onPress={onPress}
+          style={[frame, styles.pressable]}
+        >
+          {body}
+        </PressableScale>
+      ) : (
+        <View
+          accessibilityRole={tone === 'danger' || tone === 'warning' ? 'alert' : 'text'}
+          style={frame}
+        >
+          {body}
+        </View>
+      )}
     </Animated.View>
   );
 }
@@ -55,4 +82,5 @@ const styles = StyleSheet.create({
     borderRadius: radius.input,
   },
   text: { flex: 1, gap: 2 },
+  pressable: { alignItems: 'center' },
 });
