@@ -37,8 +37,9 @@ if (Platform.OS !== 'web') {
   if (!TaskManager.isTaskDefined(TASK)) {
     TaskManager.defineTask<Notifications.NotificationTaskPayload>(TASK, async ({ data }) => {
       try {
-        if (data && 'actionIdentifier' in data && typeof data.actionIdentifier === 'string')
-          await act(data.actionIdentifier, false);
+        // Only Pause runs here; Resume and Finish open the app, whose listener handles them.
+        if (data && 'actionIdentifier' in data && data.actionIdentifier === RECORDING_ACTION.pause)
+          await act(RECORDING_ACTION.pause, false);
       } catch {
         // Never throw from a background task.
       }

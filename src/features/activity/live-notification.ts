@@ -5,6 +5,7 @@ import { liveStats, withPoints } from '@/domain/activity/recording';
 import { pointBuffer } from '@/services/location/point-buffer';
 import {
   clearRecordingNotification,
+  isRecordingNotificationShown,
   showRecordingNotification,
 } from '@/services/notifications/recording-notification';
 
@@ -47,6 +48,14 @@ export async function refreshRecordingNotification(
     }
     const meta = opts.meta !== undefined ? opts.meta : await storedMeta();
     if (!meta) return clearRecordingNotification();
+    // Paused, nothing changes: re-post only if it was swiped away (every re-post redraws it and
+    // can swallow a tap on Resume or Finish). A state change (opts.meta) always posts.
+    if (
+      opts.meta === undefined &&
+      meta.status === 'paused' &&
+      (await isRecordingNotificationShown())
+    )
+      return;
     const [points, unit] = await Promise.all([
       pointBuffer.all(meta.id),
       AsyncStorage.getItem(UNIT_KEY),

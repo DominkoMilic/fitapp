@@ -13,4 +13,8 @@ export async function showRecordingNotification(_: {
 
 export async function clearRecordingNotification(): Promise<void> {}
 
+export async function isRecordingNotificationShown(): Promise<boolean> {
+  return false;
+}
+
 export async function quietLocationChannel(): Promise<void> {}

@@ -262,7 +262,7 @@ function Live() {
   const recordingNow = meta?.status === 'recording';
   useEffect(() => {
     if (!recordingNow) return;
-    const t = setInterval(() => void refreshRecordingNotification({ throttleMs: 4000 }), 5000);
+    const t = setInterval(() => void refreshRecordingNotification({ throttleMs: 9000 }), 10_000);
     return () => clearInterval(t);
   }, [recordingNow]);
 

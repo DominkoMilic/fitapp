@@ -88,6 +88,16 @@ export async function showRecordingNotification(n: {
   });
 }
 
+/** Whether the recording notification is on screen (not swiped away). */
+export async function isRecordingNotificationShown(): Promise<boolean> {
+  try {
+    const shown = await Notifications.getPresentedNotificationsAsync();
+    return shown.some((n) => n.request.identifier === ID);
+  } catch {
+    return false;
+  }
+}
+
 export async function clearRecordingNotification(): Promise<void> {
   await Notifications.dismissNotificationAsync(ID).catch(() => undefined);
   await Notifications.cancelScheduledNotificationAsync(ID).catch(() => undefined);

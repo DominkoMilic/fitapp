@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AppState, Platform } from 'react-native';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
@@ -42,3 +43,10 @@ export function useActiveRecording(userId: string | undefined): RecordingMeta | 
   const r = useRecordingStore((s) => s.rec);
   return r && r.userId === userId ? r : null;
 }
+
+// Pause from the notification runs in a separate background copy of the app, which writes to
+// storage. Coming back to the app reloads that, so the screen never acts on an outdated state.
+if (Platform.OS !== 'web')
+  AppState.addEventListener('change', (state) => {
+    if (state === 'active') void useRecordingStore.persist.rehydrate();
+  });
