@@ -23,7 +23,7 @@ import { SyncBanner } from '@/features/sync/SyncBanner';
 import { useWeightStats } from '@/features/weight/useWeightStats';
 import { ResumeWorkoutCard } from '@/features/training/ResumeWorkoutCard';
 import { useActiveWorkout } from '@/features/training/active-workout-store';
-import { useScheduledWorkouts } from '@/features/training/schedule-api';
+import { useScheduledWorkouts, useScheduleGeneration } from '@/features/training/schedule-api';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { radius, spacing, TOUCH_TARGET, useTheme } from '@/theme';
 import { formatLongWeekday, intensityLabel } from '@/domain/format';
@@ -106,6 +106,9 @@ export default function Home() {
   const stats = useWeightStats('30D');
   const checkins = useCheckins();
   const active = useActiveWorkout(useAuth().session?.user.id);
+  // Builds the calendar here too (once a day), so "Start workout" knows today's session
+  // without visiting Training first.
+  useScheduleGeneration();
   const todayRows = useScheduledWorkouts(today, today).rows;
 
   const queries = [profile, plan, events, stats.goal];

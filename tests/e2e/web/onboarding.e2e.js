@@ -369,7 +369,7 @@ const now = new Date().toISOString();
   await page.waitForTimeout(600);
   await page.getByRole('tab', { name: /Home/ }).click();
   await page.waitForTimeout(500);
-  await page.getByRole('button', { name: "Do today's check-in" }).first().click();
+  await page.getByText('Start check-in').first().click();
   await page.waitForTimeout(700);
   await page.getByLabel('Sleep last night').fill('6.5');
   await page
