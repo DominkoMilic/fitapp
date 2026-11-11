@@ -126,6 +126,25 @@ describe('workout detail before starting', () => {
     expect(mockSkip).toHaveBeenCalledTimes(1);
   });
 
+  it('offers the 20-minute version as a length choice, not an extra button', async () => {
+    await renderWithTheme(<WorkoutDetail />);
+    expect(screen.queryByRole('button', { name: /Short on time/ })).toBeNull();
+    await fireEvent.press(screen.getByRole('radio', { name: 'Quick · 20 min' }));
+    // The edit applies to the full plan only.
+    expect(screen.queryByRole('button', { name: 'Edit before starting' })).toBeNull();
+    await fireEvent.press(button('Start 20-min workout'));
+    expect(mockPush).toHaveBeenLastCalledWith({
+      pathname: '/training/session',
+      params: { scheduledId: 'w1', template: 'full-body-20' },
+    });
+    await fireEvent.press(screen.getByRole('radio', { name: 'Full · 45 min' }));
+    await fireEvent.press(button('Start workout'));
+    expect(mockPush).toHaveBeenLastCalledWith({
+      pathname: '/training/session',
+      params: { scheduledId: 'w1' },
+    });
+  });
+
   it('shows the edited version', async () => {
     mockPrepared = {
       exercises: [

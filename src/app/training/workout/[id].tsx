@@ -3,7 +3,15 @@ import { useState } from 'react';
 
 import { goBack } from '@/navigation/back';
 import { Banner, ConfirmDialog, ErrorState, LoadingState, useToast } from '@/components/feedback';
-import { Button, Card, Screen, SectionHeader, StatusTag, Text } from '@/components/ui';
+import {
+  Button,
+  Card,
+  Screen,
+  SectionHeader,
+  SegmentedControl,
+  StatusTag,
+  Text,
+} from '@/components/ui';
 import { formatLongWeekday } from '@/domain/format';
 import { TEMPLATE_BY_SLUG } from '@/domain/training/catalogue';
 import { useToday } from '@/features/dashboard/useToday';
@@ -37,6 +45,12 @@ export default function WorkoutDetail() {
   const doneSession = sessions.find((x) => x.scheduled_workout_id === id);
   const prepared = usePreparedWorkout(userId, id);
   const [askSkip, setAskSkip] = useState(false);
+  // Full or the 20-minute version: a length choice above Start instead of a separate button.
+  const [length, setLength] = useState<'full' | 'quick'>('full');
+  const quickSlug = w?.template_slug
+    ? (TEMPLATE_BY_SLUG[w.template_slug]?.shortVersion ?? null)
+    : null;
+  const builtQuick = useBuiltWorkout(quickSlug);
 
   if (isPending)
     return (
@@ -59,6 +73,11 @@ export default function WorkoutDetail() {
   // Nothing can be started or logged for a day that hasn't come yet (spec 10.4).
   const future = w.scheduled_date > today;
   const startable = !!built && w.kind !== 'rest' && !future;
+  const canChooseLength = !!shortSlug && !!builtQuick && w.status === 'planned' && !running;
+  const quick = canChooseLength && length === 'quick';
+  const shown = quick ? builtQuick : built;
+  const fullMinutes = w.estimated_duration_minutes ?? template?.minutes ?? null;
+  const quickMinutes = shortSlug ? (TEMPLATE_BY_SLUG[shortSlug]?.minutes ?? 20) : 20;
   const start = (template?: string) =>
     router.push({
       pathname: '/training/session',
@@ -78,7 +97,11 @@ export default function WorkoutDetail() {
         {[
           dayLabel(w.scheduled_date, today),
           w.scheduled_time?.slice(0, 5),
-          w.estimated_duration_minutes ? `${w.estimated_duration_minutes} min` : null,
+          quick
+            ? `${quickMinutes} min`
+            : w.estimated_duration_minutes
+              ? `${w.estimated_duration_minutes} min`
+              : null,
           STATUS_LABEL[w.status] || null,
         ]
           .filter(Boolean)
@@ -123,11 +146,22 @@ export default function WorkoutDetail() {
               message="Most of this workout doesn't suit your current injury. A recovery session is a better choice today."
             />
           ) : null}
+          {canChooseLength ? (
+            <SegmentedControl
+              accessibilityLabel="Workout length"
+              options={[
+                { value: 'full', label: fullMinutes ? `Full · ${fullMinutes} min` : 'Full' },
+                { value: 'quick', label: `Quick · ${quickMinutes} min` },
+              ]}
+              value={length}
+              onChange={setLength}
+            />
+          ) : null}
           <SectionHeader
             title="Exercises"
-            action={prepared ? <StatusTag label="Edited" /> : undefined}
+            action={prepared && !quick ? <StatusTag label="Edited" /> : undefined}
           />
-          {prepared
+          {prepared && !quick
             ? prepared.exercises.map((e, i) => (
                 <Card key={`${e.slug}-${i}`}>
                   <Text variant="bodyStrong">{e.name}</Text>
@@ -142,9 +176,9 @@ export default function WorkoutDetail() {
                 </Card>
               ))
             : null}
-          {prepared
+          {prepared && !quick
             ? null
-            : built.exercises.map((e, i) => (
+            : (shown ?? built).exercises.map((e, i) => (
                 <Card key={`${e.slug}-${i}`}>
                   <Text variant="small" color="textSecondary">
                     {e.phase === 'warmup'
@@ -176,9 +210,18 @@ export default function WorkoutDetail() {
             </Card>
           ) : null}
           {startable ? (
-            <Button title={running ? 'Resume workout' : 'Start workout'} onPress={() => start()} />
+            <Button
+              title={
+                running
+                  ? 'Resume workout'
+                  : quick
+                    ? `Start ${quickMinutes}-min workout`
+                    : 'Start workout'
+              }
+              onPress={() => start(quick && shortSlug ? shortSlug : undefined)}
+            />
           ) : null}
-          {built && w.kind !== 'rest' && !running ? (
+          {built && w.kind !== 'rest' && !running && !quick ? (
             <Button
               title={prepared ? 'Edit again' : 'Edit before starting'}
               variant="secondary"
@@ -196,13 +239,6 @@ export default function WorkoutDetail() {
               onPress={() =>
                 router.push({ pathname: '/training/log-workout', params: { scheduledId: w.id } })
               }
-            />
-          ) : null}
-          {startable && shortSlug && !running ? (
-            <Button
-              title="Short on time? Start the 20-minute version"
-              variant="secondary"
-              onPress={() => start(shortSlug)}
             />
           ) : null}
           {sport && !future ? (
