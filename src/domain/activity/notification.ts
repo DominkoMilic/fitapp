@@ -28,9 +28,17 @@ export function recordingNotificationText(input: {
   currentSpeedMps: number;
   unit: 'metric' | 'imperial';
   paused: boolean;
+  /**
+   * The system draws a ticking clock beside the notification (Android chronometer), so the title
+   * leaves the time out while recording. Paused, the clock stops and the title keeps the time.
+   */
+  liveClock?: boolean;
 }): { title: string; body: string } {
   const distance = formatDistance(input.distanceM, input.unit);
-  const title = `${NAME[input.type]} · ${clock(input.movingS)}`;
+  const title =
+    input.liveClock && !input.paused
+      ? NAME[input.type]
+      : `${NAME[input.type]} · ${clock(input.movingS)}`;
   if (input.paused) return { title, body: `Paused · ${distance}` };
   const now =
     input.type === 'cycle'
@@ -39,4 +47,17 @@ export function recordingNotificationText(input: {
         ? `${formatPace(input.currentPaceSPerKm, input.unit)} ${input.unit === 'metric' ? '/km' : '/mi'}`
         : null;
   return { title, body: now ? `${distance} · ${now}` : distance };
+}
+
+/**
+ * Start of the notification's ticking clock (epoch ms), chosen so that now − base is the moving
+ * time: started + time spent paused. Stable while recording, so re-posts never make it jump.
+ * Null while paused (the clock stops). Pure.
+ */
+export function chronometerBase(r: {
+  status: string;
+  startedAt: number;
+  pausedMs: number;
+}): number | null {
+  return r.status === 'paused' ? null : r.startedAt + r.pausedMs;
 }

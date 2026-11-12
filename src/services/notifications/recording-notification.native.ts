@@ -2,6 +2,8 @@ import * as Notifications from 'expo-notifications';
 import { AndroidImportance, AndroidNotificationVisibility } from 'expo-notifications';
 import { Platform } from 'react-native';
 
+import { PaceNotification } from '../../../modules/pace-notification';
+
 /**
  * The notification shown while a walk, run or ride is recorded (spec 11.6): moving time,
  * distance and pace, with Pause (works without opening the app) or Resume / Finish. It is
@@ -66,10 +68,28 @@ export async function quietLocationChannel(): Promise<void> {
   }).catch(() => undefined);
 }
 
+/** Android dev/prod builds: the notification has a system clock that ticks every second. */
+export const hasLiveClock = (): boolean => PaceNotification !== null;
+
+/** Native in-place edit of the posted notification; false when it isn't on screen or unsupported. */
+export async function updateRecordingNotification(n: {
+  title: string;
+  body: string;
+  chronometerBase: number | null;
+}): Promise<boolean> {
+  if (!PaceNotification) return false;
+  try {
+    return PaceNotification.update(ID, n.title, n.body, n.chronometerBase);
+  } catch {
+    return false;
+  }
+}
+
 export async function showRecordingNotification(n: {
   title: string;
   body: string;
   paused: boolean;
+  chronometerBase?: number | null;
 }): Promise<void> {
   await ensureSetup();
   await Notifications.scheduleNotificationAsync({
@@ -86,6 +106,14 @@ export async function showRecordingNotification(n: {
     },
     trigger: Platform.OS === 'android' ? { channelId: CHANNEL } : null,
   });
+  // Add the ticking clock to what expo just posted (keeps its Pause / Resume / Finish actions).
+  if (PaceNotification && n.chronometerBase !== undefined) {
+    try {
+      PaceNotification.update(ID, null, null, n.chronometerBase);
+    } catch {
+      // Plain text still shows the time.
+    }
+  }
 }
 
 /** Whether the recording notification is on screen (not swiped away). */

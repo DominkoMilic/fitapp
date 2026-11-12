@@ -1,12 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { recordingNotificationText } from '@/domain/activity/notification';
+import { chronometerBase, recordingNotificationText } from '@/domain/activity/notification';
 import { liveStats, withPoints } from '@/domain/activity/recording';
 import { pointBuffer } from '@/services/location/point-buffer';
 import {
   clearRecordingNotification,
+  hasLiveClock,
   isRecordingNotificationShown,
   showRecordingNotification,
+  updateRecordingNotification,
 } from '@/services/notifications/recording-notification';
 
 import { asRecording, type RecordingMeta } from './recording-store';
@@ -61,18 +63,24 @@ export async function refreshRecordingNotification(
       AsyncStorage.getItem(UNIT_KEY),
     ]);
     const s = liveStats(withPoints(asRecording(meta), points), now, null);
-    await showRecordingNotification({
-      ...recordingNotificationText({
-        type: meta.type,
-        movingS: s.movingS,
-        distanceM: s.distanceM,
-        currentPaceSPerKm: s.currentPaceSPerKm,
-        currentSpeedMps: s.currentSpeedMps,
-        unit: unit === 'imperial' ? 'imperial' : 'metric',
-        paused: meta.status === 'paused',
-      }),
-      paused: meta.status === 'paused',
+    const paused = meta.status === 'paused';
+    const base = chronometerBase(meta);
+    const text = recordingNotificationText({
+      type: meta.type,
+      movingS: s.movingS,
+      distanceM: s.distanceM,
+      currentPaceSPerKm: s.currentPaceSPerKm,
+      currentSpeedMps: s.currentSpeedMps,
+      unit: unit === 'imperial' ? 'imperial' : 'metric',
+      paused,
+      liveClock: hasLiveClock(),
     });
+    // A routine update edits the posted notification in place (one redraw, the clock keeps
+    // ticking). A state change re-posts through expo: Pause becomes Resume / Finish.
+    const edited =
+      opts.meta === undefined &&
+      (await updateRecordingNotification({ ...text, chronometerBase: base }));
+    if (!edited) await showRecordingNotification({ ...text, paused, chronometerBase: base });
     await AsyncStorage.setItem(LAST_KEY, String(now));
   } catch {
     // A notification update must never break recording.

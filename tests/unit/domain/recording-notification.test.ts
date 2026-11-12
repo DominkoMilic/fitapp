@@ -1,4 +1,4 @@
-import { recordingNotificationText } from '@/domain/activity/notification';
+import { chronometerBase, recordingNotificationText } from '@/domain/activity/notification';
 
 const base = {
   movingS: 754,
@@ -33,5 +33,23 @@ describe('recording notification text', () => {
     expect(recordingNotificationText({ ...base, type: 'walk', currentPaceSPerKm: null }).body).toBe(
       '1.42 km',
     );
+  });
+
+  it('leaves the time to the system clock while recording, keeps it in the title when paused', () => {
+    expect(recordingNotificationText({ ...base, type: 'run', liveClock: true }).title).toBe('Run');
+    expect(
+      recordingNotificationText({ ...base, type: 'run', liveClock: true, paused: true }).title,
+    ).toBe('Run · 12:34');
+  });
+});
+
+describe('chronometer base', () => {
+  it('is start + time paused, so now − base is the moving time', () => {
+    const r = { status: 'recording', startedAt: 1_000_000, pausedMs: 30_000 };
+    const now = 1_000_000 + 754_000 + 30_000;
+    expect((now - chronometerBase(r)!) / 1000).toBe(754);
+  });
+  it('stops (null) while paused', () => {
+    expect(chronometerBase({ status: 'paused', startedAt: 1, pausedMs: 0 })).toBeNull();
   });
 });
