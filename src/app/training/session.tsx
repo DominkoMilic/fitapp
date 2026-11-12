@@ -41,6 +41,8 @@ import { useSessions } from '@/features/training/session-api';
 import { useBuiltWorkout } from '@/features/training/useBuiltWorkout';
 import { ExercisePicker } from '@/features/training/ExercisePicker';
 import { SetRow } from '@/features/training/SetRow';
+import { ExerciseAnimation } from '@/features/training/ExerciseAnimation';
+import { ExerciseHowTo } from '@/features/training/ExerciseHowTo';
 import { haptics, spacing } from '@/theme';
 import { announce } from '@/services/a11y/announce';
 
@@ -321,14 +323,20 @@ function Runner() {
       </View>
       {paused ? <Banner tone="info" message="Paused. The timer stops until you resume." /> : null}
 
-      <Text variant="heading" accessibilityRole="header">
-        {ex.name}
-      </Text>
-      <Text color="textSecondary">
-        {target}
-        {ex.unilateral ? ' per side' : ''}
-        {ex.restS ? ` · rest ${ex.restS} s` : ''}
-      </Text>
+      <View style={styles.exerciseHead}>
+        {/* Always on screen mid-workout: a glance shows the movement. */}
+        <ExerciseAnimation slug={ex.slug} name={ex.name} size={104} />
+        <View style={styles.exerciseTitle}>
+          <Text variant="heading" accessibilityRole="header">
+            {ex.name}
+          </Text>
+          <Text color="textSecondary">
+            {target}
+            {ex.unilateral ? ' per side' : ''}
+            {ex.restS ? ` · rest ${ex.restS} s` : ''}
+          </Text>
+        </View>
+      </View>
       {suggestion && suggestion.kind !== 'none' ? (
         <Text variant="small" color="accent">
           {suggestion.message}
@@ -350,14 +358,7 @@ function Runner() {
       ) : null}
       {showHow && info ? (
         <Card>
-          {info.instructions.map((step, k) => (
-            <Text key={k} variant="small">
-              {k + 1}. {step}
-            </Text>
-          ))}
-          <Text variant="caption" color="textSecondary">
-            {info.caution}
-          </Text>
+          <ExerciseHowTo slug={ex.slug} name={ex.name} showAnimation={false} />
         </Card>
       ) : null}
 
@@ -470,6 +471,8 @@ function Runner() {
 }
 
 const styles = StyleSheet.create({
+  exerciseHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  exerciseTitle: { flex: 1, gap: spacing.xxs },
   topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   footerRow: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.xs },
 });

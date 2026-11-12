@@ -20,6 +20,7 @@ import { useRestrictions } from '@/features/training/library';
 import { usePreparedWorkout } from '@/features/training/prepared-workout-store';
 import { useScheduleActions, useScheduledWorkout } from '@/features/training/schedule-api';
 import { useBuiltWorkout } from '@/features/training/useBuiltWorkout';
+import { ExpandableExerciseCard } from '@/features/training/ExpandableExerciseCard';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useActiveWorkout } from '@/features/training/active-workout-store';
 import { useSessions } from '@/features/training/session-api';
@@ -45,6 +46,8 @@ export default function WorkoutDetail() {
   const doneSession = sessions.find((x) => x.scheduled_workout_id === id);
   const prepared = usePreparedWorkout(userId, id);
   const [askSkip, setAskSkip] = useState(false);
+  /** The exercise whose instructions are open (one at a time). */
+  const [open, setOpen] = useState<number | null>(null);
   // Full or the 20-minute version: a length choice above Start instead of a separate button.
   const [length, setLength] = useState<'full' | 'quick'>('full');
   const quickSlug = w?.template_slug
@@ -163,39 +166,40 @@ export default function WorkoutDetail() {
           />
           {prepared && !quick
             ? prepared.exercises.map((e, i) => (
-                <Card key={`${e.slug}-${i}`}>
-                  <Text variant="bodyStrong">{e.name}</Text>
-                  <Text variant="small" color="textSecondary">
-                    {e.sets.length} ×{' '}
-                    {e.tracking === 'time'
+                <ExpandableExerciseCard
+                  key={`${e.slug}-${i}`}
+                  slug={e.slug}
+                  name={e.name}
+                  detail={`${e.sets.length} × ${
+                    e.tracking === 'time'
                       ? `${e.sets[0]?.durationS ?? e.durationS ?? 0} s`
-                      : `${e.sets[0]?.reps ?? e.repsMin} reps`}
-                    {e.unilateral ? ' per side' : ''}
-                    {e.added ? ' · added by you' : ''}
-                  </Text>
-                </Card>
+                      : `${e.sets[0]?.reps ?? e.repsMin} reps`
+                  }${e.unilateral ? ' per side' : ''}${e.added ? ' · added by you' : ''}`}
+                  expanded={open === i}
+                  onToggle={() => setOpen(open === i ? null : i)}
+                />
               ))
             : null}
           {prepared && !quick
             ? null
             : (shown ?? built).exercises.map((e, i) => (
-                <Card key={`${e.slug}-${i}`}>
-                  <Text variant="small" color="textSecondary">
-                    {e.phase === 'warmup'
-                      ? 'Warm-up'
-                      : e.phase === 'cooldown'
-                        ? 'Cool-down'
-                        : 'Main'}
-                  </Text>
-                  <Text variant="bodyStrong">{e.name}</Text>
-                  <Text variant="small" color="textSecondary">
-                    {e.sets} ×{' '}
-                    {e.durationS
-                      ? `${e.durationS >= 120 ? `${Math.round(e.durationS / 60)} min` : `${e.durationS} s`}`
-                      : `${e.repsMin}${e.repsMax !== e.repsMin ? `–${e.repsMax}` : ''} reps`}
-                    {e.unilateral ? ' per side' : ''}
-                  </Text>
-                </Card>
+                <ExpandableExerciseCard
+                  key={`${e.slug}-${i}`}
+                  slug={e.slug}
+                  name={e.name}
+                  eyebrow={
+                    e.phase === 'warmup' ? 'Warm-up' : e.phase === 'cooldown' ? 'Cool-down' : 'Main'
+                  }
+                  detail={`${e.sets} × ${
+                    e.durationS
+                      ? e.durationS >= 120
+                        ? `${Math.round(e.durationS / 60)} min`
+                        : `${e.durationS} s`
+                      : `${e.repsMin}${e.repsMax !== e.repsMin ? `–${e.repsMax}` : ''} reps`
+                  }${e.unilateral ? ' per side' : ''}`}
+                  expanded={open === i}
+                  onToggle={() => setOpen(open === i ? null : i)}
+                />
               ))}
         </>
       ) : null}

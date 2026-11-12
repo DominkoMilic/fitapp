@@ -165,3 +165,15 @@ describe('workout detail before starting', () => {
     expect(button('Edit again')).toBeTruthy();
   });
 });
+
+describe('exercise instructions in the list', () => {
+  it('tapping an exercise opens its steps, tapping again closes them', async () => {
+    await renderWithTheme(<WorkoutDetail />);
+    expect(screen.queryByText(/^1\. /)).toBeNull();
+    await fireEvent.press(button(/Push-up, 3 × 8–12 reps/));
+    expect(screen.getByText(/^1\. /)).toBeTruthy();
+    expect(button(/Animation of Push-up/)).toBeTruthy();
+    await fireEvent.press(button(/Push-up, 3 × 8–12 reps/));
+    expect(screen.queryByText(/^1\. /)).toBeNull();
+  });
+});

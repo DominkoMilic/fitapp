@@ -12,6 +12,7 @@ import {
 } from '@/domain/training/active-workout';
 import { spacing } from '@/theme';
 
+import { ExerciseHowTo } from './ExerciseHowTo';
 import { ExercisePicker } from './ExercisePicker';
 import { useLastSets } from './last-performance';
 import { SetRow } from './SetRow';
@@ -38,6 +39,8 @@ export function WorkoutEditor({
 }) {
   const { lastSets } = useLastSets();
   const [picking, setPicking] = useState(false);
+  /** The exercise whose instructions are open (one at a time). */
+  const [howTo, setHowTo] = useState<string | null>(null);
   const keys = rowKeys(w.exercises, (e) => e.slug);
   return (
     <View style={styles.stack}>
@@ -60,6 +63,13 @@ export function WorkoutEditor({
                   </Text>
                 ) : null}
               </View>
+              <Button
+                title={howTo === keys[i] ? 'Hide' : 'How to'}
+                variant="ghost"
+                fullWidth={false}
+                accessibilityLabel={`${howTo === keys[i] ? 'Hide' : 'Show'} how to do ${ex.name}`}
+                onPress={() => setHowTo(howTo === keys[i] ? null : (keys[i] ?? null))}
+              />
               {w.exercises.length > 1 ? (
                 <Button
                   title="Remove"
@@ -70,6 +80,7 @@ export function WorkoutEditor({
                 />
               ) : null}
             </View>
+            {howTo === keys[i] ? <ExerciseHowTo slug={ex.slug} name={ex.name} /> : null}
             {ex.sets.map((s, k) => (
               <SetRow
                 key={k}
