@@ -52,7 +52,7 @@ describe('Progress tab', () => {
     await renderWithTheme(<Progress />);
     expect(screen.getByLabelText('Current weight: 106.1 kg')).toBeTruthy();
     expect(screen.getByLabelText('7-day average: 106.5 kg')).toBeTruthy();
-    expect(screen.getByLabelText('Total change: -0.5 kg')).toBeTruthy();
+    expect(screen.getByLabelText('Total change: -0.5 kg. Start → 7-day avg')).toBeTruthy();
     expect(screen.getByText(/· today/)).toBeTruthy();
   });
 });

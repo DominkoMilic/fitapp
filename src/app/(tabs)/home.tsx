@@ -28,6 +28,7 @@ import { useScheduledWorkouts, useScheduleGeneration } from '@/features/training
 import { useAuth } from '@/features/auth/AuthProvider';
 import { radius, spacing, TOUCH_TARGET, useTheme } from '@/theme';
 import { formatLongWeekday, intensityLabel, weighedWhen } from '@/domain/format';
+import { shownWeight } from '@/domain/weight/display';
 import { goalJourney } from '@/domain/weight/tone';
 
 const WEEKDAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -140,7 +141,12 @@ export default function Home() {
   const next = nextEvent(upcoming, today, session?.title ?? null);
   const journey =
     stats.startKg !== null && stats.current
-      ? goalJourney(stats.startKg, stats.current.kg, stats.targetKg)
+      ? // In display units, from the rounded figures shown, so "x down" matches start − average.
+        goalJourney(
+          shownWeight(stats.startKg, unit),
+          shownWeight(stats.current.kg, unit),
+          stats.targetKg === null ? null : shownWeight(stats.targetKg, unit),
+        )
       : null;
   const dateLabel = formatLongWeekday(today);
   const latest = stats.daily.length ? stats.daily[stats.daily.length - 1]! : null;
@@ -228,8 +234,8 @@ export default function Home() {
         ) : null}
         {journey ? (
           <Text variant="small" color="textSecondary">
-            {`${disp(journey.moved).toFixed(1)} ${u} ${journey.direction}`}
-            {journey.toGo !== null ? ` · ${disp(journey.toGo).toFixed(1)} ${u} to go` : ''}
+            {`${journey.moved.toFixed(1)} ${u} ${journey.direction}`}
+            {journey.toGo !== null ? ` · ${journey.toGo.toFixed(1)} ${u} to go` : ''}
           </Text>
         ) : null}
         {stats.current?.basis === 'average' ? (

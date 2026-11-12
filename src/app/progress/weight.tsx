@@ -17,6 +17,7 @@ import {
 } from '@/components/ui';
 import { kgToLb, type UnitSystem } from '@/domain/calculations/units';
 import { useProfile } from '@/features/profile/api';
+import { formatShown, shownChange } from '@/domain/weight/display';
 import { changeTone } from '@/domain/weight/tone';
 import { CHART_RANGES, type RangeKey, useWeightStats } from '@/features/weight/useWeightStats';
 import { spacing } from '@/theme';
@@ -53,6 +54,9 @@ export default function WeightScreen() {
 
   const latest = s.daily.length ? s.daily[s.daily.length - 1]!.kg : null;
   const goalType = s.goal.data?.goal_type;
+  // Start minus the 7-day average as both are shown, so the three tiles always add up.
+  const totalShown =
+    s.current && s.startKg !== null ? shownChange(s.startKg, s.current.kg, unit) : null;
   const refs: ReferenceLine[] = [];
   if (s.startKg !== null) refs.push({ kind: 'start', kg: s.startKg, label: 'Start' });
   if (s.targetKg !== null) refs.push({ kind: 'target', kg: s.targetKg, label: 'Target' });
@@ -130,8 +134,9 @@ export default function WeightScreen() {
           <View style={styles.row}>
             <StatTile
               label="Total change"
-              value={fmt(s.changeSinceStart, true)}
+              value={formatShown(totalShown, true)}
               unit={u}
+              caption={s.current?.basis === 'average' ? 'Start → 7-day avg' : 'Start → latest'}
               trend={changeTone(s.changeSinceStart, goalType)}
             />
             <StatTile

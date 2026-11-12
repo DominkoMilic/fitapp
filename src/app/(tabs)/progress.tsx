@@ -8,6 +8,7 @@ import { ErrorState, LoadingState } from '@/components/feedback';
 import { Card, HeaderAddButton, MiniStat, Screen, Text, Tile } from '@/components/ui';
 import { kgToLb, type UnitSystem } from '@/domain/calculations/units';
 import { weighedWhen } from '@/domain/format';
+import { formatShown, shownChange } from '@/domain/weight/display';
 import { changeTone } from '@/domain/weight/tone';
 import { GoalReachedCard } from '@/features/milestones/GoalReachedCard';
 import { useProfile } from '@/features/profile/api';
@@ -29,6 +30,9 @@ export default function Progress() {
     kg === null ? '—' : `${signed && kg > 0 ? '+' : ''}${toDisplay(kg).toFixed(1)}`;
 
   const latest = s.daily.length ? s.daily[s.daily.length - 1]! : null;
+  // Start minus the 7-day average as both are shown, so the figures always add up.
+  const totalShown =
+    s.current && s.startKg !== null ? shownChange(s.startKg, s.current.kg, unit) : null;
   const references: ReferenceLine[] = [];
   if (s.startKg !== null) references.push({ kind: 'start', kg: s.startKg, label: 'Start' });
   if (s.targetKg !== null) references.push({ kind: 'target', kg: s.targetKg, label: 'Target' });
@@ -115,8 +119,9 @@ export default function Progress() {
           <MiniStat label="Start" value={fmt(s.startKg)} unit={u} />
           <MiniStat
             label="Total change"
-            value={fmt(s.changeSinceStart, true)}
+            value={formatShown(totalShown, true)}
             unit={u}
+            caption={s.current?.basis === 'average' ? 'Start → 7-day avg' : 'Start → latest'}
             trend={changeTone(s.changeSinceStart, s.goal.data?.goal_type)}
           />
         </View>
