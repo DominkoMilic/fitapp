@@ -21,6 +21,7 @@ import { GoalReachedCard } from '@/features/milestones/GoalReachedCard';
 import { useActivePlan, useProfile, useRecurringEvents } from '@/features/profile/api';
 import { SyncBanner } from '@/features/sync/SyncBanner';
 import { useWeightStats } from '@/features/weight/useWeightStats';
+import { AdaptPlanCard } from '@/features/training/AdaptPlanCard';
 import { ResumeWorkoutCard } from '@/features/training/ResumeWorkoutCard';
 import { ResumeActivityCard } from '@/features/activity/ResumeActivityCard';
 import { useActiveWorkout } from '@/features/training/active-workout-store';
@@ -197,6 +198,7 @@ export default function Home() {
       </PressableScale>
 
       <ResumeWorkoutCard />
+      <AdaptPlanCard />
       <ResumeActivityCard />
       <SyncBanner />
       <GoalReachedCard />

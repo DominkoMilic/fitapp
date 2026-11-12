@@ -13,6 +13,7 @@ import {
   Text,
 } from '@/components/ui';
 import { formatLongWeekday } from '@/domain/format';
+import { readAdaptedNote, visibleNotes } from '@/domain/training/adapt';
 import { TEMPLATE_BY_SLUG } from '@/domain/training/catalogue';
 import { useToday } from '@/features/dashboard/useToday';
 import { dayLabel, isSport, STATUS_LABEL } from '@/features/training/labels';
@@ -110,11 +111,19 @@ export default function WorkoutDetail() {
           .filter(Boolean)
           .join(' · ')}
       </Text>
-      {w.notes.map((n) => (
+      {visibleNotes(w.notes).map((n) => (
         <Text key={n} variant="small" color="textSecondary">
           {n}
         </Text>
       ))}
+      {w.status === 'planned' && readAdaptedNote(w.notes) ? (
+        <Button
+          title={`Undo: back to ${readAdaptedNote(w.notes)?.title}`}
+          variant="ghost"
+          fullWidth={false}
+          onPress={() => guard(actions.undoSwap(w))}
+        />
+      ) : null}
       {eventSport && restrictions.restrictedFor(eventSport.key) ? (
         <Banner
           tone="warning"

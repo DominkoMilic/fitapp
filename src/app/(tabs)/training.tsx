@@ -17,6 +17,7 @@ import { useProfile } from '@/features/profile/api';
 import { useActiveWorkout } from '@/features/training/active-workout-store';
 import { useRestrictions } from '@/features/training/library';
 import { OccurrenceRow } from '@/features/training/OccurrenceRow';
+import { AdaptPlanCard } from '@/features/training/AdaptPlanCard';
 import { ResumeWorkoutCard } from '@/features/training/ResumeWorkoutCard';
 import { useScheduledWorkouts, useScheduleGeneration } from '@/features/training/schedule-api';
 import { WeekStrip } from '@/features/training/WeekStrip';
@@ -80,6 +81,7 @@ export default function Training() {
       ) : null}
 
       <ResumeWorkoutCard />
+      <AdaptPlanCard />
       <ResumeActivityCard />
 
       <WeekStrip

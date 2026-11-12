@@ -4,6 +4,7 @@ import { randomUUID } from 'expo-crypto';
 import { useEffect, useMemo } from 'react';
 
 import { addDays } from '@/domain/calculations/dates';
+import { type PlanRow, swapFields, undoFields } from '@/domain/training/adapt';
 import { applyPending } from '@/domain/sync/outbox';
 import { TEMPLATE_BY_SLUG } from '@/domain/training/catalogue';
 import { useAuth } from '@/features/auth/AuthProvider';
@@ -126,6 +127,20 @@ export function useScheduledWorkout(id: string | undefined) {
   };
 }
 
+/** A schedule row as the plan-adaptation rules see it. */
+export const toPlanRow = (w: ScheduledWorkout): PlanRow => ({
+  id: w.id,
+  date: w.scheduled_date,
+  category: w.category,
+  kind: w.kind,
+  status: w.status,
+  title: w.title,
+  templateSlug: w.template_slug,
+  intensity: w.intensity,
+  minutes: w.estimated_duration_minutes,
+  notes: w.notes,
+});
+
 /** Calendar changes go through the outbox (work offline). Full rows: see note at the top. */
 export function useScheduleActions() {
   const { write } = useSyncActions();
@@ -148,6 +163,21 @@ export function useScheduleActions() {
     skip: (w: ScheduledWorkout) => upsert(w, { status: 'skipped', is_user_modified: true }),
     restore: (w: ScheduledWorkout) => upsert(w, { status: 'planned' }),
     complete: (w: ScheduledWorkout) => upsert(w, { status: 'completed' }),
+    /** Marks a planned workout as replaced by an unplanned session you logged (plan adaptation). */
+    replaceBy: (w: ScheduledWorkout, after: string) =>
+      upsert(w, {
+        status: 'skipped',
+        is_user_modified: true,
+        notes: [...w.notes, `Replaced by ${after}.`],
+      }),
+    /** Swaps a planned session for another workout after an unplanned one; keeps an undo note. */
+    swapTemplate: (w: ScheduledWorkout, toTemplateSlug: string, after: string) =>
+      upsert(w, swapFields(toPlanRow(w), toTemplateSlug, after)),
+    /** Undoes swapTemplate; does nothing for rows PACE didn't swap. */
+    undoSwap: async (w: ScheduledWorkout) => {
+      const fields = undoFields(w);
+      if (fields) await upsert(w, fields);
+    },
     addOneOff: async (input: { date: string; templateSlug: string; time: string | null }) => {
       const t = TEMPLATE_BY_SLUG[input.templateSlug];
       if (!t) throw new Error('Unknown template');
