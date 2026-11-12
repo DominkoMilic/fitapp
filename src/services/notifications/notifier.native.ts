@@ -1,12 +1,19 @@
 import * as Notifications from 'expo-notifications';
-import { AndroidImportance, IosAuthorizationStatus } from 'expo-notifications';
+import {
+  AndroidImportance,
+  AndroidNotificationVisibility,
+  IosAuthorizationStatus,
+} from 'expo-notifications';
 import { Platform } from 'react-native';
 
 import type { Notifier, PermissionState } from './notifier.types';
 
 const KIND = { reminder: 'reminder', rest: 'rest' } as const;
 const REST_ID = 'pace-rest-end';
-const CHANNEL = 'reminders';
+// v2 (2026-11-12): HIGH importance so reminders pop up as a heads-up banner. Android never lets an
+// app raise an existing channel's importance, so the old DEFAULT 'reminders' channel is removed.
+const CHANNEL = 'reminders-v2';
+const OLD_CHANNELS = ['reminders'];
 let handled: string | null = null;
 
 Notifications.setNotificationHandler({
@@ -30,10 +37,16 @@ if (Platform.OS === 'android')
 let channelReady: Promise<unknown> | null = null;
 const ensureChannel = () =>
   Platform.OS === 'android'
-    ? (channelReady ??= Notifications.setNotificationChannelAsync(CHANNEL, {
-        name: 'Reminders',
-        importance: AndroidImportance.DEFAULT,
-      }))
+    ? (channelReady ??= Promise.all([
+        Notifications.setNotificationChannelAsync(CHANNEL, {
+          name: 'Reminders',
+          importance: AndroidImportance.HIGH,
+          lockscreenVisibility: AndroidNotificationVisibility.PUBLIC,
+        }),
+        ...OLD_CHANNELS.map((id) =>
+          Notifications.deleteNotificationChannelAsync(id).catch(() => undefined),
+        ),
+      ]))
     : Promise.resolve();
 
 const state = (p: Notifications.NotificationPermissionsStatus): PermissionState =>
@@ -42,6 +55,9 @@ const state = (p: Notifications.NotificationPermissionsStatus): PermissionState 
     : p.canAskAgain
       ? 'undetermined'
       : 'denied';
+
+const exactState = (p: Notifications.PermissionResponse): PermissionState =>
+  p.granted ? 'granted' : p.canAskAgain ? 'undetermined' : 'denied';
 
 const dateTrigger = (at: number): Notifications.NotificationTriggerInput => ({
   type: Notifications.SchedulableTriggerInputTypes.DATE,
@@ -52,6 +68,14 @@ const dateTrigger = (at: number): Notifications.NotificationTriggerInput => ({
 export const notifier: Notifier = {
   permission: async () => state(await Notifications.getPermissionsAsync()),
   request: async () => state(await Notifications.requestPermissionsAsync()),
+  exactAlarm: async () =>
+    Platform.OS === 'android'
+      ? exactState(await Notifications.getExactAlarmPermissionsAsync())
+      : 'unsupported',
+  requestExactAlarm: async () =>
+    Platform.OS === 'android'
+      ? exactState(await Notifications.requestExactAlarmPermissionsAsync())
+      : 'unsupported',
 
   async reconcile(reminders) {
     await ensureChannel();

@@ -4,6 +4,8 @@ import type { Notifier } from './notifier.types';
 export const notifier: Notifier = {
   permission: async () => 'unsupported',
   request: async () => 'unsupported',
+  exactAlarm: async () => 'unsupported',
+  requestExactAlarm: async () => 'unsupported',
   reconcile: async () => 0,
   cancelAllReminders: async () => undefined,
   scheduleRestEnd: async () => undefined,

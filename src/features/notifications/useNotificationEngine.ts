@@ -25,13 +25,18 @@ export function useNotificationEngine() {
   const prefs = usePreferences();
   const schedule = useScheduledWorkouts(addDays(today, -120), addDays(today, 120));
   const [permission, setPermission] = useState<PermissionState>('undetermined');
+  /** Android exact-alarm access: when it changes, everything is rescheduled (exact vs inexact). */
+  const [exact, setExact] = useState<PermissionState>('unsupported');
   const [foregroundTick, setForegroundTick] = useState(0);
   const lastSignature = useRef<string | null>(null);
 
   useEffect(() => notifier.onTap((href) => router.push(href as Href)), []);
 
   useEffect(() => {
-    const check = () => void notifier.permission().then(setPermission, () => undefined);
+    const check = () => {
+      void notifier.permission().then(setPermission, () => undefined);
+      void notifier.exactAlarm().then(setExact, () => undefined);
+    };
     check();
     const sub = AppState.addEventListener('change', (s) => {
       if (s === 'active') {
@@ -79,11 +84,11 @@ export function useNotificationEngine() {
 
   useEffect(() => {
     if (!reminders || permission !== 'granted') return;
-    const signature = `${foregroundTick}|${reminders.map((r) => `${r.id}@${r.at}`).join(',')}`;
+    const signature = `${foregroundTick}|${exact}|${reminders.map((r) => `${r.id}@${r.at}`).join(',')}`;
     if (signature === lastSignature.current) return;
     lastSignature.current = signature;
     void notifier.reconcile(reminders).catch(() => {
       lastSignature.current = null; // try again next time
     });
-  }, [reminders, permission, foregroundTick]);
+  }, [reminders, permission, exact, foregroundTick]);
 }

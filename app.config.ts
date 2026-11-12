@@ -48,6 +48,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       monochromeImage: './assets/brand/android-icon-monochrome.png',
     },
     predictiveBackGestureEnabled: false,
+    // Reminders scheduled for 7:00 must ring at 7:00 even after a night in Doze; without this
+    // Android delivers them "inexactly", i.e. often only when the phone is next woken (2026-11-12).
+    // Not USE_EXACT_ALARM: Play reserves that for alarm-clock and calendar apps.
+    permissions: ['android.permission.SCHEDULE_EXACT_ALARM'],
     // Added by libraries but not used by PACE (no overlays; files are shared from the app cache).
     blockedPermissions: [
       'android.permission.SYSTEM_ALERT_WINDOW',

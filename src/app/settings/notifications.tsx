@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Linking } from 'react-native';
+import { AppState, Linking } from 'react-native';
 
 import { Banner, ErrorState, LoadingState, useToast } from '@/components/feedback';
 import { Button, SectionHeader, Screen, SegmentedControl, Text, Toggle } from '@/components/ui';
@@ -41,13 +41,29 @@ function Form({ initial }: { initial: NotificationPrefs }) {
   const showToast = useToast((s) => s.show);
   const [prefs, setPrefs] = useState<NotificationPrefs>(initial);
   const [permission, setPermission] = useState<PermissionState>('undetermined');
+  const [exact, setExact] = useState<PermissionState>('unsupported');
   const [weighIn, setWeighIn] = useState(initial.weighIn.time);
   const [timeError, setTimeError] = useState<string | undefined>();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    void notifier.permission().then(setPermission, () => undefined);
+    const check = () => {
+      void notifier.permission().then(setPermission, () => undefined);
+      void notifier.exactAlarm().then(setExact, () => undefined);
+    };
+    check();
+    // Back from the system settings screens.
+    const sub = AppState.addEventListener('change', (st) => st === 'active' && check());
+    return () => sub.remove();
   }, []);
+
+  const allowExact = async () => {
+    try {
+      setExact(await notifier.requestExactAlarm());
+    } catch {
+      void Linking.openSettings();
+    }
+  };
 
   /** Permission is asked only when a reminder is switched on (spec 17). */
   const turnOn = async (next: NotificationPrefs) => {
@@ -95,6 +111,24 @@ function Form({ initial }: { initial: NotificationPrefs }) {
             onPress={() => void Linking.openSettings()}
           />
         </>
+      ) : permission === 'granted' && (exact === 'undetermined' || exact === 'denied') ? (
+        <>
+          <Banner
+            tone="warning"
+            message="Android may hold reminders back until you next unlock your phone. Allow PACE to set alarms and reminders so they arrive on time."
+          />
+          <Button
+            title="Allow on-time reminders"
+            variant="secondary"
+            onPress={() => void allowExact()}
+          />
+        </>
+      ) : null}
+      {permission === 'granted' && exact !== 'unsupported' ? (
+        <Text variant="small" color="textSecondary">
+          Still late? Some phones (Samsung, Xiaomi) pause apps to save battery. In your phone&apos;s
+          Settings › Apps › PACE › Battery, choose Unrestricted.
+        </Text>
       ) : null}
 
       <SectionHeader title="Training" />
